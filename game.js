@@ -2,25 +2,23 @@
 // Loaded after data/map.js and data/game-data.js.
 const G = (() => {
   // ---------- the dials (node test.js shows what they do to the pacing) ----------
-  const GROW = 1.12;            // each level of a trade costs this much more than the last
-  const MILESTONE = 25;         // every 25 levels a trade's income doubles
-  const COST0 = 10, COSTK = 60; // the first trade's first level costs COST0; each later trade COSTK times the one before
-  const PAY0 = 5, PAYK = 1.5;   // seconds a trade's first level takes to pay for itself; each later trade PAYK times longer
-  const CHAPTER = .04;          // income for each chapter read
-  const PROVINCE = 300;         // a province of this many man-koku doubles income
-  const TREASURE = .06;         // income for each treasure in the collection
-  const HERITAGE = 2;           // income times this for every house that reached the present before
-  const AGE_PROVINCES = [20, 14, 12, 12, 10]; // new provinces to reach in each age (68 in all, with home)
-  const AWAY_HOURS = 12;        // time away counts up to this long
-  // the years pass with real time: days each age takes at an even pace (about two weeks in all)
-  const AGE_DAYS = [3, 3, 2.5, 3, 2.5];
-  // the pace: years go faster when income is ahead of the times, and slower behind, within these bounds
-  const PACE_MIN = .3, PACE_MAX = 3, PACE_POW = .5;
-  // an even pace's income, year by year: [year, log10 income a second] (fitted by node test.js calibrate)
-  const TARGET = [[1467,0.6],[1480,3.6],[1500,4.3],[1520,4.9],[1540,6.4],[1560,7.3],[1580,8.4],[1600,9.2],[1620,11.1],[1640,11.3],[1660,12.3],[1680,12.3],[1700,13.3],[1720,13.7],[1740,15.2],[1760,15.7],[1780,15.8],[1800,16.2],[1820,16.2],[1840,16.3],[1860,16.4],[1880,18.8],[1900,19.9],[1920,21.1],[1940,22.7],[1960,23.7],[1980,25.6],[2000,28.2],[2020,30.5],[2026,30.8]];
+  // the year, from what the house has earned in this run: [year, log10 of earnings]. Each trade's price follows from it.
+  const YEARMAP = [[1467, 0], [1603, 13], [1868, 25], [1926, 31], [1989, 39], [2026, 45]];
+  const OPEN_AT = 30;                 // a trade's first level costs a thirtieth of what the house had earned when it opened
+  const TIME0 = .6, TIMEK = 2.3;      // seconds a trade's cycle takes: the first trade's, and times this for each later one
+  const REV = .15, REVK = .75;         // a level's payout per cycle: its price times REV, times REVK for each later trade
+  const GROW0 = 1.08, GROWK = .004;   // each level costs this much more than the last (later trades grow a little steeper)
+  const SPEED_AT = [25, 50, 100, 200, 300, 400];               // levels that halve the cycle
+  const PROFIT_AT = [500, 600, 700, 800, 900, 1000, 1200, 1500]; // levels that triple the profit
+  const UPGRADE_AT = [1e5, 1e9, 1e14]; // a trade's three upgrades cost its first level times these; each triples its profit
+  const REALM_AT = 1e4;               // a realm upgrade costs this times what the house had earned by its year; triples everything
+  const MANAGER_AT = 250;             // a manager costs the trade's first level times this
+  const PROVINCE = .04, CHAPTER = .02, TREASURE = .06, RENOWN = .01; // profit for each province, chapter read, treasure, renown
+  const RENOWN_K = .05, RENOWN_POW = .2; // renown in all: RENOWN_K * (lifetime earnings) ^ RENOWN_POW
+  const AGE_PROVINCES = [20, 14, 12, 12, 10]; // provinces to reach in each age (68 in all, with home)
+  const AWAY_HOURS = 24;              // time away counts up to this long
 
   const PIDS = Object.keys(GEO.provinces);
-  const SEA = new Set(SEA_LINKS);
   const ALL_ERAS = [...ERAS, [1989, 'Heisei', '平成'], [2019, 'Reiwa', '令和']];
   if (!CLANS.nation) CLANS.nation = { en: 'Japan', ja: '日本', dye: 'rikyu', motif: 'plain', title: 'The postwar state', short: '' };
 
@@ -33,16 +31,22 @@ const G = (() => {
   }
   const pick = (S, a) => a[Math.floor(rand(S) * a.length)];
 
-  // ---------- time ----------
-  const yearsPerHour = y => { const a = ageOf(y), to = AGES[a + 1] ? AGES[a + 1].from : END_YEAR; return (to - AGES[a].from) / (AGE_DAYS[a] * 24); };
-  function target(y) {
+  // ---------- time: the year follows the house's earnings ----------
+  function logAt(y) { // log10 of what the house has earned by year y
     let i = 1;
-    while (i < TARGET.length - 1 && TARGET[i][0] < y) i++;
-    const [y0, l0] = TARGET[i - 1], [y1, l1] = TARGET[i];
-    return Math.pow(10, l0 + (l1 - l0) * Math.min(1, Math.max(0, (y - y0) / (y1 - y0))));
+    while (i < YEARMAP.length - 1 && YEARMAP[i][0] < y) i++;
+    const [y0, l0] = YEARMAP[i - 1], [y1, l1] = YEARMAP[i];
+    return l0 + (l1 - l0) * (y - y0) / (y1 - y0);
   }
-  // how fast the years pass now, times the even pace
-  const pace = S => api.paceOverride || Math.min(PACE_MAX, Math.max(PACE_MIN, Math.pow(income(S) / target(S.yearF), PACE_POW)));
+  function yearFor(earned) {
+    const L = Math.log10(earned + 1);
+    for (let i = 1; i < YEARMAP.length; i++) {
+      const [y0, l0] = YEARMAP[i - 1], [y1, l1] = YEARMAP[i];
+      if (L < l1) return Math.floor(y0 + (y1 - y0) * (L - l0) / (l1 - l0));
+    }
+    return END_YEAR;
+  }
+  const earnedFor = y => Math.pow(10, logAt(y));
   const ageOf = y => { let a = 0; AGES.forEach((x, i) => { if (y >= x.from) a = i; }); return a; };
   function eraOf(y) {
     let e = ALL_ERAS[0];
@@ -65,66 +69,99 @@ const G = (() => {
     return h;
   }
 
-  // ---------- the house ----------
+  // ---------- the trades ----------
+  const T = Object.fromEntries(WORKS.map((w, j) => {
+    const cost = j ? earnedFor(w.year) / OPEN_AT : 4;
+    return [w.id, { j, w, cost, grow: GROW0 + GROWK * j, time: TIME0 * Math.pow(TIMEK, j), rev: cost * REV * Math.pow(REVK, j) }];
+  }));
   const house = S => HOUSES.find(h => h.clan === S.house);
-  // every bonus in force, added up: the house's own, and the head of the house's
-  function mods(S) {
-    const m = {};
-    for (const src of [house(S).mods, TRAITS[S.head.trait].mods]) for (const [k, v] of Object.entries(src)) m[k] = (m[k] || 0) + v;
-    return new Proxy(m, { get: (o, k) => o[k] || 0 });
+  const hm = S => new Proxy(house(S).mods, { get: (o, k) => o[k] || 0 });
+  const isOpen = (S, id) => S.year >= T[id].w.year;
+  const count = (a, n) => a.filter(x => n >= x).length;
+  const has = (S, u) => S.upg.includes(u);
+
+  // what multiplies every trade's profit
+  function profitAll(S) {
+    const m = hm(S);
+    return (1 + m.profit) * (1 + PROVINCE * (S.reach.length - 1) * (1 + m.reach)) * (1 + CHAPTER * S.readIds.length) *
+      (1 + TREASURE * S.meta.treasures.length) * (1 + RENOWN * S.meta.renown) * Math.pow(3, REALM_UPGRADES.filter(u => has(S, u.id)).length);
+  }
+  const cycle = (S, id) => T[id].time / Math.pow(2, count(SPEED_AT, S.lv[id] || 0)) / (1 + hm(S).speed);
+  // one cycle's payout for the whole trade
+  function payout(S, id, all = profitAll(S)) {
+    const n = S.lv[id] || 0;
+    const ups = [0, 1, 2].filter(k => has(S, id + ':' + k)).length;
+    return T[id].rev * n * Math.pow(3, count(PROFIT_AT, n) + ups) * (1 + hm(S)[id]) * all;
+  }
+  const rate = (S, id, all) => payout(S, id, all) / cycle(S, id);
+  // per second, from the trades that run themselves (and all of them, if you keep tapping)
+  function income(S, managedOnly = true) {
+    const all = profitAll(S);
+    return WORKS.reduce((s, w) => s + ((!managedOnly || S.mgr[w.id]) && S.lv[w.id] ? rate(S, w.id, all) : 0), 0);
   }
 
-  // a province's worth: its yield, plus a mine, port or city
-  function provinceBonus(S, p, m = mods(S)) {
-    const sp = SPECIAL[p] ? SPECIAL[p][0] * (1 + m.special) : 0;
-    return (KOKU[p] + sp) / PROVINCE * (1 + m.reach);
+  // buying levels: n at once (Infinity: as many as the money allows)
+  function priceOf(S, id, n) {
+    const t = T[id], L = S.lv[id] || 0;
+    return t.cost * Math.pow(t.grow, L) * (Math.pow(t.grow, n) - 1) / (t.grow - 1) * (1 + hm(S).cost);
   }
-  // everything that multiplies income
-  function multiplier(S) {
-    const m = mods(S);
-    let x = (1 + m.income) * (1 + CHAPTER * S.chapterGift) * (1 + TREASURE * S.meta.treasures.length) * Math.pow(HERITAGE, S.meta.runs);
-    for (const p of S.reach) x *= 1 + provinceBonus(S, p, m);
-    return x;
+  function maxBuy(S, id) {
+    const t = T[id], first = t.cost * Math.pow(t.grow, S.lv[id] || 0) * (1 + hm(S).cost);
+    return Math.max(0, Math.floor(Math.log(1 + S.money * (t.grow - 1) / first) / Math.log(t.grow)));
   }
-  const W = Object.fromEntries(WORKS.map((w, j) => [w.id, { cost: COST0 * Math.pow(COSTK, j), pay: COST0 * Math.pow(COSTK, j) / (PAY0 * Math.pow(PAYK, j)) }]));
-  const levelIncome = (id, n) => n * Math.pow(2, Math.floor(n / MILESTONE)) * W[id].pay;
-  function workIncome(S, id, m = mods(S)) { return levelIncome(id, S.works[id] || 0) * (1 + m[id]); }
-  function income(S) {
-    const m = mods(S);
-    let base = 0;
-    for (const w of WORKS) base += workIncome(S, w.id, m);
-    return base * multiplier(S);
+  // what the buy button offers in a mode (1, 10, 100, or 'max'), and whether the money is there
+  function offer(S, id, mode) {
+    const n = mode === 'max' ? Math.max(1, maxBuy(S, id)) : mode;
+    const price = priceOf(S, id, n);
+    return { n, price, ok: isOpen(S, id) && S.money >= price };
   }
-  const isOpen = (S, id) => S.year >= WORKS.find(w => w.id === id).year;
-  function cost(S, id, n = S.works[id] || 0) { return W[id].cost * Math.pow(GROW, n) * (1 + mods(S).cost); }
-  // what one more level adds to income
-  function gain(S, id) {
-    const n = S.works[id] || 0;
-    return (levelIncome(id, n + 1) - levelIncome(id, n)) * (1 + mods(S)[id]) * multiplier(S);
+  function buy(S, id, mode = 1) {
+    const o = offer(S, id, mode);
+    if (!o.ok) return 0;
+    S.money -= o.price;
+    const was = S.lv[id] || 0;
+    S.lv[id] = was + o.n;
+    if (!was) S.prog[id] = S.mgr[id] ? 0 : null;
+    return o.n;
   }
-  // the best thing to buy next: of the open trades, the most income for the money
-  function best(S) {
-    let b = null;
-    for (const w of WORKS) {
-      if (!isOpen(S, w.id)) continue;
-      const c = cost(S, w.id), g = gain(S, w.id), v = g / c;
-      if (!b || v > b.v) b = { id: w.id, cost: c, gain: g, v };
-    }
-    return b;
+  // the levels until the next speed or profit milestone
+  function nextMilestone(S, id) {
+    const n = S.lv[id] || 0, s = SPEED_AT.find(x => x > n), p = PROFIT_AT.find(x => x > n);
+    if (s) return { at: s, what: 'speed' };
+    if (p) return { at: p, what: 'profit' };
+    return null;
   }
-  function buy(S, id) {
-    if (!isOpen(S, id)) return false;
-    const c = cost(S, id);
-    if (S.money < c) return false;
-    S.money -= c;
-    S.works[id] = (S.works[id] || 0) + 1;
+  // tap: start a cycle (a trade with a manager starts its own)
+  function run(S, id) {
+    if (!(S.lv[id] > 0) || S.mgr[id] || S.prog[id] != null) return false;
+    S.prog[id] = 0;
     return true;
   }
-  // keep buying the best thing while the money stays above keep; returns how many levels were bought
-  function buyAll(S, keep = 0) {
-    let n = 0;
-    for (let b = best(S); b && S.money - b.cost >= keep && n < 5000; b = best(S)) { buy(S, b.id); n++; }
-    return n;
+
+  // managers
+  const managerCost = (S, id) => T[id].cost * MANAGER_AT * (1 + hm(S).cost);
+  function hire(S, id) {
+    const c = managerCost(S, id);
+    if (S.mgr[id] || !isOpen(S, id) || S.money < c) return false;
+    S.money -= c;
+    S.mgr[id] = true;
+    if (S.lv[id] && S.prog[id] == null) S.prog[id] = 0;
+    return true;
+  }
+
+  // upgrades: three for each trade, and one for each age that lifts every trade
+  function upgrades(S) {
+    const out = [];
+    for (const w of WORKS) w.upgrades.forEach(([en, ja], k) => out.push({ id: w.id + ':' + k, en, ja, work: w.id, cost: T[w.id].cost * UPGRADE_AT[k], open: isOpen(S, w.id), text: `${w.en} profit ×3` }));
+    for (const u of REALM_UPGRADES) out.push({ id: u.id, en: u.en, ja: u.ja, cost: earnedFor(u.year) * REALM_AT, open: S.year >= u.year, text: `Every trade's profit ×3. ${u.text}`, realm: true });
+    return out.map(u => ({ ...u, cost: u.cost * (1 + hm(S).cost), owned: has(S, u.id) })).sort((a, b) => a.cost - b.cost);
+  }
+  function buyUpgrade(S, uid) {
+    const u = upgrades(S).find(x => x.id === uid);
+    if (!u || u.owned || !u.open || S.money < u.cost) return false;
+    S.money -= u.cost;
+    S.upg.push(uid);
+    return true;
   }
 
   // ---------- provinces ----------
@@ -136,19 +173,19 @@ const G = (() => {
     for (const p of S.reach) for (const q of ADJ[p]) if (!mine.has(q)) out.add(q);
     return [...out];
   }
+  const provinceBonus = (S, p) => PROVINCE * (1 + hm(S).reach);
   function reach(S, p) {
     if (reachPoints(S) < 1 || !reachable(S).includes(p)) return false;
-    S.from = { p, at: S.reach.filter(q => ADJ[q].includes(p)) };
     S.reach.push(p);
     S.pts--;
     const g = GEO.provinces[p];
     note(S, { en: `The house reaches ${g.en} ${g.ja}.`, p });
-    const every = Math.max(1, Math.round(4 / (1 + mods(S).find)));
+    const every = Math.max(1, Math.round(4 / (1 + hm(S).find)));
     if (S.reach.length % every === 0) findTreasure(S);
     return true;
   }
-  // the province that adds most, for "let the house choose"
-  const bestReach = S => reachable(S).sort((a, b) => provinceBonus(S, b) - provinceBonus(S, a))[0];
+  // the richest province within reach, for "let the house choose"
+  const bestReach = S => reachable(S).sort((a, b) => (KOKU[b] + (SPECIAL[b] ? SPECIAL[b][0] : 0)) - (KOKU[a] + (SPECIAL[a] ? SPECIAL[a][0] : 0)))[0];
 
   function findTreasure(S) {
     const pool = TREASURES.filter(t => t.from <= S.year && !S.meta.treasures.includes(t.id));
@@ -162,14 +199,12 @@ const G = (() => {
   // ---------- chapters: the history, arriving in its year ----------
   // events where this house is beaten in its own history are left out: the house you lead survives
   const chaptersFor = clan => [...EVENTS, ...LATER_EVENTS].filter(e => !(e.sides.includes(clan) && e.winner && e.winner !== clan)).sort((a, b) => a.year - b.year);
-  const chapterList = S => chaptersFor(S.house);
-  const chapterGiftOf = S => 1 + mods(S).chapter;
   function read(S, id) {
     const i = S.unread.indexOf(id);
     if (i < 0) return false;
     S.unread.splice(i, 1);
-    S.chapterGift += chapterGiftOf(S);
     S.readIds.push(id);
+    if (!S.meta.seen.includes(id)) S.meta.seen.push(id);
     return true;
   }
 
@@ -177,93 +212,102 @@ const G = (() => {
   function newHead(S, y) {
     // never the name of the head before, or the two before that
     const pool = (y >= 1868 ? NAMES.modern : NAMES.lord[S.house]).filter(g => g !== S.head.given && !S.heads.slice(-2).some(h => h.given === g));
-    const given = pick(S, pool);
-    const trait = pick(S, Object.keys(TRAITS));
-    const reign = 22 + Math.floor(rand(S) * 13) + (house(S).mods.reign || 0);
-    return { given, trait, from: y, until: y + reign };
+    return { given: pick(S, pool), from: y, until: y + 22 + Math.floor(rand(S) * 13) };
   }
   const headName = (S, h = S.head) => `${CLANS[S.house].en} ${h.given}`;
-
   function note(S, e) { S.chron.unshift({ y: S.year, ...e }); if (S.chron.length > 300) S.chron.length = 300; }
 
+  // ---------- renown: the fame of every house so far, which a new beginning turns into profit ----------
+  const renownTotal = S => Math.floor(RENOWN_K * Math.pow(S.meta.lifetime + S.earned, RENOWN_POW));
+  const renownGain = S => Math.max(0, renownTotal(S) - S.meta.renown - S.meta.spent);
+
   // ---------- a run ----------
-  function newMeta() { return { runs: 0, treasures: [], houses: [] }; }
+  function newMeta() { return { runs: 0, renown: 0, spent: 0, lifetime: 0, treasures: [], seen: [], best: 1467 }; }
   function newRun(meta, clan, seed = Date.now() | 0) {
     const h = HOUSES.find(x => x.clan === clan);
-    const S = { v: 2, seed, house: clan, t: 0, year: 1467, yearF: 1467, money: COST0 * 2, earned: 0, works: { paddies: 1 }, reach: [h.home], pts: 1, from: null,
-      unread: [], readIds: [], chapterGift: 0, next: 0, chron: [], heads: [], head: null, done: false, meta };
-    S.head = { given: NAMES.lord[clan][0], trait: 'diligent', from: 1467, until: 1467 + 25 + (h.mods.reign || 0) };
+    const S = { v: 3, seed, house: clan, t: 0, year: 1467, money: 0, earned: 0, lv: { paddies: 1 }, prog: { paddies: null }, mgr: {}, upg: [],
+      reach: [h.home], pts: 1, unread: [], readIds: [], next: 0, chron: [], heads: [], head: null, done: false, meta };
+    S.head = { given: NAMES.lord[clan][0], from: 1467, until: 1467 + 25 };
     note(S, { en: `${headName(S)} leads the house from ${GEO.provinces[h.home].en} ${GEO.provinces[h.home].ja}.`, head: true });
-    if (h.mods.startTreasure) findTreasure(S);
+    if (h.mods.startTreasure && !meta.treasures.length) findTreasure(S);
     arrive(S);
     return S;
+  }
+  // begin again in 1467: the renown earned so far turns into profit for good; the treasures stay
+  function prestige(S, clan = S.house) {
+    const meta = S.meta, gain = renownGain(S);
+    meta.renown += gain;
+    meta.lifetime += S.earned;
+    meta.runs++;
+    meta.best = Math.max(meta.best, S.year);
+    return newRun(meta, clan);
   }
 
   // whatever the new year brings: chapters, a new head, the present
   function arrive(S) {
-    const list = chapterList(S);
-    while (S.next < list.length && list[S.next].year <= S.year) { S.unread.push(list[S.next].id); S.next++; }
+    const list = chaptersFor(S.house);
+    // a chapter read in an earlier run counts as read straight away
+    while (S.next < list.length && list[S.next].year <= S.year) { const id = list[S.next].id; (S.meta.seen.includes(id) ? S.readIds : S.unread).push(id); S.next++; }
     while (S.year >= S.head.until && S.year < END_YEAR) {
       S.heads.push(S.head);
       S.head = newHead(S, S.head.until);
-      note(S, { en: `${headName(S)} becomes head of the house. ${TRAITS[S.head.trait].en}: ${TRAITS[S.head.trait].text.toLowerCase()}`, head: true, y: S.head.from });
+      note(S, { en: `${headName(S)} becomes head of the house.`, head: true, y: S.head.from });
     }
     if (S.year >= END_YEAR && !S.done) { S.done = true; note(S, { en: 'The house reaches the present day.', end: true }); }
   }
+  function earn(S, x) {
+    S.money += x;
+    S.earned += x;
+    const y = Math.max(S.year, yearFor(S.earned));
+    if (y === S.year) return;
+    const was = ageOf(S.year);
+    for (let yy = S.year; yy < y; yy++) S.pts += provincesPerYear(yy);
+    S.year = y;
+    if (ageOf(y) !== was) note(S, { en: `A new age: ${AGES[ageOf(y)].en} ${AGES[ageOf(y)].ja}.`, age: ageOf(y) });
+    arrive(S);
+    // after the first run the house knows the way: it reaches the richest province within reach by itself
+    if (S.meta.runs) while (reachPoints(S) > 0 && reachable(S).length) reach(S, bestReach(S));
+  }
 
+  // the clock: trades with a manager cycle on their own; others finish the cycle you started, then wait for a tap
   function tick(S, dt) {
-    const inc = income(S) * dt;
-    S.money += inc;
-    S.earned += inc;
     S.t += dt;
-    S.yearF = Math.min(END_YEAR, S.yearF + dt / 3600 * yearsPerHour(S.yearF) * pace(S));
-    const y = Math.floor(S.yearF);
-    if (y !== S.year) {
-      const was = ageOf(S.year);
-      S.pts += (y - S.year) * provincesPerYear(S.year) * (1 + mods(S).reachRate);
-      S.year = y;
-      if (ageOf(y) !== was) note(S, { en: `A new age: ${AGES[ageOf(y)].en} ${AGES[ageOf(y)].ja}.`, age: ageOf(y) });
-      arrive(S);
+    const all = profitAll(S);
+    let got = 0;
+    for (const w of WORKS) {
+      const id = w.id;
+      if (!(S.lv[id] > 0) || S.prog[id] == null) continue;
+      const c = cycle(S, id);
+      S.prog[id] += dt;
+      if (S.prog[id] < c) continue;
+      if (S.mgr[id]) { const k = Math.floor(S.prog[id] / c); got += k * payout(S, id, all); S.prog[id] -= k * c; }
+      else { got += payout(S, id, all); S.prog[id] = null; }
     }
+    if (got) earn(S, got);
   }
-
-  // time away: the money comes in, and the steward invests half of it in the best trades as it does
+  // time away: the managed trades keep earning, up to a day
   function away(S, seconds) {
-    const m = mods(S), capH = AWAY_HOURS;
-    const sim = Math.min(seconds, capH * 3600) * (1 + m.away);
-    const levels = () => Object.values(S.works).reduce((a, b) => a + b, 0);
-    const before = { money: S.money, year: S.year, levels: levels(), unread: S.unread.length, chron: S.chron[0] };
-    let left = sim;
-    while (left > 0) {
-      const dt = Math.min(left, 60), was = S.money;
-      tick(S, dt);
-      buyAll(S, was + (S.money - was) / 2);
-      left -= dt;
-    }
-    const i = S.chron.indexOf(before.chron);
-    return { seconds, sim, capped: seconds > capH * 3600, capH, from: before.year, to: S.year, money: S.money - before.money,
-      levels: levels() - before.levels, chapters: S.unread.length - before.unread, points: reachPoints(S), news: S.chron.slice(0, Math.max(0, i)) };
+    const before = { money: S.money, year: S.year, unread: S.unread.length };
+    const sim = Math.min(seconds, AWAY_HOURS * 3600) * (1 + hm(S).away);
+    // in steps, so new years (and their bonuses) arrive along the way
+    for (let left = sim, k = 0; left > 0 && k < 400; k++) { const dt = Math.min(left, Math.max(60, sim / 200)); tick(S, dt); left -= dt; }
+    return { seconds, capped: seconds > AWAY_HOURS * 3600, capH: AWAY_HOURS, from: before.year, to: S.year, money: S.money - before.money,
+      chapters: S.unread.length - before.unread, points: reachPoints(S), managed: WORKS.some(w => S.mgr[w.id] && S.lv[w.id]) };
   }
 
-  // after the present: a new house begins in 1467, with the collection and double the income for each house that made it
-  function nextRun(S, clan) {
-    const meta = S.meta;
-    if (S.done) { meta.runs++; if (!meta.houses.includes(S.house)) meta.houses.push(S.house); }
-    return newRun(meta, clan);
-  }
-
-  const UNITS = ['', '', 'million', 'billion', 'trillion', 'quadrillion', 'quintillion', 'sextillion', 'septillion', 'octillion', 'nonillion', 'decillion', 'undecillion', 'duodecillion'];
+  const UNITS = ['', '', 'million', 'billion', 'trillion', 'quadrillion', 'quintillion', 'sextillion', 'septillion', 'octillion', 'nonillion',
+    'decillion', 'undecillion', 'duodecillion', 'tredecillion', 'quattuordecillion', 'quindecillion'];
   function fmt(n) {
     if (!isFinite(n)) return '∞';
     if (n < 10) return (Math.floor(n * 10) / 10).toString();
     if (n < 1e6) return Math.floor(n).toLocaleString('en-US');
     const k = Math.min(UNITS.length - 1, Math.floor(Math.log10(n) / 3)), v = n / Math.pow(10, k * 3);
-    return (v < 10 ? v.toFixed(2) : v < 100 ? v.toFixed(1) : v.toFixed(0)) + ' ' + UNITS[k];
+    return (v < 10 ? v.toFixed(2) : v < 100 ? v.toFixed(1) : v.toFixed(0)) + '\u00a0' + UNITS[k]; // a number never wraps away from its scale word
   }
 
-  const api = { GROW, MILESTONE, provincesPerYear, AWAY_HOURS, CHAPTER, TREASURE, PIDS, paceOverride: null, rand, yearsPerHour, target, pace, ageOf, eraOf, kanjiYear, money, holdersAt,
-    house, mods, provinceBonus, multiplier, income, workIncome, isOpen, cost, gain, best, buy, buyAll, reachPoints, reachable, reach, bestReach,
-    findTreasure, chaptersFor, chapterList, chapterGiftOf, read, headName, newMeta, newRun, arrive, tick, away, nextRun, fmt };
-  return api;
+  return { T, SPEED_AT, PROFIT_AT, PROVINCE, CHAPTER, TREASURE, RENOWN, AWAY_HOURS, PIDS, rand, yearFor, earnedFor, ageOf, eraOf, kanjiYear, money,
+    holdersAt, house, isOpen, profitAll, cycle, payout, rate, income, priceOf, maxBuy, offer, buy, nextMilestone, run, managerCost, hire, upgrades,
+    buyUpgrade, provincesPerYear, reachPoints, reachable, provinceBonus, reach, bestReach, findTreasure, chaptersFor, read, headName,
+    renownTotal, renownGain, newMeta, newRun, prestige, arrive, earn, tick, away, fmt };
 })();
 if (typeof module !== 'undefined') module.exports = G;

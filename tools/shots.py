@@ -14,10 +14,15 @@ threading.Thread(target=srv.serve_forever, daemon=True).start()
 URL = f"http://127.0.0.1:{srv.server_address[1]}/index.html"
 errors = []
 # move the save's clock back, before the page loads, as if the player had been away
-AWAY = "const s = localStorage.getItem('tenka-save-2'); if (s && !sessionStorage.away) { const o = JSON.parse(s); o.savedAt -= %d * 1000; localStorage.setItem('tenka-save-2', JSON.stringify(o)); sessionStorage.away = 1; }"
-# play forward in the page: hours of time away, the steward investing, everything read and reached
-FORWARD = """h => { const S = tenka.S, G = tenka.G; for (let i = 0; i < h; i++) { G.away(S, 3600); G.buyAll(S); while (S.unread.length) G.read(S, S.unread[0]);
-  while (G.reachPoints(S) > 0 && G.reachable(S).length) G.reach(S, G.bestReach(S)); } tenka.S = S; }"""
+AWAY = "const s = localStorage.getItem('tenka-save-3'); if (s && !sessionStorage.away) { const o = JSON.parse(s); o.savedAt -= %d * 1000; localStorage.setItem('tenka-save-3', JSON.stringify(o)); sessionStorage.away = 1; }"
+# play forward in the page like a busy player: buy the cheapest things, hire managers, read, reach
+FORWARD = """h => { const S = tenka.S, G = tenka.G;
+  for (let i = 0; i < h * 12; i++) { for (const w of WORKS) G.run(S, w.id); G.tick(S, 300);
+    for (const w of WORKS) if (G.isOpen(S, w.id)) { G.hire(S, w.id); while (G.buy(S, w.id, 1)) {} }
+    for (const u of G.upgrades(S)) if (u.open && !u.owned) G.buyUpgrade(S, u.id);
+    while (S.unread.length > 3) G.read(S, S.unread[0]);
+    while (G.reachPoints(S) > 0 && G.reachable(S).length) G.reach(S, G.bestReach(S)); }
+  tenka.S = S; }"""
 
 def shot(pg, name, full=False):
     pg.wait_for_timeout(500)
@@ -32,47 +37,50 @@ with sync_playwright() as p:
         pg.goto(URL)
         pg.wait_for_selector("#pick:not([hidden])")
         shot(pg, f"{name}-1-pick")
-        pg.click("#pick [data-clan='takeda']")
         pg.click("#pick [data-clan='oda']")
         pg.click("#pick [data-act='begin']")
-        pg.wait_for_timeout(600)
+        pg.wait_for_timeout(500)
         shot(pg, f"{name}-2-start")
-        for _ in range(14):
-            pg.click("#nextcard")
-            pg.wait_for_timeout(1300)
-        shot(pg, f"{name}-3-growing")
-        pg.click("#reachpill")
-        pg.wait_for_timeout(900)
-        shot(pg, f"{name}-4-map-open")
-        pg.locator("#choose [data-act='auto']").click()
-        pg.wait_for_timeout(700)
-        shot(pg, f"{name}-5-soak")
-        pg.wait_for_timeout(2500)
+        # tap the paddies and buy, by hand, for a while
+        for i in range(60):
+            pg.click(".tile[data-id='paddies']")
+            pg.wait_for_timeout(700)
+            b = pg.locator(".trade[data-id='paddies'] .buy.ok")
+            if b.count():
+                b.click()
+        shot(pg, f"{name}-3-tapping")
+        pg.click(".modes [data-mode='max']")
+        pg.evaluate(FORWARD, 1)
+        pg.wait_for_timeout(600)
+        shot(pg, f"{name}-4-hour")
+        for t in ["upgrades", "managers", "chron", "house"]:
+            pg.click(f"#tabs [data-tab='{t}']")
+            shot(pg, f"{name}-5-{t}")
+        pg.click("#tabs [data-tab='trades']")
+        if pg.locator("#reachpill:not([hidden])").count():
+            pg.click("#reachpill")
+            pg.wait_for_timeout(900)
+            shot(pg, f"{name}-6-map")
+            pg.locator("#choose [data-act='auto']").click()
+            pg.wait_for_timeout(2600)
         # six hours away
         pg.close()
         pg = ctx.new_page(); watch(pg)
         pg.add_init_script(AWAY % (6 * 3600))
         pg.goto(URL)
-        pg.wait_for_selector("#now .away")
-        shot(pg, f"{name}-6-back")
-        pg.locator("#chron [data-act='read']").first.click()
-        pg.wait_for_timeout(300)
-        pg.locator("#chron").scroll_into_view_if_needed()
-        shot(pg, f"{name}-7-chronicle")
-        pg.evaluate(FORWARD, 150)
-        pg.evaluate("window.scrollTo(0, 0)")
-        shot(pg, f"{name}-8-meiji")
-        pg.evaluate(FORWARD, 200)
-        pg.evaluate("window.scrollTo(0, 0)")
-        shot(pg, f"{name}-9-later")
-        pg.evaluate("() => { const S = tenka.S; S.year = S.yearF = 2026; tenka.G.arrive(S); tenka.S = S; }")
-        shot(pg, f"{name}-10-present")
-        shot(pg, f"{name}-11-full", full=True)
-        pg.click("[data-act='newhouse']")
+        pg.wait_for_selector("#panel .away")
+        shot(pg, f"{name}-7-back")
+        pg.evaluate(FORWARD, 30)
+        shot(pg, f"{name}-8-later")
+        pg.click("#tabs [data-tab='house']")
+        pg.on("dialog", lambda d: d.accept())
+        pg.click("[data-act='again']")
+        pg.wait_for_selector("#pick:not([hidden])")
+        shot(pg, f"{name}-9-again")
         pg.click("#pick [data-clan='shimazu']")
         pg.click("#pick [data-act='begin']")
         pg.wait_for_timeout(600)
-        shot(pg, f"{name}-12-next-house")
+        shot(pg, f"{name}-10-new-house")
         ctx.close()
     br.close()
 srv.shutdown()

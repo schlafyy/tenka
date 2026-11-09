@@ -10,34 +10,33 @@ An idle game about one Japanese house across 550 years. Pick a house and its cre
 
 ## How it plays
 
-- **One screen.** The map of the house's land at the top; under it the year, your money and one big card: the best thing to buy next. Tap it. "Spend it all" buys the best trades until the money runs out.
-- **Trades.** Each age brings three, opening in their year: paddies, a silver mine and castle towns; indigo dye houses, sake and the Dōjima rice exchange; silk mills, railways and department stores; electric works, cars and microchips; games, mobile networks and robots. Every 25 levels a trade's income doubles.
-- **Time grows with the house.** The years pass with real time, about three days for each age at an even pace. A house ahead of its time sees them pass up to three times faster, one behind sees them slow down. A whole run takes about two weeks.
-- **Provinces.** Every few years the house can reach a new province next to its land (20 in the Sengoku, 14 across the Edo peace, then 12, 12 and 10). Its dye soaks across the map, and the province's rice (and any mine, port or city) raises income. The other provinces are held by the real clans of each year, with their crests, until the modern state.
-- **Chronicle.** The real history arrives in its year as chapters, with the clans' crests: 85 events from the Sengoku map (1467–1945) and 13 written for the game after the war. Reading a chapter raises income. Chapters in which your own house is destroyed are left out: the house you lead survives.
-- **Heads of the house.** Every 22–34 years a new head takes over with a trait (thrifty, learned, patient...). Each house has its own lasting strength.
-- **Treasures.** Famous things (Tsukumo Nasu, the Great Wave, a first-day Shinkansen ticket...) turn up as the house reaches provinces. They stay in the collection for good, in every later run.
-- **Away.** Up to 12 hours away count (more for patient heads and the Tokugawa), and a steward invests half of what comes in. A note on return says what happened.
-- **The present.** At 2026 a new house can begin in 1467, keeping the treasures, with double income for every house that made it.
+A business-tycoon idle game (in the manner of AdVenture Capitalist) on top of 550 years of Japanese history.
+
+- **Trades.** Each age opens three, in their real year: paddies, a silver mine and castle towns; indigo dye houses, sake and the Dōjima rice exchange; silk mills, railways and department stores; electric works, cars and microchips; games, mobile networks and robots. Tap a trade's square and its bar fills in your house's dye, then pays out. Buy levels ×1, ×10, ×100 or Max. Levels 25, 50, 100, 200, 300 and 400 double a trade's speed; from 500 on, milestones triple its profit.
+- **Managers.** One for each trade (the village headman, the mine master, the master brewer, the fab director…). A managed trade runs without taps and keeps earning while you are away, up to a day.
+- **Upgrades.** Three for each trade (iron ploughs, cupellation, kanban, emoji…), each tripling its profit, and one great work for each age (the land survey, the five highways, civilisation and enlightenment, the bullet train, the internet) that triples everything.
+- **The year follows the money.** The more the house has earned, the later the year: the history arrives as you grow, and each trade opens in its year.
+- **Provinces and chronicle.** The house reaches a new province every few years (+4% profit each), its dye soaking across the real clans' map. The real history arrives as chapters with the clans' crests; reading one gives +2% profit.
+- **Renown.** Begin again in 1467, with any house, to turn this run's fame into renown: +1% profit each, for good. Treasures stay too. After the first new beginning, chapters already read count as read and the house reaches its provinces by itself.
 
 ## Pacing (from the bot in `test.js`)
 
-A bot that checks in five times a day reaches the present in about 13 days on its first run and 9 on its second.
+A bot that plays half an hour, then checks in five times a day, reaches about 1560 in its first half hour and the present day in about 9 days, beginning again a dozen times. A person, playing less perfectly, will take longer.
 
 ## Files
 
 | File | What it does |
 |---|---|
-| `index.html` | Layout and all styles (phone: one scrolling column under the map; wide screens: map left, column right) |
-| `ui.js` | The cloth map (dyes, kasuri splits, crests, the soak), the present, the chronicle, the house, choosing a house, saving and the clock |
+| `index.html` | Layout and all styles (phone: map strip, sticky year and money, the panel, tabs along the bottom; wide screens: map left, panel right) |
+| `ui.js` | The cloth map (dyes, kasuri splits, crests, the soak), the trades, upgrades, managers, chronicle and house tabs, choosing a house, saving and the clock |
 | `game.js` | All the rules, as pure functions over one JSON state; no page code, so `test.js` plays it in Node. The dials are at the top |
-| `data/game-data.js` | Province yields, mines and ports, the ages and their trades, houses, traits, names, treasures, the chapters after 1945 |
+| `data/game-data.js` | Province yields, mines and ports, the ages and their trades (with managers and upgrades), the great works, houses, names, treasures, the chapters after 1945 |
 | `data/map.js` | Generated by `tools/import.js` from the Sengoku map: province shapes, borders and sea crossings, clans, dyes, crests, the map by year, the history. Don't edit by hand |
-| `test.js` | `node test.js` checks the data and rules, then lets a bot play two whole runs to show the pacing; `quick` skips the bot; `calibrate` prints the even-pace income curve (`TARGET` in `game.js`) |
+| `test.js` | `node test.js` checks the data and rules, then lets a bot play to the present to show the pacing; `quick` skips the bot |
 | `tools/shots.py` | Plays the game in headless Chrome at phone and desktop sizes and saves screenshots; fails on any page error |
 | `tools/subset_fonts.py` | Cuts the fonts down to the characters used; re-run after adding text |
 | `tools/icon.py` | The icons |
 
-**Tuning:** after changing the economy in `game.js`, run `node test.js calibrate`, paste the curve into `TARGET` (a little below the bot), then `node test.js` and look at the day counts.
+**Tuning:** the dials are at the top of `game.js`. `YEARMAP` sets what the house must have earned by each year, and every trade's price follows from it. After a change, run `node test.js` and look at the day counts.
 
 **Credits:** province shapes: "Provinces of Japan with names.svg" by Ash_Crow, Wikimedia Commons, CC BY 2.5. Clan crests from Wikimedia Commons, each under its own licence (listed in `data/map.js`). Fonts: Shippori Mincho B1 and Zen Kaku Gothic New, SIL Open Font License. The history is written from standard accounts and simplified; yields are approximate.

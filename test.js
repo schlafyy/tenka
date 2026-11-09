@@ -1,4 +1,4 @@
-// node test.js        checks the data and the rules, then lets a bot play a whole run to show the pacing
+// node test.js        checks the data and the rules, then lets a bot play to show the pacing
 // node test.js quick  skips the bot
 const assert = require('assert');
 Object.assign(globalThis, require('./data/map.js'), require('./data/game-data.js'));
@@ -7,100 +7,122 @@ const G = require('./game.js');
 // ---- data ----
 const PIDS = Object.keys(GEO.provinces);
 assert.strictEqual(PIDS.length, 68);
-for (const p of PIDS) {
-  assert(KOKU[p] > 0, 'koku for ' + p);
-  for (const q of ADJ[p]) assert(ADJ[q].includes(p), `border ${p}-${q} one-way`);
-}
+for (const p of PIDS) { assert(KOKU[p] > 0, 'koku for ' + p); for (const q of ADJ[p]) assert(ADJ[q].includes(p), `border ${p}-${q} one-way`); }
 for (const p of Object.keys(SPECIAL)) assert(GEO.provinces[p], 'unknown province ' + p);
 for (const h of HOUSES) { assert(CLANS[h.clan] && CRESTS[h.clan], 'clan and crest ' + h.clan); assert(GEO.provinces[h.home]); assert(NAMES.lord[h.clan], 'names ' + h.clan); }
-for (const w of WORKS) assert(w.year >= AGES[w.age].from && (!AGES[w.age + 1] || w.year < AGES[w.age + 1].from), 'trade in its age: ' + w.id);
+for (const w of WORKS) {
+  assert(w.year >= AGES[w.age].from && (!AGES[w.age + 1] || w.year < AGES[w.age + 1].from), 'trade in its age: ' + w.id);
+  assert(w.manager && w.upgrades.length === 3, 'manager and upgrades: ' + w.id);
+}
+for (let j = 1; j < WORKS.length; j++) assert(G.T[WORKS[j].id].cost > G.T[WORKS[j - 1].id].cost, 'each trade dearer than the last');
 for (const e of [...EVENTS, ...LATER_EVENTS]) assert(e.year && e.en && e.short && Array.isArray(e.sides), 'chapter ' + e.id);
 assert.strictEqual(new Set([...EVENTS, ...LATER_EVENTS].map(e => e.id)).size, EVENTS.length + LATER_EVENTS.length, 'chapter ids unique');
 assert.strictEqual(new Set(TREASURES.map(t => t.id)).size, TREASURES.length);
-for (const c of Object.values(G.holdersAt(1600)).flat()) if (c) assert(CLANS[c], 'holder ' + c);
 
 // ---- rules ----
-assert(Math.abs(G.yearsPerHour(1500) * 24 * 3 - 136) < 1e-9, 'the Sengoku age takes three days at an even pace');
-assert(G.target(1467) < G.target(1600) && G.target(1600) < G.target(2026));
-assert.strictEqual(G.holdersAt(1467).owari, BASE_1467.owari);
+assert.strictEqual(G.yearFor(0), 1467);
+assert.strictEqual(G.yearFor(1e100), END_YEAR);
+for (const y of [1500, 1603, 1700, 1900, 2000]) assert(Math.abs(G.yearFor(G.earnedFor(y) * 1.0001) - y) <= 1, 'earnedFor inverts yearFor at ' + y);
 assert.strictEqual(G.holdersAt(1900).owari, 'empire');
 assert.strictEqual(G.holdersAt(1990).owari, 'nation');
 assert.strictEqual(`${G.eraOf(1521).ja}${G.kanjiYear(G.eraOf(1521).n)}`, '大永元');
-assert.strictEqual(G.eraOf(2026).en, 'Reiwa');
 assert(!G.chaptersFor('takeda').some(e => e.sides.includes('takeda') && e.winner && e.winner !== 'takeda'), 'the Takeda never see their own fall');
 
-let S = G.newRun(G.newMeta(), 'oda', 42);
-assert.deepStrictEqual(S.reach, ['owari']);
-assert(G.best(S) && G.best(S).id === 'paddies', 'the first thing to buy is a paddy');
-assert(G.buy(S, 'paddies') && S.works.paddies === 2, 'a house starts with one paddy and buys another');
-assert(!G.buy(S, 'mine'), 'the silver mine opens in 1526');
-G.tick(S, 1);
-assert(S.money > 0 && S.earned > 0);
-assert.strictEqual(G.reachPoints(S), 1);
-const before = G.income(S);
-assert(G.reach(S, 'mikawa'), 'reach a neighbour');
-assert(!G.reach(S, 'mutsu'), 'not a far province');
-assert(G.income(S) > before, 'a province raises income');
-assert.strictEqual(G.reachPoints(S), 0);
-S.year = S.yearF = 1600; G.arrive(S);
+let S = G.newRun(G.newMeta(), 'takeda', 42);
+assert.strictEqual(S.lv.paddies, 1);
+assert(G.run(S, 'paddies'), 'tap to start the paddies');
+assert(!G.run(S, 'paddies'), 'not twice while running');
+G.tick(S, G.cycle(S, 'paddies') + .01);
+assert(S.money > 0 && S.prog.paddies == null, 'a cycle pays out, then waits for a tap');
+S.money = 1e6;
+assert.strictEqual(G.buy(S, 'paddies', 10), 10);
+assert.strictEqual(S.lv.paddies, 11);
+const n = G.maxBuy(S, 'paddies');
+assert(G.priceOf(S, 'paddies', n) <= S.money && G.priceOf(S, 'paddies', n + 1) > S.money, 'max buys exactly what the money allows');
+assert(!G.buy(S, 'mine', 1), 'the silver mine opens in 1526');
+assert(G.hire(S, 'paddies') && S.prog.paddies === 0, 'a manager starts the paddies');
+G.tick(S, 100);
+assert(S.prog.paddies != null && S.prog.paddies < G.cycle(S, 'paddies'), 'a managed trade keeps cycling');
+S.lv.paddies = 24; const slow = G.cycle(S, 'paddies'); S.lv.paddies = 25;
+assert.strictEqual(G.cycle(S, 'paddies'), slow / 2, 'level 25 halves the cycle');
+const r0 = G.rate(S, 'paddies');
+S.money = 1e30;
+assert(G.buyUpgrade(S, 'paddies:0') && Math.abs(G.rate(S, 'paddies') / r0 - 3) < 1e-9, 'an upgrade triples the profit');
+assert(G.reachPoints(S) >= 1, 'a province to reach');
+assert(G.reach(S, 'shinano') && !G.reach(S, 'mutsu'), 'reach a neighbour, not a far province');
+S.year = 1600; G.arrive(S);
 assert(S.unread.length > 30, 'the chapters arrive with the years');
+while (S.unread.length) G.read(S, S.unread[0]);
 assert(S.heads.length >= 3, 'heads of the house come and go');
-const inc = G.income(S);
-assert(G.read(S, S.unread[0]) && G.income(S) > inc, 'a chapter read raises income');
 const json = JSON.parse(JSON.stringify(S));
 assert.strictEqual(G.income(json), G.income(S), 'a save round-trips');
-S.year = S.yearF = 2026; G.arrive(S);
-assert(S.done);
-const T = G.nextRun(S, 'shimazu');
-assert.strictEqual(T.meta.runs, 1);
-assert.deepStrictEqual(T.reach, ['satsuma']);
-assert.strictEqual(G.newRun(G.newMeta(), 'hosokawa', 1).meta.treasures.length, 1, 'the Hosokawa start with a treasure');
+S.earned = 1e20;
+const gain = G.renownGain(S);
+assert(gain > 0);
+const T2 = G.prestige(S, 'shimazu');
+assert.strictEqual(T2.meta.renown, gain);
+assert.strictEqual(T2.year, 1467);
+assert.deepStrictEqual(T2.reach, ['satsuma']);
+assert.strictEqual(G.renownGain(T2), 0, 'renown is not paid twice');
+T2.year = 1600; G.arrive(T2);
+assert(T2.readIds.length > 30 && T2.unread.every(id => !T2.meta.seen.includes(id)), 'chapters read before count as read; only new ones wait');
+G.earn(T2, G.earnedFor(1700));
+assert(T2.reach.length > 1 && G.reachPoints(T2) === 0, 'after the first run the house reaches provinces by itself');
+const away = G.newRun(G.newMeta(), 'oda', 1);
+away.lv.paddies = 10; away.money = 1e4; G.hire(away, 'paddies');
+const rep = G.away(away, 3600);
+assert(rep.money > 0 && rep.managed, 'managers earn while you are away');
 console.log('rules ok');
 
 if (process.argv[2] === 'quick') process.exit(0);
-const calibrate = process.argv[2] === 'calibrate';
-// calibrate: play at an even pace and print the bot's income by year, to fit the TARGET curve in game.js
-if (calibrate) G.paceOverride = 1;
 
-// ---- pacing: a player who checks in a few times a day ----
-// day 1 starts with half an hour of play; then short visits at 4, 8, 12 and 15 hours into each day, and the night away
+// ---- pacing: a bot that checks in a few times a day ----
+// the best thing to buy: the most income per koku (a manager counts as tripling what its trade earns, since nobody taps while you are away)
+function options(S) {
+  const out = [], all = G.profitAll(S);
+  for (const w of WORKS) {
+    if (S.year < w.year) continue;
+    const id = w.id, now = S.lv[id] ? G.rate(S, id, all) : 0;
+    const n = G.maxBuy(S, id) >= 10 ? 10 : 1;
+    S.lv[id] = (S.lv[id] || 0) + n; const then = G.rate(S, id, all); S.lv[id] -= n;
+    out.push({ kind: 'lv', id, n, cost: G.priceOf(S, id, n), gain: then - now });
+    if (!S.mgr[id] && S.lv[id]) out.push({ kind: 'mgr', id, cost: G.managerCost(S, id), gain: now * 3 });
+  }
+  const inc = G.income(S, false);
+  for (const u of G.upgrades(S)) if (u.open && !u.owned) out.push({ kind: 'upg', id: u.id, cost: u.cost, gain: u.realm ? inc * 2 : (S.lv[u.work] ? G.rate(S, u.work, all) * 2 : 0) });
+  return out.filter(o => o.gain > 0);
+}
 function act(S) {
-  G.buyAll(S);
+  for (let k = 0; k < 400; k++) {
+    const best = options(S).sort((a, b) => b.gain / b.cost - a.gain / a.cost)[0];
+    if (!best || best.cost > S.money) break;
+    if (best.kind === 'lv') G.buy(S, best.id, best.n);
+    if (best.kind === 'mgr') G.hire(S, best.id);
+    if (best.kind === 'upg') G.buyUpgrade(S, best.id);
+  }
   while (S.unread.length) G.read(S, S.unread[0]);
   while (G.reachPoints(S) > 0 && G.reachable(S).length) G.reach(S, G.bestReach(S));
 }
-function play(clan, meta, days = 30) {
-  const S = G.newRun(meta, clan, 7);
-  const ages = {}, daily = [], curve = [];
-  let h = 0;
-  const mark = () => { const y = Math.floor(S.year / 10) * 10; if (!curve.length || curve[curve.length - 1][0] < y) curve.push([y, +Math.log10(G.income(S)).toFixed(2)]); };
-  const visit = minutes => { for (let s = 0; s < minutes * 60; s += 5) { G.tick(S, 5); act(S); mark(); } h += minutes / 60; };
-  const gone = hours => { for (let left = hours; left > 0; left -= .25) { G.away(S, Math.min(.25, left) * 3600); mark(); } act(S); h += hours; };
+function play(days) {
+  let S = G.newRun(G.newMeta(), 'oda', 7), h = 0;
+  const firsts = {}, daily = [];
+  const mark = () => { const a = G.ageOf(S.year); if (firsts[a] === undefined) firsts[a] = h; };
+  const visit = minutes => {
+    for (let s = 0; s < minutes * 60; s++) { for (const w of WORKS) G.run(S, w.id); G.tick(S, 1); if (s % 5 === 0) act(S); mark(); h += 1 / 3600; if (S.done) return; }
+    if (G.renownGain(S) >= Math.max(30, S.meta.renown)) S = G.prestige(S);
+  };
+  const gone = hours => { G.away(S, hours * 3600); act(S); mark(); h += hours; };
   visit(30);
-  ages[0] = 0;
+  if (!days) return { S, firsts, daily, h };
   for (let d = 0; d < days && !S.done; d++) {
-    for (const at of [4, 8, 12, 15, 24]) {
-      gone(d * 24 + at - h);
-      visit(3);
-      const a = G.ageOf(S.year);
-      if (ages[a] === undefined) ages[a] = h;
-      if (S.done) break;
-    }
-    daily.push(S.year);
+    for (const at of [4, 8, 12, 15, 24]) { gone(d * 24 + at - h); visit(3); if (S.done) break; }
+    daily.push(`${S.year}${S.meta.runs ? '/' + S.meta.runs : ''}`);
   }
-  return { S, ages, daily, h, curve };
+  return { S, firsts, daily, h };
 }
-if (calibrate) {
-  const { curve } = play('oda', G.newMeta(), 40);
-  console.log('const TARGET = ' + JSON.stringify(curve) + ';');
-  process.exit(0);
-}
-for (const run of [0, 1]) {
-  const meta = G.newMeta(); meta.runs = run;
-  const { S, ages, daily, h } = play('oda', meta);
-  console.log(`run ${run + 1}: ${S.done ? 'present day after ' + (h / 24).toFixed(1) + ' days' : 'not done'}; ages begin on day ` +
-    Object.entries(ages).map(([a, t]) => `${AGES[a].id} ${(t / 24).toFixed(1)}`).join(', '));
-  console.log('  year at the end of each day:', daily.join(' '));
-  console.log(`  provinces ${S.reach.length}, chapters read ${S.readIds.length}, heads ${S.heads.length + 1}, treasures ${S.meta.treasures.length}, levels`,
-    WORKS.map(w => w.glyph + (S.works[w.id] || 0)).join(' '));
-}
+const first = play(0);
+console.log(`first half hour: ${first.S.year}, ${G.fmt(first.S.money)} koku, managers ${Object.keys(first.S.mgr).length}, levels`, WORKS.filter(w => first.S.lv[w.id]).map(w => w.glyph + first.S.lv[w.id]).join(' '));
+const { S: end, firsts, daily, h } = play(30);
+console.log(`${end.done ? 'the present day after ' + (h / 24).toFixed(1) + ' days' : 'not there after 30 days'}, ${end.meta.runs} new beginnings, renown ${G.fmt(end.meta.renown)}`);
+console.log('  ages first reached on day', Object.entries(firsts).map(([a, t]) => `${AGES[a].id} ${(t / 24).toFixed(1)}`).join(', '));
+console.log('  year/beginnings at the end of each day:', daily.join(' '));

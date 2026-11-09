@@ -31,45 +31,44 @@ const AGES = [
 const END_YEAR = 2026;
 
 const WORKS = [
-  { id: 'paddies', verb: 'Clear new paddies', age: 0, year: 1467, glyph: '田', en: 'Rice paddies', ja: '田畑', text: 'Every new field is more rice at harvest.' },
-  { id: 'mine', verb: 'Sink a new shaft', age: 0, year: 1526, glyph: '銀', en: 'Silver mine', ja: '銀山', text: 'The new cupellation method from Korea makes Japan rich in silver.' },
-  { id: 'castletown', verb: 'Grow the castle town', age: 0, year: 1576, glyph: '城', en: 'Castle town', ja: '城下町', text: 'Merchants and craftsmen settle under the castle walls.' },
-  { id: 'dyehouse', verb: 'Add a dye vat', age: 1, year: 1603, glyph: '藍', en: 'Indigo dye house', ja: '紺屋', text: 'Cotton dyed blue for a whole country that now wears it.' },
-  { id: 'brewery', verb: 'Build a brewhouse', age: 1, year: 1660, glyph: '酒', en: 'Sake brewery', ja: '酒蔵', text: 'Winter brewing, cedar casks, and ships to carry it to Edo.' },
-  { id: 'exchange', verb: 'Buy a seat at the exchange', age: 1, year: 1730, glyph: '米', en: 'Rice exchange', ja: '米会所', text: 'At Dōjima in Osaka, rice is traded as promises on paper.' },
-  { id: 'silk', verb: 'Add reeling machines', age: 2, year: 1872, glyph: '糸', en: 'Silk mill', ja: '製糸場', text: 'Reeling machines like Tomioka\'s, and silk for the world.' },
-  { id: 'railway', verb: 'Lay new track', age: 2, year: 1880, glyph: '鉄', en: 'Railway', ja: '鉄道', text: 'Steam lines join the old castle towns.' },
-  { id: 'store', verb: 'Open a new floor', age: 2, year: 1904, glyph: '店', en: 'Department store', ja: '百貨店', text: 'An old kimono shop becomes a palace of goods.' },
-  { id: 'electric', verb: 'Add a factory line', age: 3, year: 1926, glyph: '電', en: 'Electric works', ja: '電機', text: 'Fans, radios and the wires to light every house.' },
-  { id: 'cars', verb: 'Open a new plant', age: 3, year: 1955, glyph: '車', en: 'Car works', ja: '自動車', text: 'Small, careful cars, then the world\'s roads.' },
-  { id: 'chips', verb: 'Build a clean room', age: 3, year: 1976, glyph: '芯', en: 'Microchips', ja: '半導体', text: 'Memory chips, made cleaner than anyone else\'s.' },
-  { id: 'games', verb: 'Start a new game', age: 4, year: 1989, glyph: '遊', en: 'Game studio', ja: 'ゲーム', text: 'Worlds in a cartridge, then on every phone.' },
-  { id: 'network', verb: 'Raise new towers', age: 4, year: 1999, glyph: '網', en: 'Mobile network', ja: '通信', text: 'The internet in every pocket, years before anywhere else.' },
-  { id: 'robots', verb: 'Build a robot line', age: 4, year: 2012, glyph: '機', en: 'Robotics', ja: 'ロボット', text: 'Machines that build, carry and care.' },
+  { id: 'paddies', verb: 'Clear new paddies', age: 0, year: 1467, glyph: '田', en: 'Rice paddies', ja: '田畑', text: 'Every new field is more rice at harvest.', manager: ['Village headman', '名主'], upgrades: [['Iron ploughs', '鉄の鋤'], ['Double cropping', '二毛作'], ['Irrigation ponds', '溜池']] },
+  { id: 'mine', verb: 'Sink a new shaft', age: 0, year: 1526, glyph: '銀', en: 'Silver mine', ja: '銀山', text: 'The new cupellation method from Korea makes Japan rich in silver.', manager: ['Mine master', '山師'], upgrades: [['Cupellation', '灰吹法'], ['Drainage adits', '水抜き坑'], ['Smelting furnaces', '精錬炉']] },
+  { id: 'castletown', verb: 'Grow the castle town', age: 0, year: 1576, glyph: '城', en: 'Castle town', ja: '城下町', text: 'Merchants and craftsmen settle under the castle walls.', manager: ['Town elder', '町年寄'], upgrades: [['Free markets', '楽市楽座'], ['Merchant quarters', '町割り'], ['Stone walls', '石垣']] },
+  { id: 'dyehouse', verb: 'Add a dye vat', age: 1, year: 1603, glyph: '藍', en: 'Indigo dye house', ja: '紺屋', text: 'Cotton dyed blue for a whole country that now wears it.', manager: ['Dye master', '紺屋の親方'], upgrades: [['Indigo from Awa', '阿波藍'], ['Katazome stencils', '型染'], ['Cotton fields', '木綿畑']] },
+  { id: 'brewery', verb: 'Build a brewhouse', age: 1, year: 1660, glyph: '酒', en: 'Sake brewery', ja: '酒蔵', text: 'Winter brewing, cedar casks, and ships to carry it to Edo.', manager: ['Master brewer', '杜氏'], upgrades: [['Winter brewing', '寒造り'], ['Cask ships to Edo', '樽廻船'], ['Miyamizu water', '宮水']] },
+  { id: 'exchange', verb: 'Buy a seat at the exchange', age: 1, year: 1730, glyph: '米', en: 'Rice exchange', ja: '米会所', text: 'At Dōjima in Osaka, rice is traded as promises on paper.', manager: ['Rice broker', '米仲買'], upgrades: [['Rice on paper', '帳合米'], ['Flag relays', '旗振り通信'], ['Money changers', '両替商']] },
+  { id: 'silk', verb: 'Add reeling machines', age: 2, year: 1872, glyph: '糸', en: 'Silk mill', ja: '製糸場', text: 'Reeling machines like Tomioka\'s, and silk for the world.', manager: ['Mill forewoman', '工女取締'], upgrades: [['French reeling frames', '繰糸機'], ['Silk inspection', '生糸検査'], ['Mulberry farms', '桑畑']] },
+  { id: 'railway', verb: 'Lay new track', age: 2, year: 1880, glyph: '鉄', en: 'Railway', ja: '鉄道', text: 'Steam lines join the old castle towns.', manager: ['Station master', '駅長'], upgrades: [['Steam locomotives', '蒸気機関車'], ['Tunnels through the hills', '隧道'], ['Timetables', '時刻表']] },
+  { id: 'store', verb: 'Open a new floor', age: 2, year: 1904, glyph: '店', en: 'Department store', ja: '百貨店', text: 'An old kimono shop becomes a palace of goods.', manager: ['Floor manager', '支配人'], upgrades: [['Fixed prices', '正札販売'], ['Display windows', '陳列窓'], ['Escalators', 'エスカレーター']] },
+  { id: 'electric', verb: 'Add a factory line', age: 3, year: 1926, glyph: '電', en: 'Electric works', ja: '電機', text: 'Fans, radios and the wires to light every house.', manager: ['Chief engineer', '技師長'], upgrades: [['Hydro dams', '水力発電'], ['Two-way sockets', '二股ソケット'], ['Home radios', 'ラジオ']] },
+  { id: 'cars', verb: 'Open a new plant', age: 3, year: 1955, glyph: '車', en: 'Car works', ja: '自動車', text: 'Small, careful cars, then the world\'s roads.', manager: ['Plant manager', '工場長'], upgrades: [['Just in time', 'かんばん方式'], ['Kaizen', '改善'], ['Small engines', '小型エンジン']] },
+  { id: 'chips', verb: 'Build a clean room', age: 3, year: 1976, glyph: '芯', en: 'Microchips', ja: '半導体', text: 'Memory chips, made cleaner than anyone else\'s.', manager: ['Fab director', '工場長'], upgrades: [['Clean rooms', 'クリーンルーム'], ['Memory chips', '半導体メモリ'], ['Larger wafers', '大口径ウェハー']] },
+  { id: 'games', verb: 'Start a new game', age: 4, year: 1989, glyph: '遊', en: 'Game studio', ja: 'ゲーム', text: 'Worlds in a cartridge, then on every phone.', manager: ['Producer', 'プロデューサー'], upgrades: [['Pixel art', 'ドット絵'], ['Cartridges', 'カートリッジ'], ['Online play', 'オンライン']] },
+  { id: 'network', verb: 'Raise new towers', age: 4, year: 1999, glyph: '網', en: 'Mobile network', ja: '通信', text: 'The internet in every pocket, years before anywhere else.', manager: ['Network chief', '通信部長'], upgrades: [['Mobile internet', 'iモード'], ['Emoji', '絵文字'], ['Fibre lines', '光回線']] },
+  { id: 'robots', verb: 'Build a robot line', age: 4, year: 2012, glyph: '機', en: 'Robotics', ja: 'ロボット', text: 'Machines that build, carry and care.', manager: ['Robotics lead', '開発リーダー'], upgrades: [['Industrial arms', '産業用ロボット'], ['Better sensors', 'センサー'], ['Care robots', '介護ロボット']] },
 ];
 
-// what a head of the house is good at, for as long as they lead it
-const TRAITS = {
-  thrifty: { en: 'Thrifty', ja: '倹約', text: 'Everything costs 15% less.', mods: { cost: -.15 } },
-  diligent: { en: 'Diligent', ja: '勤勉', text: 'Income +20%.', mods: { income: .2 } },
-  scholar: { en: 'Learned', ja: '学問', text: 'Chapters give twice as much.', mods: { chapter: 1 } },
-  traveller: { en: 'Well travelled', ja: '見聞', text: 'New provinces come twice as often.', mods: { reachRate: 1 } },
-  patient: { en: 'Patient', ja: '忍耐', text: 'Time away counts 25% more.', mods: { away: .25 } },
-  collector: { en: 'A collector', ja: '数寄', text: 'Treasures turn up twice as often.', mods: { find: 1 } },
-};
+// one upgrade for each age that triples every trade's profit
+const REALM_UPGRADES = [
+  { id: 'kenchi', year: 1582, en: 'The land survey', ja: '太閤検地', text: 'Every field measured with one rod.' },
+  { id: 'kaido', year: 1640, en: 'The five highways', ja: '五街道', text: 'Post towns from Edo to every corner of the realm.' },
+  { id: 'bunmei', year: 1871, en: 'Civilisation and enlightenment', ja: '文明開化', text: 'Gas lamps, post offices, a new currency.' },
+  { id: 'shinkansen', year: 1964, en: 'The bullet train', ja: '新幹線', text: 'Tokyo to Osaka in four hours.' },
+  { id: 'internet', year: 1999, en: 'The internet', ja: 'インターネット', text: 'Every shop open all night, everywhere.' },
+];
 
 // the houses you can lead: home province and the house's own lasting strength
 const HOUSES = [
   { clan: 'oda', home: 'owari', motto: 'Free markets', mottoJa: '楽市楽座', text: 'Everything costs 10% less.', mods: { cost: -.1 } },
-  { clan: 'takeda', home: 'kai', motto: 'Wind, forest, fire, mountain', mottoJa: '風林火山', text: 'Income +10%.', mods: { income: .1 } },
-  { clan: 'mori', home: 'aki', motto: 'The three arrows', mottoJa: '三本の矢', text: 'Heads of the house lead 10 years longer.', mods: { reign: 10 } },
+  { clan: 'takeda', home: 'kai', motto: 'Wind, forest, fire, mountain', mottoJa: '風林火山', text: 'Profit +10%.', mods: { profit: .1 } },
+  { clan: 'mori', home: 'aki', motto: 'The three arrows', mottoJa: '三本の矢', text: 'Every trade runs 15% faster.', mods: { speed: .15 } },
   { clan: 'shimazu', home: 'satsuma', motto: 'Ships from the south', mottoJa: '南蛮貿易', text: 'Provinces give 25% more.', mods: { reach: .25 } },
-  { clan: 'tokugawa', home: 'mikawa', motto: 'Patience', mottoJa: '忍耐', text: 'Time away counts 20% more.', mods: { away: .2 } },
-  { clan: 'date', home: 'mutsu', motto: 'The one-eyed dragon', mottoJa: '独眼竜', text: 'Mutsu is your home: the largest province of all.', mods: {} },
+  { clan: 'tokugawa', home: 'mikawa', motto: 'Patience', mottoJa: '忍耐', text: 'Managers earn 25% more while you are away.', mods: { away: .25 } },
+  { clan: 'date', home: 'mutsu', motto: 'The one-eyed dragon', mottoJa: '独眼竜', text: 'Provinces give 25% more.', mods: { reach: .25 } },
   { clan: 'uesugi', home: 'echigo', motto: 'Righteousness', mottoJa: '義', text: 'Chapters give 50% more.', mods: { chapter: .5 } },
   { clan: 'hojo', home: 'izu', motto: 'Four to the lord, six to the people', mottoJa: '四公六民', text: 'Rice paddies earn double.', mods: { paddies: 1 } },
   { clan: 'imagawa', home: 'suruga', motto: 'The cultured court', mottoJa: '今川文化', text: 'Treasures turn up 50% more often.', mods: { find: .5 } },
-  { clan: 'otomo', home: 'bungo', motto: 'The Nanban lord', mottoJa: '南蛮', text: 'Ports and mines give double.', mods: { special: 1 } },
+  { clan: 'otomo', home: 'bungo', motto: 'The Nanban lord', mottoJa: '南蛮', text: 'Silver mines earn double.', mods: { mine: 1 } },
   { clan: 'chosokabe', home: 'tosa', motto: 'One-ryō farmers', mottoJa: '一領具足', text: 'Rice paddies earn double.', mods: { paddies: 1 } },
   { clan: 'maeda', home: 'noto', motto: 'A million koku of Kaga', mottoJa: '加賀百万石', text: 'Castle towns earn double.', mods: { castletown: 1 } },
   { clan: 'hosokawa', home: 'tango', motto: 'The way of tea and poetry', mottoJa: '文武両道', text: 'Start with a treasure.', mods: { startTreasure: 1 } },
@@ -133,4 +132,4 @@ const LATER_EVENTS = [
   { id: 'expo25', year: 2025, en: 'Expo 2025', ja: '大阪・関西万博', at: 'settsu', sides: [], short: 'The world\'s fair comes back to Osaka, on the island of Yumeshima, inside a ring of wooden beams two kilometres round.' },
 ];
 
-if (typeof module !== 'undefined') module.exports = { KOKU, SPECIAL, AGES, END_YEAR, WORKS, TRAITS, HOUSES, NAMES, TREASURES, LATER_EVENTS };
+if (typeof module !== 'undefined') module.exports = { KOKU, SPECIAL, AGES, END_YEAR, WORKS, REALM_UPGRADES, HOUSES, NAMES, TREASURES, LATER_EVENTS };

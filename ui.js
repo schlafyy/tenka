@@ -12,13 +12,13 @@
   const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
   const fmt = G.fmt, P = GEO.provinces, PIDS = G.PIDS;
   const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
-  const KEY = 'tenka-save-2';
+  const KEY = 'tenka-save-3';
   const WORK = Object.fromEntries(WORKS.map(w => [w.id, w]));
   const CHAPTER = Object.fromEntries([...EVENTS, ...LATER_EVENTS].map(e => [e.id, e]));
   const PLACE = { ezo: ['Ezo', '蝦夷'], ryukyu: ['Ryukyu', '琉球'] };
 
   let S = null;                // the game state
-  let report = null;           // what happened while you were away, until dismissed
+  let report = null;           // what happened while you were away, until dismissed or the next purchase
   let chosen = null;           // the province picked on the open map
   let older = 25;              // chronicle entries shown
 
@@ -176,13 +176,16 @@
   }
   function focus() {
     if (!S) return;
-    const ps = isOpen() && G.reachPoints(S) > 0 ? [...S.reach.slice(-6), ...G.reachable(S)] : [...new Set(S.reach.flatMap(p => [p, ...ADJ[p]]))];
+    const ps = isOpen() && G.reachPoints(S) > 0 ? [...S.reach.slice(-6), ...G.reachable(S)] : S.reach.length > 1 ? S.reach : [S.reach[0], ...ADJ[S.reach[0]]];
     const bs = ps.flatMap(p => [...provG[p].children].map(u => u.getBBox()));
     const x0 = Math.min(...bs.map(b => b.x)), y0 = Math.min(...bs.map(b => b.y)), x1 = Math.max(...bs.map(b => b.x + b.width)), y1 = Math.max(...bs.map(b => b.y + b.height));
     const r = svg.getBoundingClientRect(), aspect = r.width / Math.max(1, r.height);
-    let w = Math.max(x1 - x0, (y1 - y0) * aspect) * 1.2;
-    w = Math.min(HOME.width * 1.1, Math.max(HOME.width / 4, w));
-    Object.assign(vb, { w, h: w / aspect, x: (x0 + x1) / 2 - w / 2, y: (y0 + y1) / 2 - w / aspect / 2 });
+    // on the strip the land takes the upper two thirds, leaving the lower edge to the reach pill
+    let w = isOpen() ? Math.max(x1 - x0, (y1 - y0) * aspect) * 1.2 : Math.max((x1 - x0) * 1.2, (y1 - y0) * 1.6 * aspect);
+    w = Math.min(HOME.width * (isOpen() ? 1.1 : 1.7), Math.max(HOME.width / 4, w));
+    // the strip keeps its lower edge for the reach pill: the land sits a little above the middle
+    const lift = isOpen() ? 0 : w / aspect * .16;
+    Object.assign(vb, { w, h: w / aspect, x: (x0 + x1) / 2 - w / 2, y: (y0 + y1) / 2 - w / aspect / 2 + lift });
     applyView();
   }
   const toMap = (cx, cy) => { const pt = svg.createSVGPoint(); pt.x = cx; pt.y = cy; return pt.matrixTransform(svg.getScreenCTM().inverse()); };
@@ -231,7 +234,7 @@
 
   // ---------- painting the cloth ----------
   const shown = {};
-  let mapYear = null, mapKey = '';
+  let mapKey = '', known = null; // known: the provinces already painted, so new ones soak in
   function holders() {
     const h = G.holdersAt(S.year), mine = new Set(S.reach);
     for (const p of PIDS) {
@@ -246,6 +249,8 @@
     const key = S.year + '|' + S.reach.join() + '|' + S.house;
     if (!force && key === mapKey) return;
     mapKey = key;
+    if (known) S.reach.filter(p => !known.has(p)).slice(-4).forEach(soakInto);
+    known = new Set(S.reach);
     const h = holders();
     for (const p of PIDS) {
       if (soaking.has(p)) continue;
@@ -336,7 +341,6 @@
   }
   $('#mapclose').addEventListener('click', closeMap);
   $('#reachpill').addEventListener('click', openMap);
-  $('#house').addEventListener('click', () => $('#housepage').scrollIntoView({ behavior: reduced ? 'auto' : 'smooth' }));
   function renderChoose() {
     const box = $('#choose');
     if (!isOpen()) return;
@@ -348,18 +352,17 @@
     }
     if (!chosen) {
       box.innerHTML = `<h2>Where does the house reach next?</h2><p>Tap a dashed province. ${pts > 1 ? `You can choose ${pts}.` : ''}</p>
-        <div class="btns"><button class="btn go" data-act="auto">Let the house choose</button><button class="btn" data-act="close">Later</button></div>`;
+        <div class="btns"><button class="btn go" data-act="auto">${pts > 1 ? 'Let the house choose them' : 'Let the house choose'}</button><button class="btn" data-act="close">Later</button></div>`;
       return;
     }
     const sp = SPECIAL[chosen], gain = G.provinceBonus(S, chosen);
     box.innerHTML = `<h2>${esc(P[chosen].en)}<span lang="ja">${P[chosen].ja}</span></h2>
-      <p>${fmt(KOKU[chosen] * 1e4)} koku of rice${sp ? `, and ${esc(sp[1])} <span lang="ja">${sp[2]}</span>` : ''}. Income ×${(1 + gain).toFixed(2)}.</p>
+      <p>${fmt(KOKU[chosen] * 1e4)} koku of rice${sp ? `, and ${esc(sp[1])} <span lang="ja">${sp[2]}</span>` : ''}. Every province reached: profit +${Math.round(gain * 100)}%.</p>
       <div class="btns"><button class="btn go" data-act="reach">Reach ${esc(P[chosen].en)}</button><button class="btn" data-act="close">Later</button></div>`;
   }
   function doReach(p) {
     if (!G.reach(S, p)) return;
     chosen = null;
-    soakInto(p);
     paintMap(true);
     render();
     save();
@@ -371,196 +374,213 @@
     if (!a) return;
     if (a.dataset.act === 'close') closeMap();
     if (a.dataset.act === 'reach' && chosen) doReach(chosen);
-    if (a.dataset.act === 'auto') doReach(G.bestReach(S));
+    if (a.dataset.act === 'auto') { while (G.reachPoints(S) > 1) G.reach(S, G.bestReach(S)); doReach(G.bestReach(S)); }
   });
 
-  // ---------- the present ----------
-  const hm = sec => { sec = Math.max(0, Math.ceil(sec)); if (sec < 60) return sec + ' s'; const m = Math.round(sec / 60); if (m < 60) return m + ' min'; const h = Math.floor(m / 60); return h + ' h' + (m % 60 ? ' ' + (m % 60) + ' min' : ''); };
-  const levels = () => Object.values(S.works).reduce((a, b) => a + b, 0);
-  const money = () => (G.money(S) === 'yen' ? 'yen' : 'koku');
-  function paceLine() {
-    const p = G.pace(S), every = 3600 / (G.yearsPerHour(S.yearF) * p);
-    const how = p >= 1.2 ? 'the house is ahead of its time' : p <= .8 ? 'the house is behind the times, so they pass slowly' : 'the house keeps pace with the times';
-    return `A year every ${hm(every)}: ${how}.`;
-  }
-  function renderNow() {
-    const age = G.ageOf(S.year), b = G.best(S), w = b && WORK[b.id];
-    const open = WORKS.filter(x => x.age === age), earlier = WORKS.filter(x => x.age < age && S.works[x.id]);
-    const afford = b ? Math.floor(Math.log(1 + (S.money / b.cost) * (G.GROW - 1)) / Math.log(G.GROW)) : 0;
-    let h = `<div class="when"><div id="year" class="num">${S.year}</div><div class="era" id="era"></div></div>
-      <p class="wealth num"><span id="money"></span> ${money()} <span class="rate">· <span id="rate"></span> a second</span></p>
-      <p class="pace" id="pace"></p>`;
+  // ---------- the panel: trades, upgrades, managers, chronicle, house ----------
+  const secs = sec => { if (sec < 1) return sec.toFixed(1) + ' s'; sec = Math.ceil(sec); if (sec < 60) return sec + ' s'; const m = Math.floor(sec / 60); if (m < 60) return m + ' min ' + String(sec % 60).padStart(2, '0'); const h = Math.floor(m / 60); return h + ' h' + (m % 60 ? ' ' + (m % 60) + ' min' : ''); };
+  const unit = () => (G.money(S) === 'yen' ? 'yen' : 'koku');
+  const MODES = [[1, '×1'], [10, '×10'], [100, '×100'], ['max', 'Max']];
+  let tab = 'trades', mode = 1;
+  const CHECK = '<svg viewBox="0 0 12 12" aria-hidden="true"><path d="M1.5 6.5l3 3 6-7" fill="none" stroke="currentColor" stroke-width="1.8"/></svg>';
+
+  function renderTrades() {
+    const shown = WORKS.filter(w => G.isOpen(S, w.id) || false);
+    const next = WORKS.find(w => S.year < w.year);
+    let h = '';
     if (report) {
       const r = report, bits = [];
       if (r.to > r.from) bits.push(`${r.from} → ${r.to}`);
-      bits.push(`+${fmt(r.money)} ${r.unit}`);
-      if (r.levels) bits.push(`your steward added ${r.levels} level${r.levels > 1 ? 's' : ''} to the trades`);
-      h += `<div class="away" role="status"><h2>While you were away, ${hm(r.seconds)}${r.capped ? ` (the first ${r.capH} hours count)` : ''}</h2>
-        <p>${bits.join(' · ')}.${r.chapters ? ` ${r.chapters} new chapter${r.chapters > 1 ? 's' : ''} to read.` : ''}${r.points ? ' A province to reach.' : ''}</p>
+      bits.push(r.money > 0 ? `+${fmt(r.money)} ${r.unit}` : 'nothing earned, since no trade has a manager yet');
+      h += `<div class="away" role="status"><h2>While you were away, ${secs(r.seconds)}${r.capped ? ` (the first ${r.capH} hours count)` : ''}</h2>
+        <p>${bits.join(' · ')}.${r.managed || r.money <= 0 ? '' : ' Trades without a manager wait for your tap.'}${r.chapters ? ` ${r.chapters} new chapter${r.chapters > 1 ? 's' : ''}.` : ''}</p>
         <button class="x" data-act="dismiss" aria-label="Dismiss"><svg viewBox="0 0 12 12" fill="none"><path d="M1 1l10 10M11 1L1 11"/></svg></button></div>`;
     }
-    if (S.done) {
-      h += `<div class="present"><h2>The present day</h2><p>The ${esc(CLANS[S.house].en)} have come from ${esc(P[G.house(S).home].en)} in ${1467} to ${END_YEAR}. Begin a new house in 1467: it keeps the treasure collection, and its income is doubled for every house that made it here.</p>
-        <button class="btn go" data-act="newhouse">Begin a new house</button></div>`;
+    if (S.done) h += `<div class="present"><h2>The present day</h2><p>The ${esc(CLANS[S.house].en)} have come from ${esc(P[G.house(S).home].en)} in 1467 to ${END_YEAR}. Begin again for renown, or keep growing.</p><button class="btn" data-act="tab" data-tab="house">See the house</button></div>`;
+    h += `<div class="bar-row"><div class="modes" role="group" aria-label="How many to buy">${MODES.map(([m, l]) => `<button data-act="mode" data-mode="${m}" aria-pressed="${mode === m}">${l}</button>`).join('')}</div></div>`;
+    if (!Object.keys(S.mgr).length && S.year < 1500) h += `<p class="tip">Tap a trade's square to run it. A full bar pays out. Managers run trades for you, even while you are away.</p>`;
+    for (const w of shown) {
+      const id = w.id, lv = S.lv[id] || 0, ms = G.nextMilestone(S, id);
+      h += `<div class="trade" data-id="${id}">
+        <button class="tile" data-act="run" data-id="${id}" data-k="run-${id}" aria-label="Run the ${esc(w.en.toLowerCase())}"><span class="g" lang="ja">${w.glyph}</span><span class="lv num">${lv}</span></button>
+        <h3>${esc(w.en)} <span lang="ja">${w.ja}</span><small>${S.mgr[id] ? `${CHECK} ${esc(w.manager[0])}` : lv ? 'tap to run' : ''}</small></h3>
+        <div class="prog" data-act="run" data-id="${id}"><i></i><span><b class="num" data-pay="${id}"></b><em class="num" data-left="${id}"></em></span></div>
+        <div class="buyrow"><button class="buy" data-act="buy" data-id="${id}" data-k="buy-${id}"><span data-n="${id}"></span><b class="num" data-price="${id}"></b></button>
+        ${ms ? `<small class="ms">${ms.what === 'speed' ? 'twice as fast' : 'profit ×3'} at level ${ms.at}</small>` : ''}</div></div>`;
     }
-    if (w) {
-      h += `<button class="next" data-k="next" data-act="buy" data-id="${w.id}" id="nextcard">
-        <span class="g" lang="ja" aria-hidden="true">${w.glyph}</span>
-        <span class="t"><b>${esc(w.verb)}</b><span class="nb" title="${esc(w.en)}">Level ${S.works[w.id] || 0} → ${(S.works[w.id] || 0) + 1}</span><span class="nb">+${fmt(b.gain)} a second${((S.works[w.id] || 0) + 1) % G.MILESTONE === 0 ? ', income doubles' : ''}</span></span>
-        <span class="c num"><span id="nextcost">${fmt(b.cost)}</span><small id="nextwhen"></small></span></button>
-        <button class="all" data-act="all" data-k="all" ${afford >= 2 ? '' : 'hidden'}>Spend it all on the best trades</button>`;
-    }
-    if (levels() < 6 && S.year < 1475) h += `<p class="hint">Tap the card to grow your first trade. <b>The house earns while you are away</b>, and the years pass faster as it grows.</p>`;
-    h += `<div class="trades">`;
-    for (const x of open) {
-      if (b && x.id === b.id) continue;
-      const lv = S.works[x.id] || 0;
-      if (!G.isOpen(S, x.id)) h += `<button class="trade shut" disabled><span class="g" lang="ja">${x.glyph}</span><span class="n">${esc(x.en)} <small>opens in ${x.year}</small></span><span class="c"></span></button>`;
-      else h += `<button class="trade" data-act="buy" data-id="${x.id}" data-k="t-${x.id}"><span class="g" lang="ja">${x.glyph}</span><span class="n">${esc(x.en)} <small>level ${lv}</small></span><span class="c num" data-cost="${x.id}">${fmt(G.cost(S, x.id))}</span></button>`;
-    }
-    h += `</div>`;
-    if (earlier.length) {
-      const inc = earlier.reduce((s, x) => s + G.workIncome(S, x.id), 0) * G.multiplier(S);
-      h += `<details class="earlier"><summary><svg viewBox="0 0 10 10" aria-hidden="true"><path d="M3 1.5L6.5 5L3 8.5" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>Trades of earlier ages, ${fmt(inc)} a second</summary><div class="trades">` +
-        earlier.map(x => `<button class="trade" data-act="buy" data-id="${x.id}" data-k="t-${x.id}"><span class="g" lang="ja">${x.glyph}</span><span class="n">${esc(x.en)} <small>level ${S.works[x.id]}</small></span><span class="c num" data-cost="${x.id}">${fmt(G.cost(S, x.id))}</span></button>`).join('') +
-        `</div></details>`;
-    }
-    const wasOpen = $('#now details.earlier[open]');
-    $('#now').innerHTML = h;
-    if (wasOpen) $('#now details.earlier').open = true;
+    if (next) h += `<div class="trade shut"><div class="tile"><span class="g" lang="ja">${next.glyph}</span></div><h3>${esc(next.en)} <span lang="ja">${next.ja}</span></h3><p class="opens">Opens in ${next.year}, when the house has earned <span class="nb">${fmt(G.earnedFor(next.year))} ${unit()}</span>.</p></div>`;
+    return h;
   }
-  // the numbers that change every moment, without rebuilding the buttons under your finger
-  function live() {
-    const era = G.eraOf(S.year), age = AGES[G.ageOf(S.year)], inc = G.income(S);
-    $('#era').innerHTML = `<b lang="ja">${era.ja}${G.kanjiYear(era.n)}年</b><span>${esc(era.en)} ${era.n} · ${esc(age.en)}</span>`;
-    $('#money').textContent = fmt(S.money);
-    $('#rate').textContent = '+' + fmt(inc);
-    $('#pace').textContent = paceLine();
-    const card = $('#nextcard');
-    if (card) {
-      const b = G.best(S), short = b.cost - S.money;
-      card.classList.toggle('wait', short > 0);
-      card.setAttribute('aria-disabled', short > 0);
-      $('#nextwhen').textContent = short > 0 ? 'in ' + hm(short / Math.max(inc, 1e-9)) : '';
-      const afford = Math.floor(Math.log(1 + (S.money / b.cost) * (G.GROW - 1)) / Math.log(G.GROW));
-      $('#now .all').hidden = afford < 2;
-    }
-    document.querySelectorAll('#now [data-cost]').forEach(e => e.parentElement.classList.toggle('can', G.cost(S, e.dataset.cost) <= S.money));
-    const pts = G.reachPoints(S), pill = $('#reachpill');
-    pill.hidden = !pts || S.done && !G.reachable(S).length || !G.reachable(S).length;
-    const label = `<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><circle cx="8" cy="8" r="6.5" stroke-dasharray="2.6 2"/><path d="M8 5v6M5 8h6"/></svg>${pts > 1 ? `Reach ${pts} new provinces` : 'Reach a new province'}`;
-    if (pill.dataset.k !== label) { pill.dataset.k = label; pill.innerHTML = label; }
+  function renderUpgrades() {
+    const all = G.upgrades(S), open = all.filter(u => u.open && !u.owned), owned = all.filter(u => u.owned).length;
+    let h = `<h2 class="head">Upgrades <span lang="ja">改良</span></h2><p class="note">${owned} of ${all.length} bought. Each one triples a trade's profit; the great works of each age triple them all.</p>`;
+    h += open.slice(0, 12).map(u => `<div class="item"><h3>${esc(u.en)} <span lang="ja">${u.ja}</span></h3><p>${esc(u.text)}</p>
+      <button class="btn ${S.money >= u.cost ? 'go' : ''}" data-act="upg" data-id="${u.id}" data-k="upg-${u.id}" data-cost="${u.cost}" ${S.money >= u.cost ? '' : 'disabled'}>${fmt(u.cost)}</button></div>`).join('');
+    if (!open.length) h += `<p class="note">New upgrades come with new trades and new ages.</p>`;
+    return h;
   }
-  $('#now').addEventListener('click', e => {
-    const a = e.target.closest('[data-act]');
-    if (!a) return;
-    const act = a.dataset.act;
-    if (act === 'buy') {
-      if (!G.buy(S, a.dataset.id)) return;
-      if (a.id === 'nextcard' && !reduced) { a.classList.remove('stamp'); void a.offsetWidth; a.classList.add('stamp'); }
-      report = null;
-      render(); save();
-      if (a.id === 'nextcard') { const c = $('#nextcard'); if (c && !reduced) c.classList.add('stamp'); }
+  function renderManagers() {
+    let h = `<h2 class="head">Managers <span lang="ja">支配人</span></h2><p class="note">A manager runs a trade for you, without a tap, and keeps it running while you are away (up to ${G.AWAY_HOURS} hours).</p>`;
+    for (const w of WORKS.filter(w => G.isOpen(S, w.id))) {
+      const c = G.managerCost(S, w.id), got = S.mgr[w.id];
+      h += `<div class="item"><h3>${esc(w.manager[0])} <span lang="ja">${w.manager[1]}</span></h3><p>Runs the ${esc(w.en.toLowerCase())}.</p>
+        ${got ? `<span class="hired">${CHECK} Hired</span>` : `<button class="btn ${S.money >= c ? 'go' : ''}" data-act="hire" data-id="${w.id}" data-k="hire-${w.id}" data-cost="${c}" ${S.money >= c ? '' : 'disabled'}>${fmt(c)}</button>`}</div>`;
     }
-    if (act === 'all') { const n = G.buyAll(S); report = null; render(); save(); toast(`${n} levels added`); }
-    if (act === 'dismiss') { report = null; render(); }
-    if (act === 'newhouse') showPick(true);
-  });
-
-  // ---------- the chronicle ----------
+    return h;
+  }
   function chapterHtml(e, unread) {
     const by = e.sides.find(c => CRESTS[c]) || (e.winner && CRESTS[e.winner] ? e.winner : null) || (() => { const h = G.holdersAt(e.year)[e.at]; const c = [].concat(h || [])[0]; return c && CRESTS[c] ? c : null; })();
     return `<li class="entry ${unread ? 'unread' : ''}" data-id="${e.id}">
       <div><div class="y num">${e.year}</div>${disc(by, e.at)}</div>
       <div><h3>${esc(e.en)} <span lang="ja" class="nb">${e.ja}</span></h3><p class="where">${placeName(e.at)}${by ? ` · ${clanName(by)}` : ''}</p>
-      ${unread ? `<button class="btn" data-act="read" data-id="${e.id}" data-k="r-${e.id}">Read · income +${Math.round(G.CHAPTER * G.chapterGiftOf(S) * 100)}%</button>` : `<p class="story">${esc(e.short)}</p>`}</div></li>`;
+      ${unread ? `<button class="btn" data-act="read" data-id="${e.id}" data-k="r-${e.id}">Read · profit +${Math.round(G.CHAPTER * 100)}%</button>` : `<p class="story">${esc(e.short)}</p>`}</div></li>`;
   }
   function renderChron() {
-    let h = `<h2>Chronicle <span lang="ja">年代記</span></h2>`;
+    let h = `<h2 class="head">Chronicle <span lang="ja">年代記</span></h2>`;
     if (S.unread.length) {
-      const list = S.unread.map(id => CHAPTER[id]);
-      h += `<ol class="entries">${list.map(e => chapterHtml(e, true)).join('')}</ol>`;
-      if (list.length > 1) h += `<button class="btn more" data-act="readall">Read all ${list.length}</button>`;
+      h += `<ol class="entries">${S.unread.map(id => chapterHtml(CHAPTER[id], true)).join('')}</ol>`;
+      if (S.unread.length > 1) h += `<button class="btn more" data-act="readall">Read all ${S.unread.length}</button>`;
     }
-    const items = [...S.readIds.map(id => ({ y: CHAPTER[id].year, e: CHAPTER[id] })), ...S.chron.map(c => ({ y: c.y, c }))]
-      .sort((a, b) => b.y - a.y || (a.e ? -1 : 1));
-    const shown = items.slice(0, older);
-    h += `<ol class="entries">${shown.map(x => x.e ? chapterHtml(x.e, false) :
-      `<li class="entry house"><div><div class="y num">${x.y}</div></div><div><h3>${esc(x.c.en)}</h3></div></li>`).join('')}</ol>`;
+    const items = [...S.readIds.map(id => ({ y: CHAPTER[id].year, e: CHAPTER[id] })), ...S.chron.map(c => ({ y: c.y, c }))].sort((a, b) => b.y - a.y || (a.e ? -1 : 1));
+    h += `<ol class="entries">${items.slice(0, older).map(x => x.e ? chapterHtml(x.e, false) : `<li class="entry house"><div><div class="y num">${x.y}</div></div><div><h3>${esc(x.c.en)}</h3></div></li>`).join('')}</ol>`;
     if (items.length > older) h += `<button class="btn more" data-act="older">Show older</button>`;
-    $('#chron').innerHTML = h;
+    return h;
   }
-  $('#chron').addEventListener('click', e => {
-    const a = e.target.closest('[data-act]');
-    if (!a) return;
-    if (a.dataset.act === 'read') {
-      const id = a.dataset.id;
-      G.read(S, id); render(); save();
-      toast(`Income +${Math.round(G.CHAPTER * G.chapterGiftOf(S) * 100)}%`);
-      const li = $(`#chron .entry[data-id="${id}"]`);
-      if (li) { li.classList.add('fresh'); }
-    }
-    if (a.dataset.act === 'readall') { const k = S.unread.length; while (S.unread.length) G.read(S, S.unread[0]); render(); save(); toast(`${k} chapters read`); }
-    if (a.dataset.act === 'older') { older += 50; renderChron(); }
-  });
-
-  // ---------- the house ----------
   function renderHouse() {
-    const h = G.house(S), t = TRAITS[S.head.trait];
-    const found = TREASURES.filter(x => S.meta.treasures.includes(x.id));
-    let x = `<h2>The house <span lang="ja">家</span></h2>
+    const h = G.house(S), m = S.meta, gain = G.renownGain(S);
+    const found = TREASURES.filter(x => m.treasures.includes(x.id));
+    let x = `<h2 class="head">The house <span lang="ja">家</span></h2>
       <div class="facts"><p><b>${clanName(S.house)}</b>, from ${placeName(h.home)}. ${esc(h.motto)} <span lang="ja">${h.mottoJa}</span>: ${esc(h.text.toLowerCase())}</p>
-      <p>Head of the house: <b>${esc(G.headName(S))}</b>, since ${S.head.from}. ${esc(t.en)} <span lang="ja">${t.ja}</span>: ${esc(t.text.toLowerCase())}</p>
-      <p>${S.reach.length} of ${PIDS.length} provinces · ${S.readIds.length} chapters read · ${S.meta.runs ? `${S.meta.runs} house${S.meta.runs > 1 ? 's' : ''} reached the present before: income ×${2 ** S.meta.runs}` : 'the first house to set out'}</p></div>`;
-    if (S.heads.length) x += `<h3 class="sub">Heads before</h3><p class="note">Your house follows its own line of heads; the history around it is the real one.</p><ul class="heads">${S.heads.map(p => `<li><b>${esc(p.given)}</b> ${p.from}–${p.until}</li>`).join('')}</ul>`;
-    x += `<h3 class="sub">Treasures <span lang="ja">家宝</span> · ${found.length} of ${TREASURES.length}, income +${Math.round(found.length * G.TREASURE * 100)}%</h3>
-      <p class="facts" style="margin:-2px 0 10px"><span style="color:var(--muted)">One turns up for every few provinces reached. They stay with the house for good.</span></p>
+      <p>Head of the house: <b>${esc(G.headName(S))}</b>, since ${S.head.from}. Your house follows its own line of heads; the history around it is the real one.</p>
+      <p>${S.reach.length} of ${PIDS.length} provinces · ${S.readIds.length} chapters read · everything together: profit ×${fmt(G.profitAll(S))}</p></div>
+      <div class="renown"><h3>Renown <span lang="ja">名声</span>: ${fmt(m.renown)} <small>profit +${fmt(m.renown * G.RENOWN * 100)}%</small></h3>
+      <p>Begin again in 1467 with any house: the fame this run has won turns into renown for good. The treasures stay; the trades, provinces and money start over.${m.runs ? '' : ' After the first new beginning, the house reaches its provinces by itself.'}</p>
+      <button class="btn ${gain >= Math.max(10, m.renown) ? 'go' : ''}" data-act="again" ${gain > 0 ? '' : 'disabled'}>${gain > 0 ? `Begin again · +${fmt(gain)} renown` : 'No renown to win yet'}</button></div>`;
+    if (S.heads.length) x += `<h3 class="sub">Heads before</h3><ul class="heads">${S.heads.map(p => `<li><b>${esc(p.given)}</b> ${p.from}–${p.until}</li>`).join('')}</ul>`;
+    x += `<h3 class="sub">Treasures <span lang="ja">家宝</span> · ${found.length} of ${TREASURES.length}, profit +${Math.round(found.length * G.TREASURE * 100)}%</h3>
+      <p class="note">One turns up for every few provinces reached. They stay with the house for good.</p>
       ${found.length ? `<div class="treasures">${found.map(t => `<div class="tr"><b>${esc(t.en)}</b><span lang="ja">${t.ja}</span><br>${esc(t.kind)}</div>`).join('')}</div>` : ''}
       <p class="note after">${TREASURES.length - found.length} still to find.</p>
       <h3 class="sub">Your save</h3>
       <div class="tools"><button class="btn" data-act="copy">Copy save</button><button class="btn" data-act="paste">Load a save</button><button class="btn" data-act="restart">Start over</button></div>
       <p class="credits">Province shapes: “Provinces of Japan with names.svg” by Ash_Crow, Wikimedia Commons, CC BY 2.5. Clan crests from Wikimedia Commons, each under its own licence. Fonts: Shippori Mincho B1 and Zen Kaku Gothic New (SIL OFL). The history is written for the game from standard accounts and simplified; yields are approximate.</p>`;
-    $('#housepage').innerHTML = x;
+    return x;
   }
-  $('#housepage').addEventListener('click', async e => {
+  const VIEWS = { trades: renderTrades, upgrades: renderUpgrades, managers: renderManagers, chron: renderChron, house: renderHouse };
+
+  // the numbers that change every frame, without rebuilding the buttons under your finger
+  function live() {
+    const era = G.eraOf(S.year), age = AGES[G.ageOf(S.year)];
+    $('#year').textContent = S.year;
+    $('#era').innerHTML = `<b lang="ja">${era.ja}${G.kanjiYear(era.n)}年</b><span>${esc(era.en)} ${era.n} · ${esc(age.en)}</span>`;
+    $('#money').textContent = fmt(S.money);
+    $('#unit').textContent = unit();
+    const inc = G.income(S);
+    $('#rate').textContent = inc > 0 ? `+${fmt(inc)} a second` : 'hire a manager to earn while away';
+    if (tab === 'trades') {
+      const all = G.profitAll(S);
+      for (const w of WORKS) {
+        const id = w.id, row = panel.querySelector(`.trade[data-id="${id}"]`);
+        if (!row) continue;
+        const c = G.cycle(S, id), p = S.prog[id], fast = S.mgr[id] && c < .25, lv = S.lv[id] || 0;
+        row.querySelector('.prog i').style.width = (fast ? 100 : p == null ? 0 : Math.min(100, p / c * 100)) + '%';
+        row.querySelector('.prog').classList.toggle('fast', !!fast);
+        row.querySelector('.tile').classList.toggle('idle', lv > 0 && !S.mgr[id] && p == null);
+        const badge = row.querySelector('.lv'); if (badge.textContent !== String(lv)) badge.textContent = lv;
+        row.querySelector(`[data-pay="${id}"]`).textContent = lv ? (fast ? `+${fmt(G.payout(S, id, all) / c)} a second` : `+${fmt(G.payout(S, id, all))}`) : 'not yet bought';
+        row.querySelector(`[data-left="${id}"]`).textContent = lv && !fast ? secs(p == null ? c : Math.max(0, c - p)) : '';
+        const o = G.offer(S, id, mode);
+        row.querySelector(`[data-n="${id}"]`).textContent = lv ? `Buy ×${o.n}` : 'Open';
+        row.querySelector(`[data-price="${id}"]`).textContent = fmt(o.price);
+        row.querySelector('.buy').classList.toggle('ok', o.ok);
+        row.querySelector('.buy').setAttribute('aria-disabled', !o.ok);
+      }
+    } else panel.querySelectorAll('[data-cost]').forEach(b => { const ok = S.money >= +b.dataset.cost; b.disabled = !ok; b.classList.toggle('go', ok); });
+    // the dots on the tabs: what is waiting
+    const ups = G.upgrades(S).filter(u => u.open && !u.owned && u.cost <= S.money).length;
+    const mgrs = WORKS.filter(w => G.isOpen(S, w.id) && !S.mgr[w.id] && G.managerCost(S, w.id) <= S.money).length;
+    dot('upgrades', ups); dot('managers', mgrs); dot('chron', S.unread.length); dot('house', G.renownGain(S) >= Math.max(10, S.meta.renown) ? '!' : 0);
+    const pts = G.reachPoints(S), pill = $('#reachpill');
+    pill.hidden = !pts || !G.reachable(S).length;
+    pill.setAttribute('aria-label', pts > 1 ? `Reach ${pts} new provinces` : 'Reach a new province');
+    const label = `<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><circle cx="8" cy="8" r="6.5" stroke-dasharray="2.6 2"/><path d="M8 5v6M5 8h6"/></svg>${pts > 1 ? `Reach ${pts} provinces` : 'Reach a province'}`;
+    if (pill.dataset.k !== label) { pill.dataset.k = label; pill.innerHTML = label; }
+  }
+  function dot(t, n) {
+    const b = document.querySelector(`#tabs [data-tab="${t}"] .dot`);
+    const v = n ? String(n) : '';
+    if (b.textContent !== v) { b.textContent = v; b.hidden = !v; }
+  }
+
+  const panel = $('#panel');
+  function setTab(t) {
+    tab = t;
+    document.querySelectorAll('#tabs button').forEach(b => b.setAttribute('aria-current', b.dataset.tab === t ? 'page' : 'false'));
+    structKey = '';
+    render();
+    panel.scrollTop = 0;
+    if (matchMedia('(max-width: 899px)').matches) window.scrollTo({ top: Math.min(window.scrollY, $('#app').offsetTop) });
+  }
+  document.querySelectorAll('#tabs button').forEach(b => b.addEventListener('click', () => setTab(b.dataset.tab)));
+  $('#house').addEventListener('click', () => setTab('house'));
+
+  panel.addEventListener('click', async e => {
     const a = e.target.closest('[data-act]');
     if (!a) return;
-    if (a.dataset.act === 'copy') {
+    const act = a.dataset.act, id = a.dataset.id;
+    if (act === 'run') { if (!S.lv[id] && G.offer(S, id, 1).ok) { G.buy(S, id, 1); } G.run(S, id); }
+    if (act === 'buy') {
+      const was = G.nextMilestone(S, id), n = G.buy(S, id, mode);
+      if (n && was && (S.lv[id] || 0) >= was.at) toast(`${WORK[id].en}: ${was.what === 'speed' ? 'twice as fast' : 'profit ×3'}`);
+      if (n) report = null;
+    }
+    if (act === 'mode') mode = a.dataset.mode === 'max' ? 'max' : +a.dataset.mode;
+    if (act === 'hire' && G.hire(S, id)) toast(`${WORK[id].manager[0]} hired`);
+    if (act === 'upg' && G.buyUpgrade(S, id)) toast('Profit ×3');
+    if (act === 'dismiss') report = null;
+    if (act === 'tab') return setTab(a.dataset.tab);
+    if (act === 'read') { G.read(S, id); toast(`Profit +${Math.round(G.CHAPTER * 100)}%`); }
+    if (act === 'readall') { const k = S.unread.length; while (S.unread.length) G.read(S, S.unread[0]); toast(`${k} chapters read`); }
+    if (act === 'older') older += 50;
+    if (act === 'again' && confirm(`Begin again in 1467? You gain ${fmt(G.renownGain(S))} renown for good; trades, provinces and money start over.`)) return showPick('again');
+    if (act === 'copy') {
       const code = btoa(unescape(encodeURIComponent(JSON.stringify(S))));
       try { await navigator.clipboard.writeText(code); toast('Save copied'); } catch { prompt('Copy your save:', code); }
     }
-    if (a.dataset.act === 'paste') {
+    if (act === 'paste') {
       const code = prompt('Paste a save:');
       if (!code) return;
-      try { const T = JSON.parse(decodeURIComponent(escape(atob(code.trim())))); if (T.v !== 2 || !T.house) throw 0; S = T; mapKey = ''; render(); focus(); save(); toast('Save loaded'); } catch { alert('That is not a save from this game.'); }
+      try { const T = JSON.parse(decodeURIComponent(escape(atob(code.trim())))); if (T.v !== 3 || !T.house) throw 0; S = T; known = null; mapKey = ''; focus(); toast('Save loaded'); } catch { alert('That is not a save from this game.'); }
     }
-    if (a.dataset.act === 'restart' && confirm('Start over with a new house in 1467? This run is lost; the treasure collection stays.')) showPick(false);
+    if (act === 'restart' && confirm('Start over with a new house in 1467? This run is lost; renown and treasures stay.')) return showPick('restart');
+    structKey = '';
+    render(); save();
   });
 
   // ---------- choosing a house ----------
   let pickClan = 'oda';
-  function showPick(fromPresent) {
-    const meta = S ? S.meta : null;
-    const box = $('#pick');
+  function showPick(why) {
+    const meta = S ? S.meta : null, box = $('#pick');
     const draw = () => {
       const h = HOUSES.find(x => x.clan === pickClan);
-      box.innerHTML = `<div class="in"><h1>${meta && meta.runs + (fromPresent ? 1 : 0) ? 'A new house' : 'Tenka'} <span lang="ja">天下</span></h1>
-        <p class="lede">Lead one house from the Ōnin War of 1467 to the present day. Grow its trades, and the years pass; the house reaches across Japan province by province, and the real history arrives chapter by chapter. Nothing is lost while you are away.</p>
+      box.innerHTML = `<div class="in"><h1>${why ? 'Begin again' : 'Tenka'} <span lang="ja">天下</span></h1>
+        <p class="lede">${why === 'again' ? `Your renown carries over: profit +${fmt((meta.renown + G.renownGain(S)) * G.RENOWN * 100)}% from the first paddy. Choose the house to lead from 1467.` : 'Build a house\'s fortune from 1467 to the present day. Run its trades, hire managers, buy upgrades, and the years pass as the money comes in: the house reaches across Japan province by province, and the real history arrives chapter by chapter.'}</p>
         <div class="houses" role="group" aria-label="Houses">${HOUSES.map(x => `<button aria-pressed="${x.clan === pickClan}" data-clan="${x.clan}">${disc(x.clan)}<b>${clanName(x.clan)}</b><small>${esc(P[x.home].en)} · ${esc(x.motto)}</small></button>`).join('')}</div>
         <div class="chosen"><h2>${clanName(h.clan)}</h2><p>From ${placeName(h.home)}. ${esc(h.motto)} <span lang="ja">${h.mottoJa}</span>: ${esc(h.text.toLowerCase())}</p>
-        <button class="btn go" data-act="begin">Begin in 1467</button></div></div>`;
+        <button class="btn go" data-act="begin">Begin in 1467</button>${why ? '<button class="btn" data-act="cancel">Not yet</button>' : ''}</div></div>`;
     };
     draw();
     box.hidden = false;
     box.onclick = e => {
       const c = e.target.closest('[data-clan]');
       if (c) { pickClan = c.dataset.clan; draw(); box.querySelector(`[data-clan="${pickClan}"]`).focus(); return; }
+      if (e.target.closest('[data-act="cancel"]')) { box.hidden = true; return; }
       if (e.target.closest('[data-act="begin"]')) {
-        S = meta ? (fromPresent ? G.nextRun(S, pickClan) : G.newRun(meta, pickClan)) : G.newRun(G.newMeta(), pickClan);
+        S = why === 'again' ? G.prestige(S, pickClan) : G.newRun(meta || G.newMeta(), pickClan);
         box.hidden = true;
-        report = null; older = 25; mapKey = '';
+        report = null; older = 25; mapKey = ''; known = null;
         for (const k of Object.keys(shown)) delete shown[k];
-        render(); focus(); save();
+        tab = 'trades'; setTab('trades'); focus(); save();
         window.scrollTo(0, 0);
       }
     };
@@ -570,11 +590,17 @@
   let structKey = '';
   function render() {
     if (!S) return;
-    const k = [S.year, S.unread.join(), S.readIds.length, S.chron.length, S.reach.length, G.reachPoints(S), levels(), S.done, !!report, older, G.best(S) && G.best(S).id].join('|');
+    const keyBits = { trades: () => [WORKS.filter(w => G.isOpen(S, w.id)).length, Object.keys(S.mgr).length, WORKS.map(w => G.nextMilestone(S, w.id)?.at).join(), S.done, !!report],
+      upgrades: () => [S.upg.length, S.year], managers: () => [Object.keys(S.mgr).length, S.year], chron: () => [S.unread.join(), S.readIds.length, S.chron.length, older],
+      house: () => [S.heads.length, S.reach.length, S.readIds.length, G.renownGain(S), S.meta.treasures.length] };
+    const k = tab + '|' + S.house + '|' + keyBits[tab]().join('|');
     if (k !== structKey) {
       structKey = k;
       const f = document.activeElement && document.activeElement.dataset && document.activeElement.dataset.k;
-      renderNow(); renderChron(); renderHouse();
+      panel.innerHTML = VIEWS[tab]();
+      const dyeCol = shade(DYES[CLANS[S.house].dye], -.3), mo = MOTIF[CLANS[S.house].motif];
+      document.body.style.setProperty('--dye', dyeCol); // the bars fill in the house's own dye, with its stencil
+      document.body.style.setProperty('--dye-cloth', mo ? `url("data:image/svg+xml,${encodeURIComponent(`<svg xmlns='http://www.w3.org/2000/svg' width='${mo.w * 1.6}' height='${mo.h * 1.6}'><path d='${mo.d}' transform='scale(1.6)' fill='${mo.fill ? shade(dyeCol, -.25) : 'none'}' stroke='${mo.fill ? 'none' : shade(dyeCol, -.3)}' stroke-width='.6'/></svg>`)}")` : 'none');
       $('#house').innerHTML = `${disc(S.house)}<span><b>${clanName(S.house)}</b><small>${esc(G.headName(S))} · ${S.reach.length} province${S.reach.length > 1 ? 's' : ''}</small></span>`;
       if (f) { const t = document.querySelector(`[data-k="${f}"]`); if (t) t.focus(); }
       if (isOpen()) renderChoose();
@@ -582,36 +608,38 @@
     paintMap();
     live();
   }
-  function toast(t) { const box = $('#toast'); box.innerHTML = `<span>${esc(t)}</span>`; }
+  function toast(t) { $('#toast').innerHTML = `<span>${esc(t)}</span>`; }
 
-  // ---------- the clock ----------
+  // ---------- the clock: every frame while the page is open; the time away is counted on return ----------
   let last = Date.now(), lastSave = Date.now();
   function catchUp(now) {
     const dt = (now - last) / 1000;
     last = now;
-    if (dt > 90) { report = G.away(S, dt); report.unit = money(); }
+    if (dt > 90) { report = G.away(S, dt); report.unit = unit(); structKey = ''; }
     else if (dt > 0) G.tick(S, dt);
   }
-  function step() {
-    if (!S) return;
-    catchUp(Date.now());
-    render();
-    if (Date.now() - lastSave > 5000) { save(); lastSave = Date.now(); }
+  function frame() {
+    if (S && $('#pick').hidden) {
+      catchUp(Date.now());
+      render();
+      if (Date.now() - lastSave > 5000) { save(); lastSave = Date.now(); }
+    } else last = Date.now();
+    requestAnimationFrame(frame);
   }
-  setInterval(step, 250);
-  document.addEventListener('visibilitychange', () => { if (document.hidden) save(); else step(); });
+  document.addEventListener('visibilitychange', () => { if (document.hidden) save(); });
   addEventListener('pagehide', save);
   addEventListener('resize', () => { if (S && !isOpen()) focus(); });
 
   // ---------- start ----------
   const saved = load();
-  if (saved && saved.v === 2) {
+  if (saved && saved.v === 3) {
     S = saved;
     if (S.savedAt) { last = S.savedAt; catchUp(Date.now()); }
-    render(); focus();
+    setTab('trades'); focus();
   } else {
-    try { localStorage.removeItem('tenka-save-1'); } catch { /* nothing to clear */ }
-    showPick(false);
+    for (const k of ['tenka-save-1', 'tenka-save-2']) try { localStorage.removeItem(k); } catch { /* nothing to clear */ }
+    showPick(null);
   }
-  window.tenka = { get S() { return S; }, set S(v) { S = v; mapKey = ''; render(); focus(); }, G, render };
+  requestAnimationFrame(frame);
+  window.tenka = { get S() { return S; }, set S(v) { S = v; mapKey = ''; known = null; structKey = ''; render(); focus(); }, G, render };
 })();
