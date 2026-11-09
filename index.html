@@ -11,7 +11,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Tenka">
-<meta name="apple-mobile-web-app-status-bar-style" content="black">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <style>
 @font-face { font-family: 'Shippori'; src: url(fonts/mincho-400.woff2) format('woff2'); font-weight: 400; font-display: swap; }
 @font-face { font-family: 'Shippori'; src: url(fonts/mincho-700.woff2) format('woff2'); font-weight: 700; font-display: swap; }
@@ -40,8 +40,9 @@
 }
 * { box-sizing: border-box; }
 html, body { height: 100%; }
-html { background: var(--plaster); scrollbar-color: var(--hair-2) transparent; scrollbar-width: thin; }
-body { margin: 0; color: var(--ink); background: var(--plaster); font: 400 15px/1.55 var(--gothic); -webkit-font-smoothing: antialiased; -webkit-tap-highlight-color: transparent; overflow: hidden; }
+/* the page behind the column is the roof: Safari tints the bar behind the clock from it */
+html { background: var(--roof); scrollbar-color: var(--hair-2) transparent; scrollbar-width: thin; }
+body { margin: 0; color: var(--ink); background: var(--roof); font: 400 15px/1.55 var(--gothic); -webkit-font-smoothing: antialiased; -webkit-tap-highlight-color: transparent; overflow: hidden; }
 ::selection { background: #ecd9a8; color: var(--ink); }
 :focus-visible { outline: 2px solid var(--wood); outline-offset: 2px; }
 .trade :focus-visible, .renown :focus-visible, #tabs :focus-visible, #house:focus-visible, .chosen :focus-visible { outline-color: var(--gilt); }
@@ -59,7 +60,7 @@ h1, h2, h3 { font-family: var(--mincho); font-weight: 400; }
 /* ---------- the shop front: the curtain, the sign, the five ages ---------- */
 #top { flex: none; padding-top: env(safe-area-inset-top); background: linear-gradient(var(--roof) env(safe-area-inset-top), transparent 0); }
 /* the eave: a row of round tile ends over a wooden lintel */
-.eave { position: relative; z-index: 2; height: 30px; background: url(art/eave.svg) 13px 0 / 26px 30px repeat-x, var(--roof); }
+.eave { position: relative; z-index: 2; height: 40px; background: url(art/eave.svg) 13px 100% / 26px 30px repeat-x, linear-gradient(#2a2c2f, var(--roof) 10px); }
 .beam { position: relative; z-index: 1; height: 12px; background: repeating-linear-gradient(90deg, rgba(255, 255, 255, .035) 0 1px, transparent 1px 7px, rgba(0, 0, 0, .06) 7px 8px, transparent 8px 19px), linear-gradient(var(--wood-2), var(--wood)); box-shadow: 0 3px 4px rgba(0, 0, 0, .35); }
 /* the noren: a rod, a hem, two slits, the crest dyed across all three panels */
 /* the noren: three cotton panels hung through a sleeve on the lintel; the dim shop shows between them */
