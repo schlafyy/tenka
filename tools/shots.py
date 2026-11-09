@@ -21,7 +21,7 @@ FORWARD = """h => { const S = tenka.S, G = tenka.G;
     for (const w of WORKS) if (G.isOpen(S, w.id)) { G.hire(S, w.id); while (G.buy(S, w.id, 1)) {} }
     for (const u of G.upgrades(S)) if (u.open && !u.owned) G.buyUpgrade(S, u.id);
     while (S.unread.length > 3) G.read(S, S.unread[0]);
-    while (G.reachPoints(S) > 0 && G.reachable(S).length) G.reach(S, G.bestReach(S)); }
+  }
   tenka.S = S; }"""
 
 def shot(pg, name, full=False):
@@ -57,12 +57,6 @@ with sync_playwright() as p:
             pg.click(f"#tabs [data-tab='{t}']")
             shot(pg, f"{name}-5-{t}")
         pg.click("#tabs [data-tab='trades']")
-        if pg.locator("#reachpill:not([hidden])").count():
-            pg.click("#reachpill")
-            pg.wait_for_timeout(900)
-            shot(pg, f"{name}-6-map")
-            pg.locator("#choose [data-act='auto']").click()
-            pg.wait_for_timeout(2600)
         # six hours away
         pg.close()
         pg = ctx.new_page(); watch(pg)

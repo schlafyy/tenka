@@ -48,8 +48,9 @@ assert.strictEqual(G.cycle(S, 'paddies'), slow / 2, 'level 25 halves the cycle')
 const r0 = G.rate(S, 'paddies');
 S.money = 1e30;
 assert(G.buyUpgrade(S, 'paddies:0') && Math.abs(G.rate(S, 'paddies') / r0 - 3) < 1e-9, 'an upgrade triples the profit');
-assert(G.reachPoints(S) >= 1, 'a province to reach');
-assert(G.reach(S, 'shinano') && !G.reach(S, 'mutsu'), 'reach a neighbour, not a far province');
+assert(S.reach.length > 1 && G.reachPoints(S) === 0, 'the house reaches provinces by itself as the years pass');
+assert(S.reach.every(p => p === 'kai' || S.reach.some(q => ADJ[q].includes(p))), 'each one next to land it already had');
+S.pts = 1; assert(!G.reach(S, 'tsushima') || ADJ.tsushima.some(q => S.reach.includes(q)), 'not a far province');
 S.year = 1600; G.arrive(S);
 assert(S.unread.length > 30, 'the chapters arrive with the years');
 while (S.unread.length) G.read(S, S.unread[0]);
@@ -66,8 +67,7 @@ assert.deepStrictEqual(T2.reach, ['satsuma']);
 assert.strictEqual(G.renownGain(T2), 0, 'renown is not paid twice');
 T2.year = 1600; G.arrive(T2);
 assert(T2.readIds.length > 30 && T2.unread.every(id => !T2.meta.seen.includes(id)), 'chapters read before count as read; only new ones wait');
-G.earn(T2, G.earnedFor(1700));
-assert(T2.reach.length > 1 && G.reachPoints(T2) === 0, 'after the first run the house reaches provinces by itself');
+
 const away = G.newRun(G.newMeta(), 'oda', 1);
 away.lv.paddies = 10; away.money = 1e4; G.hire(away, 'paddies');
 const rep = G.away(away, 3600);

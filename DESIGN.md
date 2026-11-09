@@ -1,6 +1,6 @@
 ---
 name: Tenka 天下
-description: A house's fortune across 550 years, kept on a length of indigo-dyed cotton; trades run in the house's own dye while the map strip above soaks with its land.
+description: A house's fortune across 550 years, kept on a length of indigo-dyed cotton; the banner shows the house and its age, and trades run in the house's own dye.
 colors:
   kachi: "#13152f"
   kon: "#1a1e47"
@@ -14,7 +14,6 @@ colors:
   muted: "#adb2d2"
   faint: "#8f94b8"
   ink: "#13152f"
-  ink-soft: "#4a4a63"
   story: "#ddd5c4"
 typography:
   display:
@@ -76,6 +75,7 @@ typography:
     fontWeight: 400
     lineHeight: 1.3
 rounded:
+  tick: "1px"
   cloth: "4px"
   tile: "8px"
   pill: "22px"
@@ -84,12 +84,20 @@ spacing:
   gap-sm: "8px"
   gap-md: "14px"
   gutter: "18px"
-  tab-clearance: "96px"
 components:
-  year-header:
+  house-banner:
     backgroundColor: "{colors.kachi}"
     textColor: "{colors.cream}"
-    padding: "12px 18px 10px"
+    padding: "14px 18px 12px"
+  age-band:
+    backgroundColor: "{colors.hanada}"
+    rounded: "{rounded.cloth}"
+    height: "8px"
+  age-tick:
+    backgroundColor: "{colors.cream}"
+    rounded: "{rounded.tick}"
+    width: "2px"
+    height: "14px"
   buy-mode-switch:
     textColor: "{colors.muted}"
     rounded: "{rounded.pill}"
@@ -164,29 +172,18 @@ components:
     textColor: "{colors.ink}"
     rounded: "{rounded.tile}"
     height: "17px"
-  house-pill:
-    backgroundColor: "{colors.kachi}"
-    textColor: "{colors.cream}"
-    rounded: "{rounded.pill}"
-    padding: "5px 14px 5px 5px"
-  reach-pill:
-    backgroundColor: "{colors.cream}"
-    textColor: "{colors.ink}"
-    rounded: "{rounded.pill}"
-    padding: "7px 16px"
-    height: "40px"
   crest-disc:
     backgroundColor: "{colors.undyed}"
     textColor: "{colors.ink}"
     rounded: "{rounded.round}"
-    size: "34px"
+    size: "54px"
+  province-chip:
+    textColor: "{colors.muted}"
+    rounded: "{rounded.pill}"
+    padding: "2px 8px"
   chronicle-entry:
     textColor: "{colors.cream}"
     padding: "14px 0"
-  choose-bar:
-    backgroundColor: "{colors.lining}"
-    textColor: "{colors.cream}"
-    padding: "14px 18px 16px"
   house-card:
     backgroundColor: "{colors.lining}"
     textColor: "{colors.cream}"
@@ -211,39 +208,39 @@ components:
 
 **Creative North Star: "Indigo Cloth"**
 
-Tenka is the Sengoku map's world, kept whole and made into a business you run. The ground is indigo (kachi at the edge, kon in the sea, lining for panels), text is unbleached cotton cream, and each house is a natural dye with a stencil motif. A strip of the dyed map sits at the head, a sticky header holds the year and the money, and below it a list of trades, each one a square you tap, a bar that fills in your house's own dye, and a price to buy more. A fixed tab bar carries the rest: upgrades, managers, the chronicle and the house.
+Tenka is the Sengoku map's world, kept whole and made into a business you run. The ground is indigo (kachi at the edge, kon in the banner's grade, lining for panels), text is unbleached cotton cream, and each house is a natural dye with a stencil motif. A banner on woven indigo holds the house, the year, the five ages and the money; below it a list of trades, each one a square you tap, a bar that fills in your house's own dye, and a price to buy more. A fixed tab bar carries the rest: upgrades, managers, the chronicle and the house.
 
-The interface is quiet and Mincho-led. Cream is the one bright thing on the dark ground, and it marks what can be acted on now: a trade square that waits for a tap, a buy button you can afford, a price button you can pay, the selected buy mode, the count dots on tabs, the reach pill and the toast. Everything else recedes into muted indigo-tinted grey, dashed stitches and hairlines. The mood is a patient evening with a ledger and a history book, not a casino dashboard.
+The interface is quiet and Mincho-led. Cream is the one bright thing on the dark ground, and it marks what can be acted on now: a trade square that waits for a tap, a buy button you can afford, a price button you can pay, the selected buy mode, the count dots on tabs, the tick where the next trade opens and the toast. Everything else recedes into muted indigo-tinted grey, dashed stitches and hairlines. The mood is a patient evening with a ledger and a history book, not a casino dashboard.
 
 **Key Characteristics:**
-- Indigo ground with the cotton weave (1px lines on a 3px pitch) on the map strip and the house picker.
+- Indigo ground with the cotton weave (1px lines on a 3px pitch) on the banner and the house picker.
 - Cream is for what can be acted on now; waiting, shut or finished things are outlined, dashed or dimmed.
-- Trade bars fill in the house's darkened dye under its own stencil motif.
-- Mincho for names, kanji, the year and stories; gothic for money, counts, labels and controls.
+- Trade bars and the age band fill in the house's darkened dye under its own stencil motif.
+- Mincho for names, kanji, the year and stories; gothic for money, figures, labels and controls.
 - Dashed cream lines mean stitches: rows, seams, borders of waiting or optional things, focus.
 - Crests are real kamon on a disc of the clan's own dye, darkened.
-- Motion is small and eased on one curve.
+- Motion is small, eased on one curve, and runs on the compositor.
 
 ## Colors
 
-The Sengoku map's indigo palette, reduced to what a ledger needs; clan dyes reach the interface only through the map, the crest discs and the trade bars.
+The Sengoku map's indigo palette, reduced to what a ledger needs; the clan dye reaches the interface only through the crest discs, the trade bars and the age band.
 
 ### Primary
-- **The Indigo Vat** (kachi, kon, kon-light, hanada, lining, lining-2): kachi is the page, the sticky header, the house pill and the text on cream. Kon and kon-light are the sea in the map strip's radial grade and the lake and Ezo fills. Hanada is text selection, the scrollbar thumb and the trade bar's fallback fill. Lining is the tab bar, the choose bar and house cards; lining-2 is the trade tile and the selected house card.
+- **The Indigo Vat** (kachi, kon, kon-light, hanada, lining, lining-2): kachi is the page, the level badge and the text on cream. Kon and kon-light are the banner's and the picker's radial grade. Hanada is text selection, the scrollbar thumb and the fallback fill of bars and age band. Lining is the tab bar and house cards; lining-2 is the trade tile and the selected house card.
 
 ### Neutral
 - **Unbleached Cotton** (cream, cream-hover): all primary text, and the solid surface of whatever can be acted on now; cream at .14 (line), .32 (seam) and up to .5 alpha is every border, hairline and hover wash. cream-hover is the brighter cotton a cream surface turns on hover.
 - **Undyed Cotton** (undyed): the crest-disc fallback ground behind a single kanji.
-- **Ink** (ink, ink-soft): text on cream surfaces. ink is kachi under another name. ink-soft is defined but unused in the current build.
-- **Indigo-tinted Greys** (muted, faint): muted is secondary text, unaffordable prices and notes; faint is shut trades, empty treasure slots and the credits.
+- **Ink** (ink): text on cream surfaces. ink is kachi under another name.
+- **Indigo-tinted Greys** (muted, faint): muted is secondary text, unaffordable prices, province chips and notes; faint is shut trades, unreached ages and the credits.
 - **Story Cotton** (story): the dimmed cream of long Mincho reading in chronicle entries and the picker's lede.
 
 ### Named Rules
-**The Cream Marks Action Rule.** Cream marks what can be acted on now. A solid cream fill means "tap this": an idle trade square, an affordable buy or price button, the selected buy mode, a tab's count dot, the reach pill, the Go button, the toast. When the thing is no longer actionable it returns to outline or muted text. Cream never decorates.
+**The Cream Marks Action Rule.** Cream marks what can be acted on now. A solid cream fill means "tap this": an idle trade square, an affordable buy button, the active buy mode, a ready upgrade or manager price button, a tab's count dot, the age-band tick, the toast. When the thing is no longer actionable it returns to outline or muted text. Cream never decorates.
 
 **The Same Cloth Rule.** Token names and values match the Sengoku map's Indigo Cloth where the build uses them. A new colour needs a job the map's palette does not already do.
 
-**The Own Dye Rule.** The player's house dye, darkened (30% for bar fills, 38% for crest discs), is the only clan colour in the interface, and only on the trade bars and the discs. It is set once, from the house, as the variables --dye and --dye-cloth on the page. No other element takes a dye.
+**The Own Dye Rule.** The player's house dye, darkened (30% for bar and band fills, 38% for crest discs), is the only clan colour in the interface, and only on the trade bars, the age band and the discs. It is set once, from the house, as the variables --dye and --dye-cloth on the page. No other element takes a dye.
 
 ## Typography
 
@@ -253,87 +250,85 @@ The Sengoku map's indigo palette, reduced to what a ledger needs; clan dyes reac
 **Character:** A high-contrast Mincho carries the history, the year and the trade glyphs; a soft gothic handles money, costs and controls. All type sits on a nine-step rem ramp: .72, .84, .9, 1, 1.05, 1.25, 1.5, 2.2, 2.4.
 
 ### Hierarchy
-- **Display** (700, 2.4rem, 1, -0.02em): the year in the sticky header, lining tabular numerals. Its era sits right-aligned in Mincho 400 1.05rem with its romanization in gothic .72rem muted.
+- **Display** (700, 2.4rem, 1, -0.02em): the year at the right of the banner, lining tabular numerals. Under it the era sits right-aligned: its kanji in Mincho 400 1rem cream, its romanization and number in gothic .84rem muted.
 - **Headline** (700, 2.2rem, 1.1): the picker's "Tenka 天下". The trade tile's kanji uses the same size and weight (glyph).
-- **Money** (gothic 500, 1.5rem, 1.1): the money figure in the header; its unit is muted and its rate is muted .9rem, pushed right.
-- **Title** (700, 1.25rem): tab and section headings, the choose bar and the present-day box, the tab bar's kanji.
+- **Money** (gothic 500, 1.5rem, 1.1): the money figure in the banner; its unit is muted and its rate is muted .9rem, pushed right.
+- **Title** (700, 1.25rem): tab and section headings, the present-day box, the tab bar's kanji, the house name in the banner (1.15 line height).
 - **Title-sm** (700, 1.05rem, 1.2): trade names, upgrade and manager names, chronicle entry names (`keep-all`, balanced, kanji kept whole), house names in the picker, subheads. Kanji beside a name is Mincho 400 .9rem muted.
+- **Figure** (gothic 500, inherits the heading's size): numbers inside Mincho headings, such as renown, "3 of 12 provinces, profit +10%" and the treasure count, set in the gothic face so digits stay even.
 - **Reading** (400, 1rem, 1.65, max 62ch, Mincho): a chronicle story. The picker's lede is 1.05rem.
 - **Body** (400, 15px, 1.55, gothic): default text. Numbers use tabular lining numerals.
 - **Control** (500, .9rem, gothic): buttons, buy mode switch, buy button, tab counts, toast.
-- **Label** (400, .84rem): bar text, tips, item descriptions, where-lines, "Opens in 1550". Notes and facts are .9rem muted.
+- **Label** (400, .84rem): bar text, tips, item descriptions, where-lines, the head's name and the "age · next trade" line in the banner, "Opens in 1550", the age-band kanji (Mincho). Notes and facts are .9rem muted.
 - **Micro** (.72rem): level badge, "profit ×3 at level 25" milestone notes, tab labels, the credits.
 
 ### Named Rules
-**The English-then-Kanji Rule.** A name is the English followed by its kanji in Mincho (trade names, upgrades, entries, treasures, picker title).
+**The English-then-Kanji Rule.** A name is the English followed by its kanji in Mincho (trade names, upgrades, entries, treasures, provinces, picker title).
 
-**The Year Is Loud Rule.** The year is the largest text on the panel and the only display-size text there; the trade glyph shares its scale only because it is a single kanji in a square.
+**The Year Is Loud Rule.** The year is the largest text on the screen and the only display-size text; the trade glyph shares its scale only because it is a single kanji in a square.
 
 ## Layout
 
-A one-column panel, 460px at most, centred (`--col`), under a map strip. On a phone the page is the map strip (clamp(150px, 22dvh, 230px)), a sticky header (year with era, then money with rate, 12px 18px padding, dashed bottom seam), the panel, and a fixed tab bar. The panel's bottom padding (96px plus the safe area) clears the tab bar. Side padding is 18px; blocks sit 12 to 16px apart, subheads 22px above.
+One centred column, 560px at most (`--col`), exactly the height of the screen (100dvh) and made of three stacked parts. The house banner is fixed at the top and never scrolls: 14px (plus the safe area) above, 18px at the sides, 12px below, a dashed bottom seam. The panel takes the rest, scrolls on its own (padding 14px 18px 24px, overscroll contained) and swaps tabs with a .18s fade. The tab bar sits at the bottom, 56px tall, with the safe area below. The structure does not change on wide screens: from 900px the column only gains dashed side seams and 8px more banner top padding. Blocks sit 12 to 16px apart, subheads 22px above.
 
-A trade is a two-column grid: a 66px tile at left (14px gap) and, stacked right, the name with its level note, the bar, and the buy row with its milestone note. Rows are separated by dashed hairlines, 16px above and 14px below. The next locked trade closes the list, drawn dashed. Upgrades and managers are two-column items (text, then a 96px minimum price button), 13px padding.
+The banner has three bands. The top row is the house at left (a 54px crest disc, 12px gap, the house name over the head's name) and the year at right with the era under it. Below, 14px down, the five ages (戦国 江戸 明治 昭和 平成) as five equal columns with a 4px gap, each an 8px band over a .84rem kanji label. Then a one-line note naming the age and the next trade (8px down), then the money row (10px down): money, unit, and the rate pushed right.
 
-Choosing a province unrolls the strip to calc(100dvh - 150px) over .6s and shows the choose bar beneath it. The house pill sits top-left, the reach pill bottom-left, the close button top-right.
+A trade is a two-column grid: a 66px tile at left (14px gap) and, stacked right, the name with its level note, the bar, and the buy row with its milestone note. Rows are separated by dashed hairlines, 16px above and 14px below. The next locked trade closes the list, drawn dashed. Upgrades and managers are two-column items (text, then a 96px minimum price button), 13px padding. The House tab lists its provinces as a wrapping row of chips (4px by 6px gap).
 
-At 900px and up the body is a two-column grid: the map at full height on the left, the app (420 to 500px, dashed left seam) on the right, the header no longer sticky, the panel scrolling inside, the tab bar in flow at the foot. The choose bar floats over the map's bottom-left as a bordered 4px card. The picker is a fixed full-screen overlay, 560px max, houses in an auto-fill grid of 150px minimum columns.
+The picker is a fixed full-screen overlay, 560px max, houses in an auto-fill grid of 150px minimum columns.
 
-Reduced motion cuts every animation and transition to .01ms.
+Reduced motion cuts every animation and transition to .01ms, and the trade pulse is not started.
 
 ## Elevation & Depth
 
-Mostly flat: depth comes from tone (kachi page, lining and lining-2 panels, cream surfaces) and from dashed or hairline borders. Soft ambient shadows appear only on the three things that float over the map or the panel: the house pill (0 4px 14px at .3), the reach pill (0 6px 18px at .35) and the toast (0 8px 22px at .35). They are wide, blurred and offset only downward. The tab bar, header, tiles, buttons, rows and panels stay shadowless. Crest discs carry a zero-offset 1.5px cream ring at .55 rather than a shadow.
+Flat: depth comes from tone (kachi page, lining and lining-2 panels, cream surfaces), the weave and dashed or hairline borders. The only soft shadow is the toast's (0 8px 22px at .35), wide, blurred and offset only downward, because it floats over the panel. The banner, tab bar, tiles, buttons, rows and panels stay shadowless. Crest discs carry a zero-offset 1.5px cream ring at .55 rather than a shadow.
 
 ### Named Rules
-**The Lifted Floaters Rule.** Only controls floating over the map or the panel carry a soft shadow. Rows, tiles, buttons and panels never do. No hard or offset shadows.
+**The Lifted Floaters Rule.** Only what floats over the panel (the toast) carries a soft shadow. Banner, rows, tiles, buttons and panels never do. No hard or offset shadows.
 
 ## Shapes
 
-Barely softened corners on a short scale: 4px for bars, buy buttons, panel boxes, away note, treasure tiles, house cards and the choose bar on wide screens; 8px for the trade tile and the small badges (level, tab dots); 22px pills for buttons, the buy mode switch, the house pill, the reach pill and the toast; full circles for discs and the close button. A crest disc has a 1.5px cream ring at .55; the kanji fallback has none.
+Barely softened corners on a short scale: 4px for trade bars, age bands, buy buttons, panel boxes, away note, treasure tiles and house cards; 8px for the trade tile and the small badges (level, tab dots); 22px pills for buttons, the buy mode switch, province chips and the toast; full circles for discs; 1px on the age-band tick. A crest disc has a 1.5px cream ring at .55; the kanji fallback has none.
 
-Dashed means rows, waiting or seam: trade and list rows, chronicle entries, the header and tab bar seams, the shut trade's tile, the away note, gone treasure tiles. Solid 1px lines at .32 frame the present-day and renown boxes and the level badge. Focus is a 1.5px dashed cream outline offset 3px. Reachable provinces on the open map are dashed cream and breathe (2.4s); the selected one goes solid and thicker.
+Dashed means rows, waiting or seam: trade and list rows, chronicle entries, the banner and tab bar seams, the shut trade's tile, the away note. Solid 1px lines at .32 frame the present-day and renown boxes and the level badge; province chips use a 1px line at .14. Focus is a 1.5px dashed cream outline offset 3px.
 
 ## Components
 
-### Year header
-Sticky at the top of the page on phones, kachi ground with a dashed bottom seam. Left, the year in Display; right, the era in Mincho with romanization beneath. Below, the money in Money type, a muted unit and a muted rate at the far right.
+### House banner
+Fixed at the top of the column on a woven indigo ground (weave over a kon-light to kon to kachi radial grade) with a dashed bottom seam. Left, the house button: a 54px crest disc, the house name in Mincho 700 1.25rem and the head's name in muted .84rem, ellipsised. Right, the year in Display with the era beneath it. Below, the age band, the age-and-next-trade line and the money row (see Layout). The house button opens the house picker.
+
+### Age band
+Five equal columns, each an 8px band (4px radius, cream .1 trough) holding a fill in the house dye with its stencil motif, falling back to hanada. The fill is a scaled layer (transform scaleX, origin left, .6s ease), full for past ages, partial for the current one, empty for the rest. The kanji beneath is Mincho .84rem: faint ahead, muted behind, cream and 700 for the current age. A cream tick, 2px by 14px with a 1px radius, stands on the band of the age that holds the next trade, at the year it opens.
 
 ### Buy mode switch
 A 22px-radius pill with a 1.5px line border holding four buttons (×1, ×10, ×100, Max), 50px by 34px minimum, muted text. The pressed one fills cream with ink text. Right-aligned above the trades.
 
 ### Trade row
-Grid of tile and content. The **tile** is a 66px square, 8px radius, lining-2 ground and a 1.5px seam border, a 2.2rem Mincho kanji and a level badge hanging off the bottom edge (kachi, 1px seam border, .72rem). When the trade waits for a tap (idle), the tile turns solid cream with ink text and its kanji nudges up and down (1.4s); pressing scales it to .95. The **bar** is 28px tall, 4px radius, a cream .08 trough; its fill is the house dye (--dye) with the stencil motif tiled over it (--dye-cloth), falling back to hanada; it shimmers when the trade runs so fast the fill would blur. Inside, the payout in 500 and the time left in muted. The **buy button** is a 40px, 4px-radius outlined button with muted text ("×10" count left, price right); when affordable it fills cream with ink text and brightens to cream-hover on hover. A muted .72rem milestone note ("twice as fast at level 25") sits at its right. The **shut** trade is the next locked one: dashed tile with no fill, faint kanji and name, and a muted line "Opens in 1550, when the house has earned ...".
+Grid of tile and content. The **tile** is a 66px square, 8px radius, lining-2 ground and a 1.5px seam border, a 2.2rem Mincho kanji and a level badge hanging off the bottom edge (kachi, 1px seam border, .72rem). When the trade waits for a tap (idle), the tile turns solid cream with ink text; pressing scales it to .94. When a cycle pays, the tile pulses once, scale 1.07 back to 1 over 260ms (skipped for reduced motion and for trades so fast the bar is a blur). The **bar** is 28px tall, 4px radius, a cream .08 trough; its fill is a scaled layer (scaleX on the compositor, never a width) in the house dye with the stencil motif tiled over it (--dye-cloth), falling back to hanada; at high speed the fill is shown whole. Inside, the payout in 500 and the time left in muted. The **buy button** is a 40px, 4px-radius outlined button with muted text ("×10" count left, price right); when affordable it fills cream with ink text, brightens to cream-hover on hover and scales to .98 on press. A muted .72rem milestone note ("twice as fast at level 25") sits at its right. The **shut** trade is the next locked one: dashed tile with no fill, faint kanji and name, and a muted line "Opens in 1550, when the house has earned ...".
 
 ### Upgrades and managers
-List items on a dashed hairline: name with kanji and a muted .84rem description at left; a 96px-minimum pill button at right showing the price. Outlined while unaffordable (disabled), solid cream "go" when affordable. A hired manager shows a muted check and "Hired".
+List items on a dashed hairline: name with kanji and a muted .84rem description at left; a 96px-minimum pill button at right showing the price. Disabled and outlined (muted text, hairline border) while unaffordable; solid cream (.btn.go) when affordable. A hired manager shows a muted check and "Hired".
 
 ### Tab bar
-Fixed to the bottom (in flow on wide screens), lining ground, dashed top seam, five equal buttons at 56px minimum: a 1.25rem Mincho kanji over a .72rem label, muted. The current tab turns cream and gains a 2px cream bar across the top edge. A count dot (cream, ink text, 17px, 8px radius) sits at the top-right of the kanji when something waits.
+Fixed to the bottom of the column, lining ground, dashed top seam, five equal buttons at 56px minimum: a 1.25rem Mincho kanji over a .72rem label, muted. The current tab turns cream and gains a 2px cream bar across the top edge. A count dot (cream, ink text, 17px, 8px radius) sits at the top-right of the kanji when something waits.
 
 ### Panel boxes
 The present-day box and the renown box: 1px seam border, 4px radius, 14px 16px padding, a title, muted text and a button. The away note is the same shape in dashed seam, with a 32px dismiss target at its top-right.
 
 ### Buttons
-42px tall, 22px-radius pills, 8px 18px padding, gothic 500 .9rem. Default: cream text, 1.5px cream border at .5; hover goes to full cream border with a .07 wash. Go: solid cream with ink text, hover cream-hover. Disabled: muted text, hairline border.
-
-### Map strip, house pill, reach pill
-The strip is the indigo radial grade under the weave. The house pill is a kachi .9 pill holding a 34px crest disc, the clan name in Mincho 1.05rem and a muted .72rem line. The reach pill is cream with ink text and a 15px SVG, 40px tall. When the map is open both hide and a 40px round close button takes the top-right.
-
-### Open-map choose bar
-Lining ground, 14px 18px padding, dashed seam bottom edge; a Mincho 1.25rem province name with muted kanji, a muted line, and a wrapping row of buttons.
+42px tall, 22px-radius pills, 8px 18px padding, gothic 500 .9rem. Default: cream text, 1.5px cream border at .5; hover goes to full cream border with a .07 wash; press scales to .97. Go: solid cream with ink text, hover cream-hover. Disabled: muted text, hairline border, no hover or press.
 
 ### Chronicle entries
-A two-column grid (46px, 1fr). Left: the year in Mincho 700 1rem muted, right-aligned, over a 38px crest disc. Right: the name in Title-sm with its kanji, a muted "place · clan" line and the story in Reading (Story Cotton, 62ch). A dashed hairline separates entries. An unread entry swaps the story for a "Read · profit +N%" button; new entries settle in (.8s, 10px drop and fade). House entries (the player's own heads) drop the disc and set the name in gothic 400 1rem muted.
+A two-column grid (46px, 1fr). Left: the year in Mincho 700 1rem muted, right-aligned, over a 38px crest disc. Right: the name in Title-sm with its kanji, a muted "place · clan" line and the story in Reading (Story Cotton, 62ch). A dashed hairline separates entries. An unread entry swaps the story for a "Read · profit +N%" button. House entries (the player's own heads) drop the disc and set the name in gothic 400 .9rem muted.
 
 ### Crest disc
-34px in the pill, 38px in the chronicle, 44px in the picker: a circle filled with the clan's dye darkened by 38%, a crest resist-dyed to cream inside, a 1.5px cream ring at .55. Without a crest, an undyed disc with the clan's first kanji in ink Mincho.
+54px in the banner, 38px in the chronicle, 44px in the picker: a circle filled with the clan's dye darkened by 38%, a crest resist-dyed to cream inside, a 1.5px cream ring at .55. Without a crest, an undyed disc with the clan's first kanji in ink Mincho.
 
-### House section and treasures
-A Title heading, a facts block (muted lines, cream 500 terms), the renown box, "heads before" in two columns, treasure tiles in an auto-fill grid (128px min, 4px radius, 1px hairline, Mincho name in cream; gone ones dashed, faint) and a tools row of default buttons. Credits are .72rem faint.
+### House section, provinces and treasures
+A Title heading, a facts block (muted lines, cream 500 terms), the renown box, then the provinces as chips: pills with a 1px line at .14, 2px 8px padding, muted .84rem English name with its kanji in cream Mincho. "Heads before" follows in two columns, treasure tiles in an auto-fill grid (128px min, 4px radius, 1px hairline, Mincho name in cream) and a tools row of default buttons. Counts in the sub-headings use the gothic figure style. Credits are .72rem faint.
 
 ### House picker
-A fixed full-screen overlay on the indigo grade with the weave: headline with kanji, a Story Cotton Mincho lede above a 2px dashed seam, a grid of house cards (4px radius, 1.5px hairline border, lining ground; the pressed card has a full cream border and lining-2 ground) each with a 44px disc, the name and a muted line, then a bordered "chosen" box with a full-width Go button.
+A fixed full-screen overlay on the woven indigo grade: headline with kanji, a Story Cotton Mincho lede above a 2px dashed seam, a grid of house cards (4px radius, 1.5px hairline border, lining ground; the pressed card has a full cream border and lining-2 ground) each with a 44px disc, the name and a muted line, then a bordered "chosen" box with a full-width Go button.
 
 ### Toast
 A cream pill, ink text, gothic 500 .9rem, centred above the tab bar, rising and fading over 2.6s. Polite status; never blocks.
@@ -341,17 +336,18 @@ A cream pill, ink text, gothic 500 .9rem, centred above the tab bar, rising and 
 ## Do's and Don'ts
 
 ### Do:
-- **Do** use solid cream only for what can be acted on now (idle tile, affordable buy and price buttons, selected mode, count dots, reach pill, Go, toast) and return it to outline or muted when the action is gone.
+- **Do** use solid cream only for what can be acted on now (idle tile, affordable buy and price buttons, active mode, count dots, the age-band tick, toast) and return it to outline or muted when the action is gone.
 - **Do** reuse the Sengoku map's token names and values (kachi, kon, hanada, lining, cream, undyed, muted, Shippori, Zen) before inventing one.
-- **Do** set names as English then kanji in Mincho, and fill bars and crest discs only in the house's darkened dye.
+- **Do** set names as English then kanji in Mincho, and fill bars, the age band and crest discs only in the house's darkened dye.
 - **Do** keep dashed lines for rows, seams, waiting states and focus, and 1px cream at .14 or .32 for hairlines and boxes.
 - **Do** keep corners to 4px, 8px, the 22px pill and circles, and type to the nine-step rem ramp.
-- **Do** ease motion on cubic-bezier(.16, 1, .3, 1), keep it small, and honour prefers-reduced-motion.
-- **Do** keep tap targets at 40px or taller (buttons 42px, buy buttons and pills 40px, tabs 56px); the 34px mode buttons sit inside a 40px group.
+- **Do** move bars and fills with transform (scaleX) and keep other motion to short scale or fade: ease on cubic-bezier(.16, 1, .3, 1), 260ms pulse, .18s tab fade, press scale of .94 to .98; honour prefers-reduced-motion.
+- **Do** keep tap targets at 40px or taller (buttons 42px, buy buttons 40px, tabs 56px); the 34px mode buttons sit inside a 40px group.
 
 ### Don't:
 - **Don't** fill a surface cream that cannot be acted on; shut, waiting or finished things stay dashed, outlined or dimmed.
-- **Don't** use a clan dye, or any other colour, as an interface accent outside the bars and discs.
-- **Don't** add shadows to cloth surfaces (rows, tiles, buttons, panels, tab bar) or any hard offset shadow.
+- **Don't** use a clan dye, or any other colour, as an interface accent outside the bars, the age band and the discs.
+- **Don't** add shadows to cloth surfaces (banner, rows, tiles, buttons, panels, tab bar) or any hard offset shadow.
+- **Don't** animate width or height for progress, or loop an animation to call attention; the idle square is cream and still.
 - **Don't** use gilt, parchment, coin icons or game-HUD chrome; the year, the money and the bars are the interface.
 - **Don't** mix a second display face or set names without their kanji.

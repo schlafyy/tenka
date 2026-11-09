@@ -18,101 +18,86 @@
 @font-face { font-family: 'Zen'; src: url(fonts/gothic-400.woff2) format('woff2'); font-weight: 400; font-display: swap; }
 @font-face { font-family: 'Zen'; src: url(fonts/gothic-500.woff2) format('woff2'); font-weight: 500; font-display: swap; }
 
-/* the Indigo Cloth world of the Sengoku map: indigo for ground and sea, clan dyes for land, cream cotton for text */
+/* the Indigo Cloth world of the Sengoku map: indigo ground, clan dyes, cream cotton for text */
 :root {
   --kachi: #13152f; --kon: #1a1e47; --kon-light: #252c63; --hanada: #33478a; --lining: #16193a; --lining-2: #1c2046;
   --cream: #efe6d3; --cream-hover: #fff8e8; --story: #ddd5c4; --undyed: #e2d9c5; --muted: #adb2d2; --faint: #8f94b8; --line: rgba(239, 230, 211, .14); --seam: rgba(239, 230, 211, .32);
-  --ink: #13152f; --ink-soft: #4a4a63;
+  --ink: #13152f;
   --mincho: 'Shippori', 'Yu Mincho', 'Hiragino Mincho ProN', serif;
   --gothic: 'Zen', 'Yu Gothic UI', 'Hiragino Sans', sans-serif;
   --ease: cubic-bezier(.16, 1, .3, 1);
-  --col: 460px;
+  --col: 560px;
   color-scheme: dark;
 }
 * { box-sizing: border-box; }
+html, body { height: 100%; }
 html { background: var(--kachi); scrollbar-color: var(--hanada) var(--kachi); scrollbar-width: thin; }
-body { margin: 0; color: var(--cream); background: var(--kachi); font: 400 15px/1.55 var(--gothic); -webkit-font-smoothing: antialiased; -webkit-tap-highlight-color: transparent; }
+body { margin: 0; color: var(--cream); background: var(--kachi); font: 400 15px/1.55 var(--gothic); -webkit-font-smoothing: antialiased; -webkit-tap-highlight-color: transparent; overflow: hidden; }
 ::selection { background: var(--hanada); color: var(--cream); }
 :focus-visible { outline: 1.5px dashed var(--cream); outline-offset: 3px; }
-button { font: inherit; color: inherit; background: none; border: 0; padding: 0; cursor: pointer; }
+button { font: inherit; color: inherit; background: none; border: 0; padding: 0; cursor: pointer; touch-action: manipulation; }
 p, h1, h2, h3 { margin: 0; }
 h1, h2, h3 { font-family: var(--mincho); font-weight: 700; }
 [lang="ja"] { font-family: var(--mincho); }
 .num { font-variant-numeric: tabular-nums lining-nums; }
+.nb { white-space: nowrap; }
 .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+.fig { font-family: var(--gothic); font-weight: 500; }
 
-/* ---------- the map: a strip at the head of the scroll; it unrolls when you choose a province ---------- */
-#cloth {
-  position: relative; height: clamp(150px, 22dvh, 230px); overflow: hidden; transition: height .6s var(--ease);
+/* one column the height of the screen: the house banner, the panel that scrolls, the tabs */
+#app { height: 100dvh; display: flex; flex-direction: column; max-width: var(--col); margin: 0 auto; }
+
+/* ---------- the house banner: crest, year, the five ages, the money ---------- */
+#top {
+  flex: none; padding: calc(14px + env(safe-area-inset-top)) 18px 12px; border-bottom: 1px dashed var(--seam);
   background:
     repeating-linear-gradient(0deg, rgba(255, 255, 255, .02) 0 1px, transparent 1px 3px),
     repeating-linear-gradient(90deg, rgba(0, 0, 0, .07) 0 1px, transparent 1px 3px),
-    radial-gradient(ellipse 70% 75% at 58% 52%, var(--kon-light) 0%, var(--kon) 50%, var(--kachi) 100%);
+    radial-gradient(ellipse 90% 120% at 15% 0%, var(--kon-light) 0%, var(--kon) 45%, var(--kachi) 100%);
 }
-body.open #cloth { height: calc(100dvh - 150px); }
-#map { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
-body.open #map { touch-action: none; }
-.prov use { stroke: var(--cream); stroke-opacity: .4; stroke-width: .7; vector-effect: non-scaling-stroke; }
-body.open .prov.can use { cursor: pointer; }
-#ezo use { fill: var(--kon-light); stroke: none; }
-#lakes use { fill: var(--kon-light); stroke: var(--cream); stroke-opacity: .35; stroke-width: .6; vector-effect: non-scaling-stroke; }
-#mottle { pointer-events: none; mix-blend-mode: multiply; opacity: .5; }
-#sea-waves { opacity: .055; pointer-events: none; }
-#soak, #mine, #can, #crests, #labels, #lakes { pointer-events: none; }
-#mine use { fill: none; stroke: var(--cream); stroke-width: 1.8; stroke-linejoin: round; vector-effect: non-scaling-stroke; }
-#can use { fill: rgba(239, 230, 211, .22); stroke: var(--cream); stroke-width: 1.6; stroke-dasharray: 5 4; vector-effect: non-scaling-stroke; animation: breathe 2.4s ease-in-out infinite; }
-#can use.sel { fill: rgba(239, 230, 211, .32); stroke-width: 2.6; stroke-dasharray: none; animation: none; }
-@keyframes breathe { 50% { fill: rgba(239, 230, 211, .4); } }
-.crest { opacity: .8; mix-blend-mode: screen; }
-.prov-label { font-family: var(--mincho); fill: var(--cream); paint-order: stroke; stroke: rgba(19, 21, 47, .85); stroke-linejoin: round; }
-
-#house {
-  position: absolute; left: 14px; top: calc(12px + env(safe-area-inset-top)); display: flex; align-items: center; gap: 10px; text-align: left;
-  padding: 5px 14px 5px 5px; border-radius: 22px; background: rgba(19, 21, 47, .9); box-shadow: 0 4px 14px rgba(0, 0, 0, .3);
-}
-.disc { width: 34px; height: 34px; flex: none; border-radius: 50%; display: block; box-shadow: 0 0 0 1.5px rgba(239, 230, 211, .55); }
-.disc.kanji { background: var(--undyed); color: var(--ink); font: 700 1rem/1 var(--mincho); display: grid; place-items: center; box-shadow: none; }
-#house b { display: block; font: 700 1.05rem/1.15 var(--mincho); }
-#house small { display: block; font-size: .72rem; color: var(--muted); line-height: 1.3; }
-.pill {
-  position: absolute; left: 12px; bottom: 12px; display: inline-flex; align-items: center; gap: 8px; min-height: 40px; padding: 7px 16px;
-  border-radius: 22px; background: var(--cream); color: var(--ink); font-weight: 500; font-size: .9rem; box-shadow: 0 6px 18px rgba(0, 0, 0, .35);
-}
-.pill[hidden] { display: none; }
-.pill svg { width: 15px; height: 15px; }
-#mapclose { position: absolute; right: 12px; top: calc(12px + env(safe-area-inset-top)); width: 40px; height: 40px; border-radius: 50%; background: rgba(19, 21, 47, .78); border: 1.5px solid rgba(239, 230, 211, .5); display: none; place-items: center; }
-#mapclose svg { width: 14px; height: 14px; stroke: var(--cream); stroke-width: 1.8; }
-body.open #mapclose { display: grid; }
-body.open #house, body.open #reachpill { display: none; }
-
-/* the choice bar under the open map */
-#choose { display: none; padding: 14px 18px 16px; background: var(--lining); border-bottom: 1px dashed var(--seam); }
-body.open #choose { display: block; }
-#choose h2 { font-size: 1.25rem; line-height: 1.2; }
-#choose h2 span { font-weight: 400; color: var(--muted); margin-left: 6px; }
-#choose p { color: var(--muted); font-size: .9rem; margin-top: 3px; }
-#choose .btns { display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap; }
-
-/* ---------- the present: year and money, kept in view ---------- */
-#top { position: sticky; top: 0; z-index: 3; background: var(--kachi); padding: 12px 18px 10px; border-bottom: 1px dashed var(--seam); }
-.when { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
+.banner { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+#house { display: flex; align-items: center; gap: 12px; text-align: left; min-width: 0; }
+#house .disc { width: 54px; height: 54px; }
+#house b { display: block; font: 700 1.25rem/1.15 var(--mincho); white-space: nowrap; }
+#house small { display: block; font-size: .84rem; color: var(--muted); line-height: 1.3; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+#house > span { min-width: 0; }
+.when { text-align: right; flex: none; }
 #year { font: 700 2.4rem/1 var(--mincho); letter-spacing: -.02em; }
-.era { text-align: right; }
-.era b { display: block; font: 400 1.05rem/1.2 var(--mincho); }
-.era span { display: block; font-size: .72rem; color: var(--muted); }
-.wealth { display: flex; align-items: baseline; gap: 8px; margin-top: 6px; flex-wrap: wrap; }
+#era { font-size: .84rem; color: var(--muted); margin-top: 2px; white-space: nowrap; }
+#era b { font: 400 1rem var(--mincho); color: var(--cream); margin-right: 4px; }
+
+/* the five ages, filling with the house's dye as history moves on */
+.ages { display: grid; grid-template-columns: repeat(5, 1fr); gap: 4px; margin-top: 14px; }
+.age { position: relative; }
+.age .band { height: 8px; border-radius: 4px; background: rgba(239, 230, 211, .1); overflow: hidden; }
+.age .band i { display: block; height: 100%; background: var(--dye-cloth, none) var(--dye, var(--hanada)); transform-origin: left; transform: scaleX(0); transition: transform .6s var(--ease); }
+.age .tick { position: absolute; top: -3px; width: 2px; height: 14px; margin-left: -1px; border-radius: 1px; background: var(--cream); }
+.age .k { display: block; margin-top: 4px; font: 400 .84rem/1 var(--mincho); color: var(--faint); text-align: center; }
+.age.now .k { color: var(--cream); font-weight: 700; }
+.age.past .k { color: var(--muted); }
+#next { font-size: .84rem; color: var(--muted); margin-top: 8px; }
+.wealth { display: flex; align-items: baseline; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
 #money { font: 500 1.5rem/1.1 var(--gothic); }
 #unit { color: var(--muted); }
 #rate { color: var(--muted); font-size: .9rem; margin-left: auto; }
 
-#panel { padding: 14px 18px calc(96px + env(safe-area-inset-bottom)); max-width: var(--col); margin: 0 auto; }
+/* crest discs: the crest resist-dyed in cream on its clan's darkened dye */
+.disc { width: 34px; height: 34px; flex: none; border-radius: 50%; display: block; box-shadow: 0 0 0 1.5px rgba(239, 230, 211, .55); }
+.disc.kanji { background: var(--undyed); color: var(--ink); font: 700 1rem/1 var(--mincho); display: grid; place-items: center; box-shadow: none; }
+
+/* ---------- the panel ---------- */
+#panel { flex: 1; min-height: 0; overflow-y: auto; overscroll-behavior: contain; -webkit-overflow-scrolling: touch; padding: 14px 18px 24px; }
+#panel.fade { animation: fade .18s var(--ease); }
+@keyframes fade { from { opacity: .3; } to { opacity: 1; } }
 h2.head { font-size: 1.25rem; display: flex; align-items: baseline; gap: 8px; }
 h2.head span { font-weight: 400; color: var(--muted); font-size: 1rem; }
 .bar-row { display: flex; align-items: center; justify-content: flex-end; margin-bottom: 4px; }
 .modes { display: inline-flex; padding: 3px; border-radius: 22px; border: 1.5px solid var(--line); }
-.modes button { min-width: 50px; min-height: 34px; padding: 4px 10px; border-radius: 22px; color: var(--muted); font-weight: 500; font-size: .9rem; }
+.modes button { min-width: 50px; min-height: 34px; padding: 4px 10px; border-radius: 22px; color: var(--muted); font-weight: 500; font-size: .9rem; transition: background .15s, color .15s; }
 .modes button[aria-pressed="true"] { background: var(--cream); color: var(--ink); }
 .tip { font-size: .84rem; color: var(--muted); margin: 6px 0 2px; }
+.note { color: var(--muted); font-size: .9rem; margin: -2px 0 10px; }
+.note.after { margin: 14px 0 0; }
 
 .away { margin: 0 0 12px; padding: 12px 14px; border: 1px dashed var(--seam); border-radius: 4px; font-size: .9rem; position: relative; }
 .away h2 { font-size: 1.05rem; margin-bottom: 2px; padding-right: 30px; }
@@ -125,29 +110,28 @@ h2.head span { font-weight: 400; color: var(--muted); font-size: 1rem; }
 
 /* a trade: its square (tap to run), the bar that fills and pays, the buy button */
 .trade { display: grid; grid-template-columns: 66px 1fr; gap: 6px 14px; padding: 16px 0 14px; border-bottom: 1px dashed var(--line); align-items: center; }
-.tile { grid-row: 1 / 4; align-self: start; width: 66px; height: 66px; border-radius: 8px; background: var(--lining-2); border: 1.5px solid var(--seam); display: grid; place-items: center; position: relative; color: var(--cream); transition: transform .1s; }
-.tile:active { transform: scale(.95); }
+.tile { grid-row: 1 / 4; align-self: start; width: 66px; height: 66px; border-radius: 8px; background: var(--lining-2); border: 1.5px solid var(--seam); display: grid; place-items: center; position: relative; color: var(--cream); transition: transform .12s var(--ease), background .2s, color .2s; }
+.tile:active { transform: scale(.94); }
 .tile .g { font: 700 2.2rem/1 var(--mincho); }
 .tile .lv { position: absolute; bottom: -9px; left: 50%; transform: translateX(-50%); background: var(--kachi); border: 1px solid var(--seam); border-radius: 8px; padding: 0 7px; font-size: .72rem; font-weight: 500; line-height: 1.55; white-space: nowrap; color: var(--cream); }
 .tile.idle { background: var(--cream); color: var(--ink); border-color: var(--cream); cursor: pointer; }
-.tile.idle .g { animation: nudge 1.4s ease-in-out infinite; }
-@keyframes nudge { 50% { transform: translateY(-3px); } }
 .trade h3 { font-size: 1.05rem; line-height: 1.2; display: flex; align-items: baseline; gap: 6px; min-width: 0; }
 .trade h3 > span[lang] { font-weight: 400; color: var(--muted); font-size: .9rem; }
 .trade h3 small { font: 400 .72rem/1 var(--gothic); color: var(--muted); margin-left: auto; white-space: nowrap; display: inline-flex; align-items: center; gap: 4px; }
 .trade h3 small svg, .hired svg { width: 11px; height: 11px; }
 .prog { position: relative; height: 28px; border-radius: 4px; background: rgba(239, 230, 211, .08); overflow: hidden; cursor: pointer; }
-.prog i { position: absolute; left: 0; top: 0; bottom: 0; width: 0; background: var(--dye-cloth, none) var(--dye, var(--hanada)); }
-.prog.fast i { animation: shimmer 1.2s ease-in-out infinite; }
-@keyframes shimmer { 50% { opacity: .78; } }
+/* the bar moves on the compositor only: a scaled layer, never a width */
+.prog i { position: absolute; inset: 0; background: var(--dye-cloth, none) var(--dye, var(--hanada)); transform-origin: left; transform: scaleX(0); will-change: transform; }
+.prog.fast i { transform: none; }
 .prog > span { position: absolute; inset: 0; display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 0 10px; font-size: .84rem; }
 .prog b { font-weight: 500; }
 .prog em { font-style: normal; color: var(--muted); }
 .buyrow { display: flex; align-items: center; gap: 10px; }
-.buy { flex: 1; display: flex; align-items: center; justify-content: space-between; gap: 10px; min-height: 40px; padding: 6px 14px; border-radius: 4px; border: 1.5px solid rgba(239, 230, 211, .35); font-size: .9rem; color: var(--muted); }
+.buy { flex: 1; display: flex; align-items: center; justify-content: space-between; gap: 10px; min-height: 40px; padding: 6px 14px; border-radius: 4px; border: 1.5px solid rgba(239, 230, 211, .35); font-size: .9rem; color: var(--muted); transition: background .15s, color .15s, border-color .15s, transform .1s; }
 .buy b { font-weight: 500; }
 .buy.ok { background: var(--cream); color: var(--ink); border-color: var(--cream); }
 .buy.ok:hover { background: var(--cream-hover); }
+.buy.ok:active { transform: scale(.98); }
 .buy:not(.ok) { cursor: default; }
 .ms { font-size: .72rem; color: var(--muted); text-align: right; line-height: 1.25; max-width: 92px; }
 .trade.shut .tile { border-style: dashed; color: var(--faint); background: none; }
@@ -166,19 +150,10 @@ h2.head span { font-weight: 400; color: var(--muted); font-size: 1rem; }
 .renown h3 small { font: 400 .84rem var(--gothic); color: var(--muted); }
 .renown p { color: var(--muted); font-size: .9rem; margin: 6px 0 12px; }
 
-/* the tabs along the bottom */
-#tabs { position: fixed; left: 0; right: 0; bottom: 0; z-index: 4; display: flex; background: var(--lining); border-top: 1px dashed var(--seam); padding-bottom: env(safe-area-inset-bottom); }
-#tabs button { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 8px 0 7px; color: var(--muted); position: relative; min-height: 56px; }
-#tabs button [lang="ja"] { font: 700 1.25rem/1.1 var(--mincho); }
-#tabs button .l { font-size: .72rem; }
-#tabs button[aria-current="page"] { color: var(--cream); }
-#tabs button[aria-current="page"]::before { content: ''; position: absolute; top: -1px; left: 26%; right: 26%; height: 2px; background: var(--cream); }
-#tabs .dot { font-style: normal; font-variant-numeric: tabular-nums; position: absolute; top: 3px; left: calc(50% + 14px); min-width: 17px; height: 17px; padding: 0 5px; border-radius: 8px; background: var(--cream); color: var(--ink); font-size: .72rem; font-weight: 500; line-height: 17px; text-align: center; }
-#tabs .dot[hidden] { display: none; }
-
 /* ---------- buttons ---------- */
-.btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-height: 42px; padding: 8px 18px; border-radius: 22px; border: 1.5px solid rgba(239, 230, 211, .5); font-size: .9rem; font-weight: 500; transition: background .15s, border-color .15s; }
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-height: 42px; padding: 8px 18px; border-radius: 22px; border: 1.5px solid rgba(239, 230, 211, .5); font-size: .9rem; font-weight: 500; transition: background .15s, border-color .15s, color .15s, transform .1s; }
 .btn:hover:not(:disabled) { border-color: var(--cream); background: rgba(239, 230, 211, .07); }
+.btn:active:not(:disabled) { transform: scale(.97); }
 .btn.go { background: var(--cream); color: var(--ink); border-color: var(--cream); }
 .btn.go:hover:not(:disabled) { background: var(--cream-hover); }
 .btn:disabled { cursor: default; color: var(--muted); border-color: var(--line); }
@@ -188,38 +163,41 @@ h2.head span { font-weight: 400; color: var(--muted); font-size: 1rem; }
 .entry { display: grid; grid-template-columns: 46px 1fr; gap: 0 12px; padding: 14px 0; border-bottom: 1px dashed var(--line); }
 .entry .y { font: 700 1rem/1.4 var(--mincho); color: var(--muted); text-align: right; padding-top: 2px; }
 .entry .disc { width: 38px; height: 38px; margin: 8px 0 0 auto; }
-.entry .disc.kanji { font-size: 1.05rem; }
 .entry h3 { font-size: 1.05rem; line-height: 1.3; word-break: keep-all; text-wrap: balance; }
-.nb { white-space: nowrap; }
-.note { color: var(--muted); font-size: .9rem; margin: -2px 0 10px; }
-.note.after { margin: 14px 0 0; }
 .entry .where { font-size: .84rem; color: var(--muted); margin-top: 1px; }
 .entry .story { font-family: var(--mincho); font-size: 1rem; line-height: 1.65; margin-top: 7px; color: var(--story); max-width: 62ch; }
-.entry .gift { font-size: .84rem; color: var(--muted); margin-top: 6px; }
-.entry.unread { border-bottom-style: dashed; }
 .entry.unread h3 { color: var(--cream); }
 .entry.unread .btn { margin-top: 10px; }
-.entry.house h3 { font: 400 1rem/1.45 var(--gothic); color: var(--muted); }
+.entry.house h3 { font: 400 .9rem/1.45 var(--gothic); color: var(--muted); }
 .entry.house .y { font-weight: 400; }
-.entry.fresh { animation: settle .8s var(--ease); }
-@keyframes settle { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: none; } }
 .more { display: block; margin: 12px auto 0; }
 
-/* ---------- the house: heads, treasures, saving ---------- */
+/* ---------- the house: provinces, heads, treasures, saving ---------- */
 .facts { margin-top: 10px; display: grid; gap: 4px; font-size: .9rem; }
 .facts p { color: var(--muted); }
 .facts b { color: var(--cream); font-weight: 500; }
 h3.sub { font-size: 1.05rem; margin: 22px 0 8px; }
+.provs { display: flex; flex-wrap: wrap; gap: 4px 6px; font-size: .84rem; color: var(--muted); }
+.provs > span { padding: 2px 8px; border: 1px solid var(--line); border-radius: 22px; white-space: nowrap; }
+.provs [lang] { color: var(--cream); }
 .heads { list-style: none; padding: 0; margin: 0; font-size: .9rem; color: var(--muted); columns: 2; column-gap: 18px; }
 .heads li { padding: 2px 0; break-inside: avoid; }
 .heads b { color: var(--cream); font-weight: 400; }
 .treasures { display: grid; grid-template-columns: repeat(auto-fill, minmax(128px, 1fr)); gap: 8px; }
 .tr { border: 1px solid var(--line); border-radius: 4px; padding: 10px; font-size: .84rem; color: var(--muted); }
 .tr b { display: block; font: 700 1rem/1.25 var(--mincho); color: var(--cream); }
-.tr.gone { border-style: dashed; display: grid; place-items: center; min-height: 76px; color: var(--faint); }
 .tools { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
 .credits { margin-top: 22px; font-size: .72rem; color: var(--faint); line-height: 1.5; }
-.credits a { color: var(--muted); text-underline-offset: 2px; }
+
+/* the tabs along the bottom */
+#tabs { flex: none; display: flex; background: var(--lining); border-top: 1px dashed var(--seam); padding-bottom: env(safe-area-inset-bottom); }
+#tabs button { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 8px 0 7px; color: var(--muted); position: relative; min-height: 56px; transition: color .15s; }
+#tabs button [lang="ja"] { font: 700 1.25rem/1.1 var(--mincho); }
+#tabs button .l { font-size: .72rem; }
+#tabs button[aria-current="page"] { color: var(--cream); }
+#tabs button[aria-current="page"]::before { content: ''; position: absolute; top: -1px; left: 26%; right: 26%; height: 2px; background: var(--cream); }
+#tabs .dot { font-style: normal; font-variant-numeric: tabular-nums; position: absolute; top: 3px; left: calc(50% + 14px); min-width: 17px; height: 17px; padding: 0 5px; border-radius: 8px; background: var(--cream); color: var(--ink); font-size: .72rem; font-weight: 500; line-height: 17px; text-align: center; }
+#tabs .dot[hidden] { display: none; }
 
 /* ---------- choosing a house (the first screen) ---------- */
 #pick { position: fixed; inset: 0; z-index: 10; overflow-y: auto;
@@ -230,7 +208,7 @@ h3.sub { font-size: 1.05rem; margin: 22px 0 8px; }
 #pick h1 span { display: block; font-size: 1.05rem; font-weight: 400; color: var(--muted); margin-top: 6px; }
 #pick .lede { font-family: var(--mincho); font-size: 1.05rem; line-height: 1.65; margin-top: 14px; color: var(--story); padding-bottom: 18px; border-bottom: 2px dashed var(--seam); }
 .houses { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 8px; margin-top: 18px; }
-.houses button { display: flex; flex-direction: column; align-items: flex-start; gap: 8px; text-align: left; padding: 12px; border-radius: 4px; border: 1.5px solid var(--line); background: var(--lining); }
+.houses button { display: flex; flex-direction: column; align-items: flex-start; gap: 8px; text-align: left; padding: 12px; border-radius: 4px; border: 1.5px solid var(--line); background: var(--lining); transition: border-color .15s, background .15s; }
 .houses button:hover { border-color: rgba(239, 230, 211, .5); }
 .houses button[aria-pressed="true"] { border-color: var(--cream); background: var(--lining-2); }
 .houses .disc { width: 44px; height: 44px; }
@@ -244,34 +222,31 @@ h3.sub { font-size: 1.05rem; margin: 22px 0 8px; }
 #toast span { display: block; background: var(--cream); color: var(--ink); border-radius: 22px; padding: 8px 18px; font-weight: 500; font-size: .9rem; box-shadow: 0 8px 22px rgba(0, 0, 0, .35); animation: toast 2.6s var(--ease) forwards; white-space: nowrap; }
 @keyframes toast { 0% { opacity: 0; transform: translateY(10px); } 10%, 80% { opacity: 1; transform: none; } 100% { opacity: 0; } }
 
-/* ---------- wide screens: the map holds the left, the panel the right ---------- */
 @media (min-width: 900px) {
-  body { display: grid; grid-template-columns: 1fr minmax(420px, 500px); height: 100dvh; overflow: hidden; }
-  #cloth, body.open #cloth { height: 100dvh; }
-  #app { display: flex; flex-direction: column; height: 100dvh; min-height: 0; border-left: 1px dashed var(--seam); }
-  #top { position: static; padding-top: 22px; }
-  #panel { flex: 1; overflow-y: auto; width: 100%; padding-bottom: 24px; }
-  #tabs { position: static; }
-  #toast { left: auto; right: 250px; transform: translateX(50%); bottom: 84px; }
-  #choose { position: absolute; left: 18px; bottom: 18px; width: min(440px, calc(100vw - 560px)); border: 1px solid var(--seam); border-radius: 4px; z-index: 2; }
+  #app { border-left: 1px dashed var(--seam); border-right: 1px dashed var(--seam); }
+  #top { padding-top: 22px; }
 }
 @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; } }
 </style>
 </head>
 <body>
-<header id="cloth">
-  <svg id="map" role="img" aria-label="Map of Japan's provinces, your house's land stitched in cream"></svg>
-  <button id="house" aria-label="Your house"></button>
-  <button id="reachpill" class="pill" hidden></button>
-  <button id="mapclose" aria-label="Close the map"><svg viewBox="0 0 14 14" fill="none"><path d="M1 1l12 12M13 1L1 13"/></svg></button>
-</header>
-<div id="choose" aria-live="polite"></div>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false"><defs>
+  <!-- resist dyeing: a crest's dark lines become cream cotton the dye never reached -->
+  <filter id="resist" x="0" y="0" width="1" height="1" color-interpolation-filters="sRGB"><feColorMatrix type="matrix" values="0 0 0 0 .937  0 0 0 0 .902  0 0 0 0 .827  -.33 -.33 -.33 1 0"/></filter>
+  <filter id="resist-inv" x="0" y="0" width="1" height="1" color-interpolation-filters="sRGB"><feColorMatrix type="matrix" values="0 0 0 0 .937  0 0 0 0 .902  0 0 0 0 .827  0 2.2 0 0 -.45"/></filter>
+  <filter id="resist-holes" x=".025" y=".025" width=".95" height=".95" color-interpolation-filters="sRGB"><feColorMatrix type="matrix" values="0 0 0 0 .937  0 0 0 0 .902  0 0 0 0 .827  0 0 0 -1 1"/></filter>
+</defs></svg>
 <div id="app">
-  <div id="top">
-    <div class="when"><div id="year" class="num"></div><div class="era" id="era"></div></div>
+  <header id="top">
+    <div class="banner">
+      <button id="house"></button>
+      <div class="when"><div id="year" class="num"></div><div id="era"></div></div>
+    </div>
+    <div class="ages" id="ages" aria-hidden="true"></div>
+    <p id="next"></p>
     <p class="wealth num"><span id="money"></span><span id="unit"></span><span id="rate"></span></p>
-  </div>
-  <main id="panel" aria-live="off"></main>
+  </header>
+  <main id="panel"></main>
   <nav id="tabs" aria-label="Sections">
     <button data-tab="trades"><span lang="ja">商</span><span class="l">Trades</span><i class="dot" hidden></i></button>
     <button data-tab="upgrades"><span lang="ja">改</span><span class="l">Upgrades</span><i class="dot" hidden></i></button>

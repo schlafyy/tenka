@@ -265,8 +265,8 @@ const G = (() => {
     S.year = y;
     if (ageOf(y) !== was) note(S, { en: `A new age: ${AGES[ageOf(y)].en} ${AGES[ageOf(y)].ja}.`, age: ageOf(y) });
     arrive(S);
-    // after the first run the house knows the way: it reaches the richest province within reach by itself
-    if (S.meta.runs) while (reachPoints(S) > 0 && reachable(S).length) reach(S, bestReach(S));
+    // the house reaches the richest province within reach by itself
+    while (reachPoints(S) > 0 && reachable(S).length) reach(S, bestReach(S));
   }
 
   // the clock: trades with a manager cycle on their own; others finish the cycle you started, then wait for a tap
