@@ -36,7 +36,8 @@ History is the progression. The year moves forward only as the house prospers, s
 
 ## Brand Commitments
 
-- The Indigo Cloth world of the Sengoku map (`../sengoku-map/DESIGN.md`): indigo ground, each clan a natural dye with a stencil motif, provinces as resist-dyed fields, the soak of a dye spreading across a province. The user chose it and wants it kept.
+- The look is a merchant house's front (chosen 2026-11-09, replacing the Indigo Cloth world the user found rough): the house curtain in the clan's dye, white plaster, dark wood signboards with gilt letters. Light, refined, never a generic mobile game, never plain, never dark.
+- Each clan keeps its natural dye colour from the Sengoku map as its identity.
 - The clans' real crests (kamon) and names are a favourite part and must stay prominent.
 - Names lead in romanized English with the kanji beside them (Oda 織田, Owari 尾張).
 

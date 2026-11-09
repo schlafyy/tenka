@@ -1,5 +1,5 @@
-"""Renders icon.png (256 px), icon-512.png and icon-180.png: indigo cloth, a disc of kasuri stripes in two clan dyes,
-a sashiko ring, and the red thread of a cross-stitch, the map's mark for war.
+"""Renders icon.png (256 px), icon-512.png and icon-180.png: a shop curtain in madder red on white plaster,
+hung from a wooden rod, split in three, with 天 in a white circle across the middle.
 Run: python tools/icon.py"""
 import os
 from playwright.sync_api import sync_playwright
@@ -7,19 +7,15 @@ from PIL import Image
 
 ROOT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..")
 SVG = """<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
-<defs>
-  <radialGradient id="g" cx="50%" cy="45%" r="70%"><stop offset="0" stop-color="#2a3170"/><stop offset="1" stop-color="#13152f"/></radialGradient>
-  <pattern id="k" patternUnits="userSpaceOnUse" width="40" height="40" patternTransform="rotate(38)">
-    <rect width="20" height="40" fill="#c06a2c"/><rect x="20" width="20" height="40" fill="#e2d9c5"/>
-  </pattern>
-  <clipPath id="c"><rect width="256" height="256" rx="52"/></clipPath>
-</defs>
+<defs><clipPath id="c"><rect width="256" height="256" rx="52"/></clipPath></defs>
 <g clip-path="url(#c)">
-  <rect width="256" height="256" fill="url(#g)"/>
-  <circle cx="128" cy="128" r="72" fill="url(#k)"/>
-  <circle cx="128" cy="128" r="94" fill="none" stroke="#efe6d3" stroke-width="7" stroke-dasharray="17 12" stroke-linecap="round"/>
-  <path d="M100 100L156 156M156 100L100 156" stroke="#13152f" stroke-width="22" stroke-linecap="round" opacity=".55"/>
-  <path d="M100 100L156 156M156 100L100 156" stroke="#ff5b3f" stroke-width="13" stroke-linecap="round"/>
+  <rect width="256" height="256" fill="#f4f3f0"/>
+  <rect x="0" y="30" width="256" height="196" fill="#82263a"/>
+  <rect x="0" y="22" width="256" height="16" fill="#3b2b21"/>
+  <circle cx="128" cy="134" r="35" fill="#fff"/>
+  <text x="128" y="150" text-anchor="middle" font-family="Yu Mincho, Hiragino Mincho ProN, serif" font-size="44" fill="#82263a">天</text>
+  <rect x="80" y="62" width="7" height="164" fill="#f4f3f0"/>
+  <rect x="169" y="62" width="7" height="164" fill="#f4f3f0"/>
 </g></svg>"""
 
 with sync_playwright() as p:

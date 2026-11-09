@@ -1,6 +1,6 @@
 # Tenka 天下
 
-An idle game about one Japanese house across 550 years. Pick a house and its crest in 1467, the year the Ōnin War begins, and lead it to the present day: a samurai family, then a daimyō house, then Meiji industrialists, then a modern company, under the same crest. It is built on the provinces, clans, dyes, crests and history of the Sengoku map project (`../sengoku-map`), in the same Indigo Cloth look.
+An idle game about one Japanese house across 550 years. Pick a house and its crest in 1467, the year the Ōnin War begins, and lead it to the present day: a samurai family, then a daimyō house, then Meiji industrialists, then a modern company, under the same crest. It is built on the provinces, clans, dyes, crests and history of the Sengoku map project (`../sengoku-map`). It looks like the front of a merchant house: the house curtain (noren) in the clan's dye with its crest, white plaster, and dark wooden signboards with gilt characters for the trades.
 
 ## Play it
 
@@ -12,11 +12,11 @@ An idle game about one Japanese house across 550 years. Pick a house and its cre
 
 A business-tycoon idle game (in the manner of AdVenture Capitalist) on top of 550 years of Japanese history.
 
-- **Trades.** Each age opens three, in their real year: paddies, a silver mine and castle towns; indigo dye houses, sake and the Dōjima rice exchange; silk mills, railways and department stores; electric works, cars and microchips; games, mobile networks and robots. Tap a trade's square and its bar fills in your house's dye, then pays out. Buy levels ×1, ×10, ×100 or Max. Levels 25, 50, 100, 200, 300 and 400 double a trade's speed; from 500 on, milestones triple its profit.
+- **Trades.** Each age opens three, in their real year: paddies, a silver mine and castle towns; indigo dye houses, sake and the Dōjima rice exchange; silk mills, railways and department stores; electric works, cars and microchips; games, mobile networks and robots. Tap a signboard's character and its bar fills in your house's dye, then pays out. Buy levels ×1, ×10, ×100 or Max. Levels 25, 50, 100, 200, 300 and 400 double a trade's speed; from 500 on, milestones triple its profit.
 - **Managers.** One for each trade (the village headman, the mine master, the master brewer, the fab director…). A managed trade runs without taps and keeps earning while you are away, up to a day.
 - **Upgrades.** Three for each trade (iron ploughs, cupellation, kanban, emoji…), each tripling its profit, and one great work for each age (the land survey, the five highways, civilisation and enlightenment, the bullet train, the internet) that triples everything.
 - **The year follows the money.** The more the house has earned, the later the year: the history arrives as you grow, and each trade opens in its year.
-- **The house banner.** The crest, the head of the house, the year and era, and a band of the five ages filling in the house's dye.
+- **The house curtain.** The crest dyed across the curtain with the clan name and the era, then the year, the head of the house, the money, and a band of the five ages filling in the house's dye.
 - **Provinces and chronicle.** The house reaches a new province by itself every few years, always the richest next to its land (+4% profit each; listed in the House tab). The real history arrives as chapters with the clans' crests; reading one gives +2% profit.
 - **Renown.** Begin again in 1467, with any house, to turn this run's fame into renown: +1% profit each, for good. Treasures stay too. After the first new beginning, chapters already read count as read.
 

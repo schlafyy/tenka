@@ -28,14 +28,7 @@
     const n = parseInt(hex.slice(1), 16), c = [n >> 16, n >> 8 & 255, n & 255];
     return '#' + c.map(v => Math.round(k < 0 ? v * (1 + k) : v + (255 - v) * k).toString(16).padStart(2, '0')).join('');
   };
-  // each clan's stencil motif, laid over its dye
-  const MOTIF = {
-    plain: null,
-    dots: { w: 7, h: 7, d: 'M1.75 1.75m-.75 0a.75 .75 0 1 0 1.5 0a.75 .75 0 1 0-1.5 0M5.25 5.25m-.75 0a.75 .75 0 1 0 1.5 0a.75 .75 0 1 0-1.5 0', fill: true },
-    kikko: { w: 9, h: 5.196, d: 'M0 2.598L1.5 0H4.5L6 2.598L4.5 5.196H1.5ZM6 2.598H9', fill: false },
-    hishi: { w: 7, h: 7, d: 'M3.5 0L7 3.5L3.5 7L0 3.5Z', fill: false },
-    uroko: { w: 8, h: 7, d: 'M0 7L4 0L8 7Z', fill: true },
-  };
+  const crest = (clan, cls) => { const cr = CRESTS[clan]; return cr ? `<svg class="${cls}" viewBox="0 0 40 40" aria-hidden="true"><image href="${cr.src}" width="40" height="40" filter="${resist(cr)}"/></svg>` : ''; };
   const resist = cr => `url(#resist${cr.invert === 'holes' ? '-holes' : cr.invert ? '-inv' : ''})`;
   // a crest on a disc of its clan's darkened dye, or the place's first character when there is no crest
   function disc(clan, place) {
@@ -46,11 +39,15 @@
   }
   const placeName = p => (P[p] ? `${esc(P[p].en)} <span lang="ja">${P[p].ja}</span>` : PLACE[p] ? `${PLACE[p][0]} <span lang="ja">${PLACE[p][1]}</span>` : '');
   const clanName = c => `${esc(CLANS[c].en)} <span lang="ja">${CLANS[c].ja}</span>`;
-  // the house's dye and stencil, for the bars and the age band
+  // a clan's curtain colour: its dye, deepened until white lettering reads on it (4.5:1)
+  const lum = hex => { const n = parseInt(hex.slice(1), 16); return [n >> 16, n >> 8 & 255, n & 255].reduce((s, v, i) => { v /= 255; return s + [.2126, .7152, .0722][i] * (v <= .03928 ? v / 12.92 : ((v + .055) / 1.055) ** 2.4); }, 0); };
+  const curtain = clan => { const d = DYES[CLANS[clan].dye] || '#8a907c'; let k = 0; while (1.05 / (lum(shade(d, k)) + .05) < 4.5 && k > -.6) k -= .05; return shade(d, k); };
+  // the house's dye: the curtain and age band, and a lighter cut for the bars on the dark signboards
   function dyeTheHouse() {
-    const col = shade(DYES[CLANS[S.house].dye], -.3), mo = MOTIF[CLANS[S.house].motif];
+    const col = curtain(S.house);
     document.body.style.setProperty('--dye', col);
-    document.body.style.setProperty('--dye-cloth', mo ? `url("data:image/svg+xml,${encodeURIComponent(`<svg xmlns='http://www.w3.org/2000/svg' width='${mo.w * 1.6}' height='${mo.h * 1.6}'><path d='${mo.d}' transform='scale(1.6)' fill='${mo.fill ? shade(col, -.25) : 'none'}' stroke='${mo.fill ? 'none' : shade(col, -.3)}' stroke-width='.6'/></svg>`)}")` : 'none');
+    const n = parseInt(col.slice(1), 16), [r, g, b] = [n >> 16, n >> 8 & 255, n & 255], ochre = r > b * 1.6 && g > b * 1.3; // yellow-brown dyes read as gold when lightened
+    document.body.style.setProperty('--dye-lit', ochre ? shade(col, -.15) : shade(col, .15));
   }
 
   // ---------- the house banner ----------
@@ -58,7 +55,7 @@
   const unit = () => (G.money(S) === 'yen' ? 'yen' : 'koku');
   function renderTop() {
     dyeTheHouse();
-    $('#house').innerHTML = `${disc(S.house)}<span><b>${clanName(S.house)}</b><small>${esc(G.headName(S))}</small></span><span class="sr">, open the house</span>`;
+    $('#house').innerHTML = `${crest(S.house, 'crest')}<b class="v l" lang="ja" aria-hidden="true">${CLANS[S.house].ja}</b><b class="v r" lang="ja" aria-hidden="true"></b><span class="sr">The ${esc(CLANS[S.house].en)} house, led by ${esc(G.headName(S))}: open the house</span>`;
     $('#ages').innerHTML = AGES.map(a => `<div class="age"><div class="band"><i></i></div><span class="k" lang="ja">${a.ja.split('・')[0]}</span></div>`).join('');
     ages = [...document.querySelectorAll('#ages .age')];
   }
@@ -68,7 +65,8 @@
     topYear = S.year;
     const era = G.eraOf(S.year), now = G.ageOf(S.year);
     $('#year').textContent = S.year;
-    $('#era').innerHTML = `<b lang="ja">${era.ja}${G.kanjiYear(era.n)}年</b>${esc(era.en)} ${era.n}`;
+    $('#house .v.r').textContent = `${era.ja}${G.kanjiYear(era.n)}年`;
+    $('#era').textContent = `${era.en} ${era.n} · ${G.headName(S)}`;
     AGES.forEach((a, i) => {
       const to = AGES[i + 1] ? AGES[i + 1].from : END_YEAR, k = Math.min(1, Math.max(0, (S.year - a.from) / (to - a.from)));
       ages[i].querySelector('i').style.transform = `scaleX(${k})`;
@@ -104,8 +102,9 @@
       const id = w.id, ms = G.nextMilestone(S, id);
       h += `<div class="trade" data-id="${id}">
         <button class="tile" data-act="run" data-id="${id}" data-k="run-${id}" aria-label="Run the ${esc(w.en.toLowerCase())}"><span class="g" lang="ja">${w.glyph}</span><span class="lv num">${S.lv[id] || 0}</span></button>
-        <h3>${esc(w.en)} <span lang="ja">${w.ja}</span><small>${S.mgr[id] ? `${CHECK} ${esc(w.manager[0])}` : S.lv[id] ? 'tap to run' : ''}</small></h3>
-        <div class="prog" data-act="run" data-id="${id}"><i></i><span><b class="num"></b><em class="num"></em></span></div>
+        <h3>${esc(w.en)} <span lang="ja">${w.ja}</span></h3>
+        <div class="prog" data-act="run" data-id="${id}"><i></i></div>
+        <p class="meta"><span>${S.mgr[id] ? `${CHECK} ${esc(w.manager[0])}` : S.lv[id] ? 'tap the square to run' : ''}</span><span class="num"><b class="pay"></b> <span class="left"></span></span></p>
         <div class="buyrow"><button class="buy" data-act="buy" data-id="${id}" data-k="buy-${id}"><span></span><b class="num"></b></button>
         ${ms ? `<small class="ms">${ms.what === 'speed' ? 'twice as fast' : 'profit ×3'} at level ${ms.at}</small>` : ''}</div></div>`;
     }
@@ -116,7 +115,7 @@
   function renderUpgrades() {
     const all = G.upgrades(S), open = all.filter(u => u.open && !u.owned), owned = all.filter(u => u.owned).length;
     let h = `<h2 class="head">Upgrades <span lang="ja">改良</span></h2><p class="note">${owned} of ${all.length} bought. Each one triples a trade's profit; the great works of each age triple them all.</p>`;
-    h += open.slice(0, 12).map(u => `<div class="item"><h3>${esc(u.en)} <span lang="ja">${u.ja}</span></h3><p>${esc(u.text)}</p>
+    h += open.slice(0, 12).map(u => `<div class="item"><span class="tag" lang="ja" aria-hidden="true">${u.realm ? '天' : WORK[u.work].glyph}</span><h3>${esc(u.en)} <span lang="ja">${u.ja}</span></h3><p>${esc(u.text)}</p>
       ${priceButton('upg', u.id, u.cost)}</div>`).join('');
     if (!open.length) h += `<p class="note">New upgrades come with new trades and new ages.</p>`;
     return h;
@@ -125,7 +124,7 @@
     let h = `<h2 class="head">Managers <span lang="ja">支配人</span></h2><p class="note">A manager runs a trade for you, without a tap, and keeps it running while you are away (up to ${G.AWAY_HOURS} hours).</p>`;
     for (const w of WORKS.filter(w => G.isOpen(S, w.id))) {
       const c = G.managerCost(S, w.id);
-      h += `<div class="item"><h3>${esc(w.manager[0])} <span lang="ja">${w.manager[1]}</span></h3><p>Runs the ${esc(w.en.toLowerCase())}.</p>
+      h += `<div class="item"><span class="tag" lang="ja" aria-hidden="true">${w.glyph}</span><h3>${esc(w.manager[0])} <span lang="ja">${w.manager[1]}</span></h3><p>Runs the ${esc(w.en.toLowerCase())}.</p>
         ${S.mgr[w.id] ? `<span class="hired">${CHECK} Hired</span>` : priceButton('hire', w.id, c)}</div>`;
     }
     return h;
@@ -135,7 +134,7 @@
     return `<li class="entry ${unread ? 'unread' : ''}" data-id="${e.id}">
       <div><div class="y num">${e.year}</div>${disc(by, e.at)}</div>
       <div><h3>${esc(e.en)} <span lang="ja" class="nb">${e.ja}</span></h3><p class="where">${placeName(e.at)}${by ? ` · ${clanName(by)}` : ''}</p>
-      ${unread ? `<button class="btn" data-act="read" data-id="${e.id}" data-k="r-${e.id}">Read · profit +${Math.round(G.CHAPTER * 100)}%</button>` : `<p class="story">${esc(e.short)}</p>`}</div></li>`;
+      ${unread ? `<button class="btn go" data-act="read" data-id="${e.id}" data-k="r-${e.id}">Read · profit +${Math.round(G.CHAPTER * 100)}%</button>` : `<p class="story">${esc(e.short)}</p>`}</div></li>`;
   }
   function renderChron() {
     let h = `<h2 class="head">Chronicle <span lang="ja">年代記</span></h2>`;
@@ -180,7 +179,7 @@
     rows = [...panel.querySelectorAll('.trade[data-id]')].map(row => {
       const id = row.dataset.id, buy = row.querySelector('.buy');
       return { id, tile: row.querySelector('.tile'), badge: row.querySelector('.lv'), prog: row.querySelector('.prog'), bar: row.querySelector('.prog i'),
-        pay: row.querySelector('.prog b'), left: row.querySelector('.prog em'), buy, n: buy.querySelector('span'), price: buy.querySelector('b'), last: {}, was: null };
+        pay: row.querySelector('.pay'), left: row.querySelector('.left'), buy, n: buy.querySelector('span'), price: buy.querySelector('b'), last: {}, was: null };
     });
   }
   const set = (o, k, el, v, prop = 'textContent') => { if (o.last[k] !== v) { o.last[k] = v; el[prop] = v; } };
@@ -200,7 +199,7 @@
     $('#money').textContent = fmt(S.money);
     $('#unit').textContent = unit();
     const inc = G.income(S);
-    $('#rate').textContent = inc > 0 ? `+${fmt(inc)} a second` : 'hire a manager to earn while away';
+    $('#rate').textContent = inc > 0 ? `+${fmt(inc)} a second` : 'tap a trade to earn';
     const all = G.profitAll(S);
     for (const r of rows) {
       const id = r.id, c = G.cycle(S, id), p = S.prog[id], fast = S.mgr[id] && c < .25, lv = S.lv[id] || 0;
@@ -269,7 +268,7 @@
       if (n && report) report = null;
     }
     if (act === 'mode') { mode = a.dataset.mode === 'max' ? 'max' : +a.dataset.mode; panel.querySelectorAll('.modes button').forEach(b => b.setAttribute('aria-pressed', b === a)); }
-    if (act === 'hire' && G.hire(S, id)) toast(`${WORK[id].manager[0]} hired`);
+    if (act === 'hire' && G.hire(S, id)) { toast(`${WORK[id].manager[0]} hired`); report = null; }
     if (act === 'upg' && G.buyUpgrade(S, id)) toast('Profit ×3');
     if (act === 'dismiss') report = null;
     if (act === 'tab') return setTab(a.dataset.tab);
@@ -298,9 +297,9 @@
       const h = HOUSES.find(x => x.clan === pickClan);
       box.innerHTML = `<div class="in"><h1>${why ? 'Begin again' : 'Tenka'} <span lang="ja">天下</span></h1>
         <p class="lede">${why === 'again' ? `Your renown carries over: profit +${fmt((meta.renown + G.renownGain(S)) * G.RENOWN * 100)}% from the first paddy. Choose the house to lead from 1467.` : 'Build a house\'s fortune from 1467 to the present day. Run its trades, hire managers, buy upgrades, and the years pass as the money comes in: the house spreads across Japan province by province, and the real history arrives chapter by chapter.'}</p>
-        <div class="houses" role="group" aria-label="Houses">${HOUSES.map(x => `<button aria-pressed="${x.clan === pickClan}" data-clan="${x.clan}">${disc(x.clan)}<b>${clanName(x.clan)}</b><small>${esc(P[x.home].en)} · ${esc(x.motto)}</small></button>`).join('')}</div>
-        <div class="chosen"><h2>${clanName(h.clan)}</h2><p>From ${placeName(h.home)}. ${esc(h.motto)} <span lang="ja">${h.mottoJa}</span>: ${esc(h.text.toLowerCase())}</p>
-        <button class="btn go" data-act="begin">Begin in 1467</button>${why ? '<button class="btn" data-act="cancel">Not yet</button>' : ''}</div></div>`;
+        <div class="houses" role="group" aria-label="Houses">${HOUSES.map(x => `<button aria-pressed="${x.clan === pickClan}" data-clan="${x.clan}" style="--dye:${curtain(x.clan)}">${crest(x.clan, 'crest')}<b>${clanName(x.clan)}</b><small>${esc(P[x.home].en)} · ${esc(x.motto)}</small></button>`).join('')}</div>
+        <div class="chosen"><div class="mini" style="--dye:${curtain(h.clan)}">${crest(h.clan, 'crest')}</div><h2>${clanName(h.clan)}</h2><p>From ${placeName(h.home)}. ${esc(h.motto)} <span lang="ja">${h.mottoJa}</span>: ${esc(h.text.toLowerCase())}</p>
+        <div class="row"><button class="btn go" data-act="begin">Begin in 1467</button>${why ? '<button class="btn" data-act="cancel">Not yet</button>' : ''}</div></div></div>`;
     };
     draw();
     box.hidden = false;
@@ -349,5 +348,5 @@
     showPick(null);
   }
   requestAnimationFrame(frame);
-  window.tenka = { get S() { return S; }, set S(v) { S = v; topKey = ''; render(true); }, G, render };
+  window.tenka = { get S() { return S; }, set S(v) { S = v; topKey = ''; report = null; render(true); }, G, render };
 })();
