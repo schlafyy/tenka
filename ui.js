@@ -185,7 +185,7 @@
   function cacheRows() {
     rows = [...panel.querySelectorAll('.trade[data-id]')].map(row => {
       const id = row.dataset.id, buy = row.querySelector('.buy');
-      return { id, tile: row.querySelector('.tile'), badge: row.querySelector('.lv'), prog: row.querySelector('.prog'), bar: row.querySelector('.prog i'),
+      return { id, row, tile: row.querySelector('.tile'), badge: row.querySelector('.lv'), prog: row.querySelector('.prog'), bar: row.querySelector('.prog i'),
         pay: row.querySelector('.pay'), left: row.querySelector('.left'), buy, n: buy.querySelector('span'), price: buy.querySelector('b'), last: {}, was: null };
     });
   }
@@ -194,7 +194,14 @@
   function bars() {
     for (const r of rows) {
       const c = G.cycle(S, r.id), p = S.prog[r.id], fast = S.mgr[r.id] && c < .25;
-      if (!fast && r.was != null && (p == null || p < r.was) && c >= .3 && !reduced) r.tile.animate([{ transform: 'scale(1.07)' }, { transform: 'none' }], { duration: 260, easing: 'cubic-bezier(.16,1,.3,1)' });
+      if (!fast && r.was != null && (p == null || p < r.was) && c >= .3 && !reduced) {
+        r.tile.animate([{ transform: 'scale(1.07)' }, { transform: 'none' }], { duration: 260, easing: 'cubic-bezier(.16,1,.3,1)' });
+        // the payout's figure rises off the board
+        const f = document.createElement('b');
+        f.className = 'float num'; f.textContent = '+' + fmt(G.payout(S, r.id, G.profitAll(S)));
+        r.row.append(f);
+        f.animate([{ transform: 'translateY(4px)', opacity: 0 }, { opacity: 1, offset: .15 }, { transform: 'translateY(-26px)', opacity: 0 }], { duration: 950, easing: 'cubic-bezier(.16,1,.3,1)' }).onfinish = () => f.remove();
+      }
       r.was = p;
       if (r.last.fastOn !== !!fast) { r.last.fastOn = !!fast; r.prog.classList.toggle('fast', !!fast); }
       if (!fast) r.bar.style.transform = `scaleX(${p == null ? 0 : Math.min(1, p / c)})`;
@@ -346,6 +353,20 @@
   }
   document.addEventListener('visibilitychange', () => { if (document.hidden) save(); });
   addEventListener('pagehide', save);
+
+  // ---------- the season over the shop front, by the real month ----------
+  (() => {
+    const m = new Date().getMonth(), season = m >= 2 && m <= 4 ? 'spring' : m >= 5 && m <= 7 ? 'summer' : m >= 8 && m <= 10 ? 'autumn' : 'winter';
+    const leaf = ['#c8432b', '#d9692a', '#b8322a', '#e08a2c'];
+    const d = document.createElement('div');
+    d.className = 'drift ' + season; d.setAttribute('aria-hidden', 'true');
+    d.innerHTML = Array.from({ length: 7 }, (_, i) => {
+      const s = season === 'autumn' ? 11 + rnd(5) : season === 'winter' ? 5 + rnd(4) : 7 + rnd(3);
+      return `<i style="--x:${4 + i * 14 + rnd(8)}%;--s:${s}px;--d:${9 + rnd(7)}s;--w:${-rnd(16)}s;--dx:${30 + rnd(50)}px;--r:${(rnd(2) ? 1 : -1) * (200 + rnd(300))}deg${season === 'autumn' ? `;color:${leaf[i % 4]}` : ''}">${season === 'autumn' ? '<svg><use href="#momiji"/></svg>' : ''}</i>`;
+    }).join('');
+    $('#top').append(d);
+    function rnd(n) { return Math.floor(Math.random() * n); }
+  })();
 
   // ---------- start ----------
   const saved = load();
