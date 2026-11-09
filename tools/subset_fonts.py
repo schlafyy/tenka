@@ -1,0 +1,45 @@
+"""Cuts the bundled Japanese fonts down to the characters the game uses (they are 2-15 MB whole).
+Run after changing any text: python tools/subset_fonts.py <folder with the full .ttf files>
+Sources (SIL Open Font License): github.com/google/fonts ofl/shipporiminchob1 and ofl/zenkakugothicnew,
+saved as <family>_<File>.ttf and <family>_OFL.txt."""
+import os, sys, string
+from fontTools import subset
+
+ROOT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..")
+FONTS = {  # output name -> source file
+    "mincho-400": "shipporiminchob1_ShipporiMinchoB1-Regular.ttf",
+    "mincho-700": "shipporiminchob1_ShipporiMinchoB1-Bold.ttf",
+    "gothic-400": "zenkakugothicnew_ZenKakuGothicNew-Regular.ttf",
+    "gothic-500": "zenkakugothicnew_ZenKakuGothicNew-Medium.ttf",
+}
+
+
+def used_chars():
+    chars = set(string.printable) | set("ōūāēīŌŪĀ–—‘’“”…·×½¼●○⌂−→←年元一二三四五六七八九十万石春夏秋冬")
+    for f in ("index.html", "ui.js", "game.js", "data/game-data.js", "data/map.js"):
+        chars |= set(open(os.path.join(ROOT, f), encoding="utf8").read())
+    return "".join(sorted(c for c in chars if c.isprintable()))
+
+
+def main(src):
+    text = used_chars()
+    out = os.path.join(ROOT, "fonts")
+    os.makedirs(out, exist_ok=True)
+    for name, file in FONTS.items():
+        opts = subset.Options()
+        opts.flavor = "woff2"
+        opts.layout_features = ["*"]
+        font = subset.load_font(os.path.join(src, file), opts)
+        sub = subset.Subsetter(opts)
+        sub.populate(text=text)
+        sub.subset(font)
+        path = os.path.join(out, name + ".woff2")
+        subset.save_font(font, path, opts)
+        print(name, os.path.getsize(path) // 1024, "KB")
+    for lic in ("shipporiminchob1_OFL.txt", "zenkakugothicnew_OFL.txt"):
+        with open(os.path.join(src, lic), encoding="utf8") as a, open(os.path.join(out, lic.replace("_OFL", "-OFL")), "w", encoding="utf8") as b:
+            b.write(a.read())
+
+
+if __name__ == "__main__":
+    main(sys.argv[1])

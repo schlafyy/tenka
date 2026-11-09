@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<svg width="100%" height="100%" viewBox="0 0 600 600" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xml:space="preserve" style="fill-rule:evenodd;clip-rule:evenodd;stroke-linejoin:round;stroke-miterlimit:1.41421;">
+    <rect id="Ebene1" x="0" y="0" width="600" height="600" style="fill:black;"/>
+    <g transform="matrix(1.44638,-1.18696e-17,-1.18696e-17,1.49485,-95.586,-75.2062)">
+        <ellipse cx="273.5" cy="251" rx="200.5" ry="194" style="fill:white;"/>
+    </g>
+    <g transform="matrix(1.27182,-1.08758e-17,-1.04371e-17,1.36968,-47.8429,-36.6396)">
+        <path d="M124.196,121.57C182.927,122.525 369.636,122.534 422.834,121.601C444.567,145.063 460.487,173.668 468.392,205.287C405.35,205.499 144.337,205.868 78.717,204.853C86.663,173.392 102.547,144.93 124.196,121.57Z" style="fill:black;"/>
+    </g>
+    <g transform="matrix(1.27182,-2.21827e-18,3.09571e-18,-1.36968,-47.8429,636.512)">
+        <path d="M124.196,121.57C182.927,122.525 369.636,122.534 422.834,121.601C444.567,145.063 460.487,173.668 468.392,205.287C405.35,205.499 144.337,205.868 78.717,204.853C86.663,173.392 102.547,144.93 124.196,121.57Z" style="fill:black;"/>
+    </g>
+</svg>

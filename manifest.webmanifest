@@ -1,0 +1,15 @@
+{
+  "name": "Tenka 天下",
+  "short_name": "Tenka",
+  "description": "An idle game of the Sengoku period: one house, sixty-eight provinces, 1467 onward.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#13152f",
+  "theme_color": "#13152f",
+  "icons": [
+    { "src": "icon-180.png", "sizes": "180x180", "type": "image/png" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png" }
+  ]
+}
