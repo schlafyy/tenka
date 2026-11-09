@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="26" height="14" viewBox="0 0 26 14">
+  <!-- one course of the roof above the eave: round ridge tiles at the bay edges, a trough tile between, the next course's shadow at the foot -->
+  <defs>
+    <linearGradient id="ridge" x1="0" x2="1"><stop offset="0" stop-color="#36383c"/><stop offset=".45" stop-color="#5a5c60"/><stop offset="1" stop-color="#36383c"/></linearGradient>
+    <linearGradient id="trough" x1="0" x2="1"><stop offset="0" stop-color="#232528"/><stop offset=".5" stop-color="#313337"/><stop offset="1" stop-color="#232528"/></linearGradient>
+    <linearGradient id="course" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#000" stop-opacity="0"/><stop offset="1" stop-color="#000" stop-opacity=".35"/></linearGradient>
+  </defs>
+  <rect width="26" height="14" fill="url(#trough)"/>
+  <rect x="-7" width="14" height="14" fill="url(#ridge)"/>
+  <rect x="19" width="14" height="14" fill="url(#ridge)"/>
+  <rect y="9" width="26" height="5" fill="url(#course)"/>
+  <rect y="13.2" width="26" height=".8" fill="#1b1d20"/>
+</svg>
