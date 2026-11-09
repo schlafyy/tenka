@@ -1,1 +1,3 @@
 __pycache__/
+# Impeccable working files (the repo is served by GitHub Pages, so they stay local)
+.impeccable/

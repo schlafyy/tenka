@@ -1,43 +1,43 @@
 # Tenka 天下
 
-An idle game of the Sengoku period. Pick a house in 1467, take its home province, and spread your dye across the 68 old provinces of Japan while history runs underneath. It is built on the province map, clans, dyes and crests of the Sengoku map project (`../sengoku-map`), in the same Indigo Cloth look.
+An idle game about one Japanese house across 550 years. Pick a house and its crest in 1467, the year the Ōnin War begins, and lead it to the present day: a samurai family, then a daimyō house, then Meiji industrialists, then a modern company, under the same crest. It is built on the province map, clans, dyes, crests and history of the Sengoku map project (`../sengoku-map`), in the same Indigo Cloth look.
 
 ## Play it
 
+- **On the iPhone:** open https://schlafyy.github.io/tenka/ in Safari, then Share → Add to Home Screen. It runs full-screen, works offline, and keeps your save on the phone.
 - **In a browser:** serve the folder (`python -m http.server`) and open `index.html`.
-- **On the iPhone:** host the folder on GitHub Pages, open it in Safari, then Share → Add to Home Screen. It runs full-screen, works offline (`sw.js`, over https only), and keeps your save on the phone.
-- The game saves itself every few seconds (localStorage). House → Copy save / Load a save moves it between devices.
+- The game saves itself every few seconds. The house section at the bottom has Copy save / Load a save to move it between devices.
 
-## What sets it apart
+## How it plays
 
-- **A real map and real yields.** The provinces are the 令制国. Each one yields its Keichō-era (c. 1598) assessed rice, rounded. Mines and ports (Iwami silver from 1526, Sakai, Hakata, Hirado from 1550…) bring coin.
-- **Seasons.** Rice arrives all year, most of it at the autumn harvest. Summer campaigns march faster. In winter the snow country (Echigo, Mutsu, Dewa, Hokuriku, Shinano, Hida) is closed to armies.
-- **History as the tech tree.** Twenty events arrive in their year, some with a choice: the Ōnin War, the Kaga ikki, guns at Tanegashima (matchlocks unlock), Xavier (welcome him and Nanban trade unlocks), Okehazama, Nagashino (volley fire), Azuchi (castle towns), Honnō-ji, the land survey, the sword hunt, Korea, Sekigahara. Clans rise in their historical years (the Hōjō in Izu in 1493, the Mōri in Aki, the Oda in Owari…) unless you're already there.
-- **Growth has a price.** New provinces are unsettled for years: they yield less, and each unsettled one makes the next war need more men. The larger the realm, the more rice each soldier costs (supply lines). Rivals grow stronger with their size and with the years.
-- **Gekokujō.** Retainers govern provinces and lead campaigns. Their loyalty slips with age and ambition. At zero, a governor seizes his province and a general deserts with his army. Gifts, victories, tea gatherings and hostages hold them.
-- **Tea.** Famous utensils (meibutsu: Tsukumo Nasu, Hiragumo, the three great shouldered caddies…) turn up in conquered provinces and at Sakai. Each joins a permanent collection with its bonus on in every later run. Give one to a retainer and he is sworn to you for 15 years. Show one at a tea gathering and every retainer gains loyalty.
-- **Diplomacy.** A marriage alliance stops a war and brings tribute. After three years, if you're twice their size, the allies can be made vassals: their whole territory joins you without a fight.
-- **Succession and retirement.** Lords age and die; heirs inherit wary retainers. Retire (隠居) whenever you like: renown from the rice you hold and the fame you earned buys house codes (farming, supply, benevolent rule, speed, the strategist who campaigns for you while you're away…) and unlocks more houses (Imagawa, Date, Uesugi, Hōjō, Ōtomo, Chōsokabe, Tokugawa), each with its own trait.
-- **Idle.** A game year is 15 minutes. Time away counts up to 12 hours (more with the steward code or the Tokugawa), and a report tells you what happened.
+- **One screen.** The map of the house's land at the top; under it the year, your money and one big card: the best thing to buy next. Tap it. "Spend it all" buys the best trades until the money runs out.
+- **Trades.** Each age brings three, opening in their year: paddies, a silver mine and castle towns; indigo dye houses, sake and the Dōjima rice exchange; silk mills, railways and department stores; electric works, cars and microchips; games, mobile networks and robots. Every 25 levels a trade's income doubles.
+- **Time grows with the house.** The years pass with real time, about three days for each age at an even pace. A house ahead of its time sees them pass up to three times faster, one behind sees them slow down. A whole run takes about two weeks.
+- **Provinces.** Every few years the house can reach a new province next to its land (20 in the Sengoku, 14 across the Edo peace, then 12, 12 and 10). Its dye soaks across the map, and the province's rice (and any mine, port or city) raises income. The other provinces are held by the real clans of each year, with their crests, until the modern state.
+- **Chronicle.** The real history arrives in its year as chapters, with the clans' crests: 85 events from the Sengoku map (1467–1945) and 13 written for the game after the war. Reading a chapter raises income. Chapters in which your own house is destroyed are left out: the house you lead survives.
+- **Heads of the house.** Every 22–34 years a new head takes over with a trait (thrifty, learned, patient...). Each house has its own lasting strength.
+- **Treasures.** Famous things (Tsukumo Nasu, the Great Wave, a first-day Shinkansen ticket...) turn up as the house reaches provinces. They stay in the collection for good, in every later run.
+- **Away.** Up to 12 hours away count (more for patient heads and the Tokugawa), and a steward invests half of what comes in. A note on return says what happened.
+- **The present.** At 2026 a new house can begin in 1467, keeping the treasures, with double income for every house that made it.
 
 ## Pacing (from the bot in `test.js`)
 
-A bot that plays well, checking every minute for two hours and then every half hour, unites the realm in about 32 hours on its first run. Its second run takes about 20 hours and its fourth about 12, after spending its renown on house codes. A person will take longer, and will usually retire a few times before uniting it.
+A bot that checks in five times a day reaches the present in about 13 days on its first run and 9 on its second.
 
 ## Files
 
 | File | What it does |
 |---|---|
-| `index.html` | Layout and all styles (phone: map above, panel below, tabs at the bottom; wide screens: panel on the right) |
-| `ui.js` | The cloth map (dyes, kasuri splits, crests, the soak and red thread of a campaign, snow), the panel, modals, saving and the clock |
-| `game.js` | All the rules, as pure functions over one JSON state; no page code, so `test.js` plays it in Node |
-| `data/game-data.js` | Province yields, mines and ports, snow, playable houses, risers, events, reforms, tea utensils, house codes, names |
-| `data/map.js` | Generated by `tools/import.js` from the Sengoku map: province shapes, which provinces border each other (from the shapes) and the sea crossings, clans, dyes, crests, the 1467 map, era names. Don't edit by hand |
-| `test.js` | `node test.js` checks the data and the rules, then lets a bot play every house and four runs in a row to show the pacing; `node test.js quick` skips the bot |
+| `index.html` | Layout and all styles (phone: one scrolling column under the map; wide screens: map left, column right) |
+| `ui.js` | The cloth map (dyes, kasuri splits, crests, the soak), the present, the chronicle, the house, choosing a house, saving and the clock |
+| `game.js` | All the rules, as pure functions over one JSON state; no page code, so `test.js` plays it in Node. The dials are at the top |
+| `data/game-data.js` | Province yields, mines and ports, the ages and their trades, houses, traits, names, treasures, the chapters after 1945 |
+| `data/map.js` | Generated by `tools/import.js` from the Sengoku map: province shapes, borders and sea crossings, clans, dyes, crests, the map by year, the history. Don't edit by hand |
+| `test.js` | `node test.js` checks the data and rules, then lets a bot play two whole runs to show the pacing; `quick` skips the bot; `calibrate` prints the even-pace income curve (`TARGET` in `game.js`) |
 | `tools/shots.py` | Plays the game in headless Chrome at phone and desktop sizes and saves screenshots; fails on any page error |
-| `tools/subset_fonts.py` | Cuts the fonts down to the characters used; re-run after adding text (see the file for the sources) |
+| `tools/subset_fonts.py` | Cuts the fonts down to the characters used; re-run after adding text |
 | `tools/icon.py` | The icons |
 
-**Tuning:** the main dials are at the top of `game.js` (`YEAR`, `TAX`, `DEF`, `CAP`, `PRESSURE`, `MARCH`, `OVERREACH`). After changing them, run `node test.js` and look at the "reached" lines.
+**Tuning:** after changing the economy in `game.js`, run `node test.js calibrate`, paste the curve into `TARGET` (a little below the bot), then `node test.js` and look at the day counts.
 
-**Credits:** province shapes: "Provinces of Japan with names.svg" by Ash_Crow, Wikimedia Commons, CC BY 2.5. Clan crests from Wikimedia Commons, each under its own licence (listed in `data/map.js`). Fonts: Shippori Mincho B1 and Zen Kaku Gothic New, SIL Open Font License. History is written for the game from standard accounts and simplified; yields are approximate.
+**Credits:** province shapes: "Provinces of Japan with names.svg" by Ash_Crow, Wikimedia Commons, CC BY 2.5. Clan crests from Wikimedia Commons, each under its own licence (listed in `data/map.js`). Fonts: Shippori Mincho B1 and Zen Kaku Gothic New, SIL Open Font License. The history is written from standard accounts and simplified; yields are approximate.

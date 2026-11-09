@@ -1,7 +1,7 @@
 {
   "name": "Tenka 天下",
   "short_name": "Tenka",
-  "description": "An idle game of the Sengoku period: one house, sixty-eight provinces, 1467 onward.",
+  "description": "An idle game: one Japanese house, from the Ōnin War of 1467 to the present day.",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
