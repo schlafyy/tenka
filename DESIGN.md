@@ -214,6 +214,7 @@ A plaster-and-wood palette with a single variable dye and a single warm metal.
 **Character:** The Mincho reads as lettering on a shop sign and in a chronicle; the Gothic keeps figures and controls plain. Both are self-hosted woff2 in `fonts/`.
 
 ### Hierarchy
+- **Curtain lettering** (Yuji Syuku brush, 400, 1.75rem clan name and 1.05rem era year, vertical, white): only on the noren.
 - **Year** (Mincho 400, 2.6rem, 1, -0.02em, tabular): the year, the one large number on plaster.
 - **Headline** (Mincho 400, 1.5rem, 1.2): tab headings, the chosen house name. The house-choice title is 2.4rem.
 - **Title** (Mincho 400, 1.15rem, 1.2): trade names, renown, chronicle entry titles, sub-headings. Items use 1.05rem.
@@ -231,7 +232,7 @@ A plaster-and-wood palette with a single variable dye and a single warm metal.
 
 ## Layout
 
-One centred column, max 560px, full height (100dvh): a shop front on top (curtain, year and wealth line, age band, next-trade line), a scrolling panel, and the wood tab sill at the bottom. At 600px and wider the column sits on a slightly darker surround (#e4e2de) with a hairline ring and a soft far shadow; the layout is otherwise unchanged. Panel gutter 18px; stacked boards 8 to 10px apart; internal padding 12 to 16px; gaps run 4, 6, 8, 12, 18. The house-choice screen is a full-viewport plaster sheet with an auto-fill grid of curtain cards (min 150px) and a sticky chosen-house card at the bottom. Safe-area insets are honoured (a wood strip on top, the sill's padding at the bottom). Touch targets are 40px or more, except small caption text; motion respects `prefers-reduced-motion`.
+One centred column, max 560px, full height (100dvh): a shop front on top (curtain, year and wealth line, age band, next-trade line), a scrolling panel, and the wood tab sill at the bottom. At 600px and wider the column sits on a slightly darker surround (#e4e2de) with a hairline ring and a soft far shadow; the layout is otherwise unchanged. Panel gutter 18px; stacked boards 8 to 10px apart; internal padding 12 to 16px; gaps run 4, 6, 8, 12, 18. The house-choice screen is a full-viewport plaster sheet with an auto-fill grid of curtain cards (min 150px) and a sticky chosen-house card at the bottom. Safe-area insets are honoured (roof grey on top, the sill's padding at the bottom). Touch targets are 40px or more, except small caption text; motion respects `prefers-reduced-motion`.
 
 ## Elevation & Depth
 
@@ -274,7 +275,7 @@ A wood board in the signboard style with a gilt figure; its action is a gold go 
 A wood bar at the bottom, five equal tabs each with a Mincho kanji (1.3rem) over a small Gothic label; the current tab is gilt with a 2px gilt bar at its top edge. Count dots are gold pills with wood numerals.
 
 ### Curtain (house header and house cards)
-The noren: a 140px dye panel under an 8px wood rod, two 3px plaster slits starting 24px down, the crest in white at 128px centred across the panels, the clan's kanji vertical on the left panel and the era year vertical on the right (Mincho 400). It is the button that opens the House tab. House cards on the choice screen repeat it small: dye body, wood top border, two plaster slits at the bottom, a 52px crest; the selected card lifts 3px with a plaster-and-wood double ring. The chosen-house card wears a 72px mini curtain across the top of a wood board.
+The shop front, top down: a tiled eave (30px of dull grey fired-clay tiles: round tile ends with a three-comma tomoe in relief over scalloped trough lips, one repeating bay in `art/eave.svg`), a 12px wooden lintel with grain, then the noren hung below it: three separate cotton panels in the house dye (126px tall, side panels flexible, middle 74px, 4px gaps showing the dim shop inside), each with a darker sewn sleeve at the top, a hem line, soft vertical fold shading and a faint weave; the weave sits under the crest and lettering, which are undyed white. One crest is dyed across all three panels, sized per crest from how much of its square the drawing fills (`CREST_FILL` in ui.js) so the drawing always runs 14px past each slit and clears the sleeve and hem. The clan's kanji are brushed down the left panel and the era year down the right in Yuji Syuku (the `Brush` face, a small subset of only clan names and era years). The panels cast a soft shadow on the plaster below. Tapping the curtain sets the panels swaying one after another (rotate from the top, 1.1s), then opens the House tab; nothing else moves on its own. It is the button that opens the House tab. House cards on the choice screen repeat it small in the same cloth (weave, folds, darker sleeve): wood top border, two slits at the hem showing the dim shop, a 52px crest; the selected card lifts 3px with a plaster-and-wood double ring. The chosen-house card wears a 72px mini curtain across the top of a wood board.
 
 ### Age band
 Five thin tracks (6px, 4px radius) over hairline, filling left to right with the house dye as the year advances, Mincho kanji age names below in soft ink (darker for past and current), and a 2px wood tick at the next trade's position.

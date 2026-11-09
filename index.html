@@ -7,7 +7,7 @@
 <link rel="icon" href="icon.png">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="icon-180.png">
-<meta name="theme-color" content="#3b2b21">
+<meta name="theme-color" content="#34363a">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Tenka">
@@ -15,6 +15,7 @@
 <style>
 @font-face { font-family: 'Shippori'; src: url(fonts/mincho-400.woff2) format('woff2'); font-weight: 400; font-display: swap; }
 @font-face { font-family: 'Shippori'; src: url(fonts/mincho-700.woff2) format('woff2'); font-weight: 700; font-display: swap; }
+@font-face { font-family: 'Brush'; src: url(fonts/brush-400.woff2) format('woff2'); font-weight: 400; font-display: swap; }
 @font-face { font-family: 'Zen'; src: url(fonts/gothic-400.woff2) format('woff2'); font-weight: 400; font-display: swap; }
 @font-face { font-family: 'Zen'; src: url(fonts/gothic-500.woff2) format('woff2'); font-weight: 500; font-display: swap; }
 
@@ -24,9 +25,13 @@
   --ink: #231d18; --ink-2: #3d342c; --soft: #6c6158; --faint: #8f857b;
   --wood: #3b2b21; --wood-2: #47352a; --wood-deep: #2c2019;
   --on-wood: #f1e7d6; --on-wood-soft: #c4b49f;
+  --roof: #34363a;
+  --cloth: repeating-linear-gradient(0deg, rgba(0, 0, 0, .045) 0 1px, transparent 1px 3px), repeating-linear-gradient(90deg, rgba(255, 255, 255, .03) 0 1px, transparent 1px 3px),
+    linear-gradient(90deg, rgba(0, 0, 0, .12), transparent 12%, rgba(0, 0, 0, .05) 32%, transparent 44%, rgba(255, 255, 255, .035) 58%, transparent 70%, rgba(0, 0, 0, .06) 86%, rgba(0, 0, 0, .13));
   --gold: #d9b56b; --gold-hover: #e6c47e; --gold-line: #b8924a; --gilt: #e2c27f;
   --dye: #82263a; --dye-lit: #953f51;
   --mincho: 'Shippori', 'Yu Mincho', 'Hiragino Mincho ProN', serif;
+  --brush: 'Brush', var(--mincho);
   --gothic: 'Zen', 'Yu Gothic UI', 'Hiragino Sans', sans-serif;
   --ease: cubic-bezier(.16, 1, .3, 1);
   --hang: 0 1px 2px rgba(44, 32, 25, .18), 0 10px 20px -10px rgba(44, 32, 25, .45);
@@ -52,17 +57,26 @@ h1, h2, h3 { font-family: var(--mincho); font-weight: 400; }
 #app { height: 100dvh; display: flex; flex-direction: column; max-width: var(--col); margin: 0 auto; background: var(--plaster); }
 
 /* ---------- the shop front: the curtain, the sign, the five ages ---------- */
-#top { flex: none; padding-top: env(safe-area-inset-top); background: linear-gradient(var(--wood) env(safe-area-inset-top), transparent 0); }
+#top { flex: none; padding-top: env(safe-area-inset-top); background: linear-gradient(var(--roof) env(safe-area-inset-top), transparent 0); }
+/* the eave: a row of round tile ends over a wooden lintel */
+.eave { position: relative; z-index: 2; height: 30px; background: url(art/eave.svg) 13px 0 / 26px 30px repeat-x, var(--roof); }
+.beam { position: relative; z-index: 1; height: 12px; background: repeating-linear-gradient(90deg, rgba(255, 255, 255, .035) 0 1px, transparent 1px 7px, rgba(0, 0, 0, .06) 7px 8px, transparent 8px 19px), linear-gradient(var(--wood-2), var(--wood)); box-shadow: 0 3px 4px rgba(0, 0, 0, .35); }
 /* the noren: a rod, a hem, two slits, the crest dyed across all three panels */
-#house { display: block; position: relative; width: 100%; height: 140px; background: var(--dye); color: #fff; border-top: 8px solid var(--wood); overflow: hidden; transition: background .6s var(--ease); }
-#house::before, #house::after { content: ''; position: absolute; top: 24px; bottom: 0; width: 3px; background: var(--plaster); z-index: 1; }
-#house::before { left: calc(50% - 45.5px); }
-#house::after { left: calc(50% + 42.5px); }
-#house .crest { position: absolute; left: 50%; top: 53%; width: 128px; height: 128px; margin: -64px 0 0 -64px; }
-#house .v { position: absolute; top: 34px; writing-mode: vertical-rl; font: 400 1.25rem/1 var(--mincho); letter-spacing: .12em; white-space: nowrap; }
-#house .v.l { left: calc(25% - 22px - .625rem); }
-#house .v.r { right: calc(25% - 22px - .45rem); font-size: .9rem; opacity: .92; }
-.sign { display: flex; align-items: flex-end; justify-content: space-between; gap: 12px; padding: 14px 18px 0; }
+/* the noren: three cotton panels hung through a sleeve on the lintel; the dim shop shows between them */
+#house { --c: 116px; --g: 4px; --m: 74px; /* --c is set per crest by ui.js */ display: flex; gap: var(--g); position: relative; width: 100%; height: 126px; padding: 0 6px; background: linear-gradient(#1a130f, #2c2019); color: #fff; overflow: hidden; }
+#house .pn { flex: 1; position: relative; overflow: hidden; transform-origin: 50% 0; background: var(--cloth), var(--dye);
+  box-shadow: inset 0 -3px 0 rgba(0, 0, 0, .14), inset 0 16px 0 rgba(0, 0, 0, .16), inset 0 17px 0 rgba(255, 255, 255, .07); }
+#house .pn.m { flex: 0 0 var(--m); }
+/* the fall of the cloth, and its weave */
+/* one crest dyed across all three panels: each panel shows its own part of it */
+#house .crest { position: absolute; top: calc(50% + 6px); width: var(--c); height: var(--c); margin-top: calc(var(--c) / -2); }
+#house .pn.l .crest { left: calc(100% + var(--g) + var(--m) / 2 - var(--c) / 2); }
+#house .pn.m .crest { left: calc(50% - var(--c) / 2); }
+#house .pn.r .crest { left: calc(0px - var(--g) - var(--m) / 2 - var(--c) / 2); }
+/* the house's name and the era year, brushed down the outer panels */
+#house .v { --fs: 1.75rem; position: absolute; left: 50%; top: 26px; transform: translateX(-50%); writing-mode: vertical-rl; font: 400 min(var(--fs), calc(88px / var(--n, 2) / 1.1))/1 var(--brush); letter-spacing: .04em; white-space: nowrap; text-shadow: 0 0 1px rgba(255, 255, 255, .4); }
+#house .pn.r .v { --fs: 1.05rem; top: 28px; letter-spacing: .1em; opacity: .95; }
+.sign { display: flex; align-items: flex-end; justify-content: space-between; gap: 12px; padding: 16px 18px 0; background: linear-gradient(rgba(44, 32, 25, .13), transparent 12px); }
 #year { font: 400 2.6rem/1 var(--mincho); letter-spacing: -.02em; }
 #era { font-size: .84rem; color: var(--soft); margin-top: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .when { min-width: 0; }
@@ -215,10 +229,10 @@ h3.sub .fig { font-size: .9rem; color: var(--soft); }
 #pick h1 span { display: block; font-size: 1.05rem; color: var(--soft); margin-top: 6px; }
 #pick .lede { font-family: var(--mincho); font-size: 1.05rem; line-height: 1.7; margin-top: 14px; color: var(--ink-2); padding-bottom: 18px; border-bottom: 1px solid var(--hair); }
 .houses { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 8px; margin-top: 18px; }
-.houses button { position: relative; display: flex; flex-direction: column; align-items: flex-start; gap: 6px; text-align: left; padding: 12px 12px 30px; border-top: 6px solid var(--wood); border-radius: 2px 2px 6px 6px; background: var(--dye); color: #fff; transition: transform .2s var(--ease), box-shadow .2s var(--ease); }
+.houses button { position: relative; display: flex; flex-direction: column; align-items: flex-start; gap: 6px; text-align: left; padding: 12px 12px 30px; border-top: 6px solid var(--wood); border-radius: 2px 2px 6px 6px; background: var(--cloth), var(--dye); box-shadow: inset 0 10px 0 rgba(0, 0, 0, .14); color: #fff; transition: transform .2s var(--ease), box-shadow .2s var(--ease); }
 .houses button:hover { transform: translateY(-2px); }
-.houses button[aria-pressed="true"] { transform: translateY(-3px); box-shadow: var(--hang), 0 0 0 3px var(--plaster), 0 0 0 5px var(--wood); }
-.houses button::before, .houses button::after { content: ''; position: absolute; bottom: 0; height: 20px; width: 3px; background: var(--plaster); }
+.houses button[aria-pressed="true"] { transform: translateY(-3px); box-shadow: inset 0 10px 0 rgba(0, 0, 0, .14), var(--hang), 0 0 0 3px var(--plaster), 0 0 0 5px var(--wood); }
+.houses button::before, .houses button::after { content: ''; position: absolute; bottom: 0; height: 20px; width: 3px; background: var(--wood-deep); }
 .houses button::before { left: calc(33.333% - 1.5px); }
 .houses button::after { left: calc(66.667% - 1.5px); }
 .houses .crest { width: 52px; height: 52px; }
@@ -228,8 +242,8 @@ h3.sub .fig { font-size: .9rem; color: var(--soft); }
 .houses small { font-size: .84rem; color: rgba(255, 255, 255, .88); line-height: 1.35; }
 /* the chosen house shown as its own curtain */
 .chosen { position: sticky; bottom: 0; margin-top: 16px; padding: 16px; border-radius: 6px; background: linear-gradient(180deg, var(--wood-2), var(--wood) 60%); color: var(--on-wood); box-shadow: var(--hang); }
-.chosen .mini { position: relative; height: 72px; margin: -16px -16px 14px; border-top: 6px solid var(--wood-deep); border-radius: 6px 6px 0 0; background: var(--dye); overflow: hidden; }
-.chosen .mini::before, .chosen .mini::after { content: ''; position: absolute; top: 14px; bottom: 0; width: 3px; background: var(--wood); }
+.chosen .mini { position: relative; height: 72px; margin: -16px -16px 14px; border-top: 6px solid var(--wood-deep); border-radius: 6px 6px 0 0; background: var(--cloth), var(--dye); box-shadow: inset 0 10px 0 rgba(0, 0, 0, .14); overflow: hidden; }
+.chosen .mini::before, .chosen .mini::after { content: ''; position: absolute; z-index: 1; top: 14px; bottom: 0; width: 3px; background: var(--wood); }
 .chosen .mini::before { left: calc(50% - 23.5px); }
 .chosen .mini::after { left: calc(50% + 20.5px); }
 .chosen .mini .crest { position: absolute; left: 50%; top: 50%; width: 58px; height: 58px; margin: -29px 0 0 -29px; }
@@ -252,12 +266,13 @@ h3.sub .fig { font-size: .9rem; color: var(--soft); }
 <body>
 <svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false"><defs>
   <!-- a crest's dark lines become white cotton the dye never reached -->
-  <filter id="resist" x="0" y="0" width="1" height="1" color-interpolation-filters="sRGB"><feColorMatrix type="matrix" values="0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  -.33 -.33 -.33 1 0"/></filter>
+  <filter id="resist" x="0" y="0" width="1" height="1" color-interpolation-filters="sRGB"><feColorMatrix type="matrix" values="0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  -1.2 -1.2 -1.2 2.6 0"/></filter>
   <filter id="resist-inv" x="0" y="0" width="1" height="1" color-interpolation-filters="sRGB"><feColorMatrix type="matrix" values="0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 2.2 0 0 -.55"/></filter>
   <filter id="resist-holes" x=".025" y=".025" width=".95" height=".95" color-interpolation-filters="sRGB"><feColorMatrix type="matrix" values="0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 -1 1"/></filter>
 </defs></svg>
 <div id="app">
   <header id="top">
+    <div class="eave" aria-hidden="true"></div><div class="beam" aria-hidden="true"></div>
     <button id="house"></button>
     <div class="sign">
       <div class="when"><div id="year" class="num"></div><div id="era"></div></div>

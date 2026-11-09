@@ -28,6 +28,10 @@
     const n = parseInt(hex.slice(1), 16), c = [n >> 16, n >> 8 & 255, n & 255];
     return '#' + c.map(v => Math.round(k < 0 ? v * (1 + k) : v + (255 - v) * k).toString(16).padStart(2, '0')).join('');
   };
+  // how much of its square each crest's drawing fills (width, height), measured once in a browser;
+  // the banner sizes the crest by it so both slits cut every crest the same way.
+  // shortcut: a new house's crest falls back to .85, measure it when one is added
+  const CREST_FILL = { oda: [1, .98], takeda: [.805, .61], mori: [.73, .77], shimazu: [.87, .87], tokugawa: [1, 1], date: [1, 1], uesugi: [.81, .81], hojo: [.825, .305], imagawa: [.81, .8], otomo: [.81, .825], chosokabe: [1, 1], maeda: [.81, .78], hosokawa: [.81, .81] };
   const crest = (clan, cls) => { const cr = CRESTS[clan]; return cr ? `<svg class="${cls}" viewBox="0 0 40 40" aria-hidden="true"><image href="${cr.src}" width="40" height="40" filter="${resist(cr)}"/></svg>` : ''; };
   const resist = cr => `url(#resist${cr.invert === 'holes' ? '-holes' : cr.invert ? '-inv' : ''})`;
   // a crest on a disc of its clan's darkened dye, or the place's first character when there is no crest
@@ -55,7 +59,9 @@
   const unit = () => (G.money(S) === 'yen' ? 'yen' : 'koku');
   function renderTop() {
     dyeTheHouse();
-    $('#house').innerHTML = `${crest(S.house, 'crest')}<b class="v l" lang="ja" aria-hidden="true">${CLANS[S.house].ja}</b><b class="v r" lang="ja" aria-hidden="true"></b><span class="sr">The ${esc(CLANS[S.house].en)} house, led by ${esc(G.headName(S))}: open the house</span>`;
+    const cr = crest(S.house, 'crest'), [fw, fh] = CREST_FILL[S.house] || [.85, .85];
+    $('#house').style.setProperty('--c', Math.min(110 / fw, 100 / fh) + 'px'); // the drawing runs 14px into each side panel and clears the sleeve and hem
+    $('#house').innerHTML = `<span class="pn l" aria-hidden="true">${cr}<b class="v" lang="ja" style="--n:${CLANS[S.house].ja.length}">${CLANS[S.house].ja}</b></span><span class="pn m" aria-hidden="true">${cr}</span><span class="pn r" aria-hidden="true">${cr}<b class="v" lang="ja"></b></span><span class="sr">The ${esc(CLANS[S.house].en)} house, led by ${esc(G.headName(S))}: open the house</span>`;
     $('#ages').innerHTML = AGES.map(a => `<div class="age"><div class="band"><i></i></div><span class="k" lang="ja">${a.ja.split('・')[0]}</span></div>`).join('');
     ages = [...document.querySelectorAll('#ages .age')];
   }
@@ -65,7 +71,8 @@
     topYear = S.year;
     const era = G.eraOf(S.year), now = G.ageOf(S.year);
     $('#year').textContent = S.year;
-    $('#house .v.r').textContent = `${era.ja}${G.kanjiYear(era.n)}年`;
+    const ey = `${era.ja}${G.kanjiYear(era.n)}年`, v = $('#house .pn.r .v');
+    v.textContent = ey; v.style.setProperty('--n', ey.length);
     $('#era').textContent = `${era.en} ${era.n} · ${G.headName(S)}`;
     AGES.forEach((a, i) => {
       const to = AGES[i + 1] ? AGES[i + 1].from : END_YEAR, k = Math.min(1, Math.max(0, (S.year - a.from) / (to - a.from)));
@@ -167,7 +174,7 @@
       <p class="note after">${TREASURES.length - found.length} still to find.</p>
       <h3 class="sub">Your save</h3>
       <div class="tools"><button class="btn" data-act="copy">Copy save</button><button class="btn" data-act="paste">Load a save</button><button class="btn" data-act="restart">Start over</button></div>
-      <p class="credits">Clan crests from Wikimedia Commons, each under its own licence. Province names and history from the Sengoku map project. Fonts: Shippori Mincho B1 and Zen Kaku Gothic New (SIL OFL). The history is written for the game from standard accounts and simplified; yields are approximate.</p>`;
+      <p class="credits">Clan crests from Wikimedia Commons, each under its own licence. Province names and history from the Sengoku map project. Fonts: Shippori Mincho B1, Zen Kaku Gothic New and Yuji Syuku (SIL OFL). The history is written for the game from standard accounts and simplified; yields are approximate.</p>`;
     return x;
   }
   const VIEWS = { trades: renderTrades, upgrades: renderUpgrades, managers: renderManagers, chron: renderChron, house: renderHouse };
@@ -255,7 +262,10 @@
     if (!reduced) { panel.classList.remove('fade'); void panel.offsetWidth; panel.classList.add('fade'); }
   }
   document.querySelectorAll('#tabs button').forEach(b => b.addEventListener('click', () => setTab(b.dataset.tab)));
-  $('#house').addEventListener('click', () => setTab('house'));
+  $('#house').addEventListener('click', () => {
+    if (!reduced) document.querySelectorAll('#house .pn').forEach((p, i) => p.animate([{ transform: 'none' }, { transform: 'rotate(1.4deg)' }, { transform: 'rotate(-.8deg)' }, { transform: 'rotate(.3deg)' }, { transform: 'none' }], { duration: 1100, delay: i * 70, easing: 'ease-out' }));
+    setTab('house');
+  });
 
   panel.addEventListener('click', async e => {
     const a = e.target.closest('[data-act]');

@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="26" height="30" viewBox="0 0 26 30">
+  <!-- one bay of a fired-clay (ibushi) eave: a round ridge tile ending in a tomoe disc at each edge, a trough tile with a scalloped lip between -->
+  <defs>
+    <linearGradient id="ridge" x1="0" x2="1"><stop offset="0" stop-color="#3a3c40"/><stop offset=".45" stop-color="#626468"/><stop offset="1" stop-color="#3a3c40"/></linearGradient>
+    <linearGradient id="trough" x1="0" x2="1"><stop offset="0" stop-color="#26282b"/><stop offset=".5" stop-color="#36383c"/><stop offset="1" stop-color="#26282b"/></linearGradient>
+    <g id="tomoe">
+      <circle r="8.6" fill="#55575b" stroke="#2c2e31" stroke-width="1.1"/>
+      <circle r="6.6" fill="none" stroke="#45474b" stroke-width=".8"/>
+      <g fill="#6c6e72">
+        <g><circle cx="0" cy="-2.4" r="1.7"/><path d="M1.6 -2.9 A3.9 3.9 0 0 1 2.9 2.1 A3 3 0 0 0 1.2 -1.6 Z"/></g>
+        <g transform="rotate(120)"><circle cx="0" cy="-2.4" r="1.7"/><path d="M1.6 -2.9 A3.9 3.9 0 0 1 2.9 2.1 A3 3 0 0 0 1.2 -1.6 Z"/></g>
+        <g transform="rotate(240)"><circle cx="0" cy="-2.4" r="1.7"/><path d="M1.6 -2.9 A3.9 3.9 0 0 1 2.9 2.1 A3 3 0 0 0 1.2 -1.6 Z"/></g>
+      </g>
+    </g>
+  </defs>
+  <rect width="26" height="30" fill="#1d1f22"/>
+  <rect width="26" height="20" fill="url(#trough)"/>
+  <path d="M5 20 Q9 23.5 13 21 Q17 23.5 21 20 V25.5 Q17 29 13 26.5 Q9 29 5 25.5 Z" fill="#4b4d51"/>
+  <path d="M5 20 Q9 23.5 13 21 Q17 23.5 21 20" fill="none" stroke="#6a6c70" stroke-width=".8"/>
+  <rect x="-7" width="14" height="19" fill="url(#ridge)"/>
+  <rect x="19" width="14" height="19" fill="url(#ridge)"/>
+  <use href="#tomoe" x="0" y="20"/>
+  <use href="#tomoe" x="26" y="20"/>
+</svg>
