@@ -9,7 +9,7 @@ on:
     paths: ['*.js', '*.html', 'data/**', 'fonts/**', 'crests/**', 'portraits/**', 'art/**', 'icon*.png', 'ios/**', 'capacitor.config.json', 'package*.json', '.github/workflows/ios.yml']
 jobs:
   build:
-    runs-on: macos-15
+    runs-on: macos-15-intel # the Apple-silicon pool kept running out of machines (2026-11-10); the Intel one builds the same app
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
