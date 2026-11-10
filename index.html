@@ -60,10 +60,10 @@ h1, h2, h3 { font-family: var(--mincho); font-weight: 400; }
 #app { height: 100dvh; display: flex; flex-direction: column; max-width: var(--col); margin: 0 auto; background: var(--plaster); }
 
 /* ---------- the shop front: the curtain, the sign, the five ages ---------- */
-#top { position: relative; flex: none; padding-top: env(safe-area-inset-top); background: linear-gradient(var(--roof) env(safe-area-inset-top), transparent 0); }
+#top { position: relative; flex: none; }
 /* the eave: a row of round tile ends over a wooden lintel */
-/* the roof runs up behind the status bar in courses of tiles, so Safari's blur there still reads as roof; the tile ends sit below it */
-.eave { position: relative; z-index: 2; height: 58px; background: url(art/eave.svg) 13px 100% / 26px 30px repeat-x, linear-gradient(rgba(0, 0, 0, .45), transparent 28px), url(art/roof.svg) 13px 4px / 26px 14px repeat, var(--roof); }
+/* the roof runs right up to the top edge, behind the clock, in courses of tiles with no shading; the tile ends sit below it */
+.eave { position: relative; z-index: 2; height: calc(58px + env(safe-area-inset-top)); background: url(art/eave.svg) 13px 100% / 26px 30px repeat-x, url(art/roof.svg) 13px calc(4px + env(safe-area-inset-top)) / 26px 14px repeat, var(--roof); }
 .beam { position: relative; z-index: 1; height: 12px; background: repeating-linear-gradient(90deg, rgba(255, 255, 255, .035) 0 1px, transparent 1px 7px, rgba(0, 0, 0, .06) 7px 8px, transparent 8px 19px), linear-gradient(var(--wood-2), var(--wood)); box-shadow: 0 3px 4px rgba(0, 0, 0, .35); }
 /* the noren: a rod, a hem, two slits, the crest dyed across all three panels */
 /* the noren: three cotton panels hung through a sleeve on the lintel; the dim shop shows between them */
