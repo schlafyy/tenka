@@ -25,7 +25,7 @@ A business-tycoon idle game (in the manner of AdVenture Capitalist) on top of 55
 
 ## Pacing (from the bot in `test.js`)
 
-A bot that plays half an hour, then checks in five times a day, reaches about 1520 in its first half hour and the present day in about 8 days, beginning again nine times. A person, playing less perfectly, will take longer.
+A bot that plays half an hour, then checks in five times a day, reaches about 1520 in its first half hour and the present day in about 8 days, beginning again nine times. Simulated casual players take longer: 11.5 days checking in three times a day, 15–16 days at twice a day or with careless buying.
 
 ## Files
 
