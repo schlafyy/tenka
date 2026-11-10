@@ -41,6 +41,7 @@ A bot that plays half an hour, then checks in five times a day, reaches about 15
 |---|---|
 | `index.html` | Layout and all styles: one column the height of the screen (the house banner, the panel that scrolls, the tabs) |
 | `street.js` | The street at the foot of every room: the town by age, the people walking past |
+| `ios/`, `capacitor.config.json`, `package.json`, `tools/www.js` | The iOS app: the same game wrapped with Capacitor (status bar hidden, the save mirrored into the app's settings store). `.github/workflows/ios.yml` builds an unsigned `Tenka.ipa` on GitHub's macOS runners for each game change; install it with Sideloadly and an Apple ID |
 | `ui.js` | The house banner, the trades, upgrades, managers, chronicle and house tabs, choosing a house, saving and the clock. Bars move on the compositor every frame; numbers update a few times a second; markup is rebuilt only when it changes |
 | `game.js` | All the rules, as pure functions over one JSON state; no page code, so `test.js` plays it in Node. The dials are at the top |
 | `data/game-data.js` | Province yields, mines and ports, the ages and their trades (with managers and upgrades), the great works, houses, names, treasures, the chapters after 1945, the guests and the tea room's tasks |

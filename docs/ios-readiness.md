@@ -18,6 +18,18 @@ Reviewed on 2026-11-10 with the apple-skills release review and Apple's interfac
 | Low | No launch image (`apple-touch-startup-image`) | iOS shows a blank screen for a moment while the game opens. |
 | Low | No haptics | The web on iPhone has no vibration API. Capacitor's Haptics plugin can add a tick when a cycle pays and a firmer one for a new age. |
 
+## Status (2026-11-10)
+
+The Capacitor app exists (`ios/`) and builds on GitHub's Intel macOS runners: the Apple-silicon pool had no free machines that day. Items 2, 3, 5 and 6 below are done:
+- the files are bundled
+- the save is mirrored into Preferences
+- there is a 1024 icon and a launch screen
+- `ITSAppUsesNonExemptEncryption` is NO
+
+Next, with a paid Apple Developer account:
+- add signing to the workflow and upload to TestFlight
+- write a privacy policy page
+
 ## Before the App Store (Capacitor)
 
 **Needed**
