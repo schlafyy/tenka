@@ -65,6 +65,10 @@ with sync_playwright() as p:
             b = pg.locator(".guest.waiting .btn.go")
             if b.count(): b.first.click(); pg.wait_for_timeout(300)
         shot(pg, f"{name}-5-guests-after")
+        # journeys: send a clerk on the first free road
+        pg.click("#tabs [data-tab='trips']")
+        if pg.locator("[data-act='send']:not([disabled])").count(): pg.locator("[data-act='send']:not([disabled])").first.click()
+        shot(pg, f"{name}-5-trips")
         pg.click("#tabs [data-tab='tea']")
         if pg.locator("[data-act='tea']").count(): pg.click("[data-act='tea']")
         pg.wait_for_timeout(1500)

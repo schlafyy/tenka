@@ -25,7 +25,7 @@
 
   // ---------- saving ----------
   // a save from before the guests and the tea room gets their empty places
-  function fresh(T) { T.choices = T.choices || {}; T.meta.paths = T.meta.paths || []; T.guests = T.guests || []; if (!('tea' in T)) T.tea = null; if (!('day' in T)) T.day = null; T.meta.bond = T.meta.bond || {}; return T; }
+  function fresh(T) { T.trips = T.trips || []; T.meta.goods = T.meta.goods || []; T.choices = T.choices || {}; T.meta.paths = T.meta.paths || []; T.guests = T.guests || []; if (!('tea' in T)) T.tea = null; if (!('day' in T)) T.day = null; T.meta.bond = T.meta.bond || {}; return T; }
   function save() { if (!S) return; S.savedAt = Date.now(); try { localStorage.setItem(KEY, JSON.stringify(S)); } catch { /* private mode: the game still runs */ } }
   function load() { try { const s = localStorage.getItem(KEY); return s ? JSON.parse(s) : null; } catch { return null; } }
 
@@ -163,6 +163,31 @@
     return h;
   }
 
+  // ---------- journeys: clerks on the roads, and the roads they can take ----------
+  const hours = n => `${n} hour${n > 1 ? 's' : ''}`;
+  function renderTrips() {
+    const home = P[G.house(S).home].en, n = G.clerks(S), free = n - S.trips.length, found = S.meta.goods, next = ROUTES.find(r => S.year < r.year);
+    let h = plaque('旅', 'Journeys') + `<p class="note">Send a clerk along a trade road. They come home after some hours, even while you are away, with money and one of the road's famous goods. Every good the house has ever brought home adds 1% profit for good: ${found.length} of ${ROUTES.length * 3} so far.</p>`;
+    for (const t of S.trips) {
+      const r = G.ROUTE[t.route], back = S.t >= t.until;
+      h += `<div class="road${back ? ' back' : ''}" data-trip="${r.id}"><div class="ends"><span>${esc(home)}</span><span>${esc(r.to)}</span></div>
+        <div class="line" aria-hidden="true"><u></u></div>
+        <div class="row"><p>${back ? `Home from ${esc(r.to)}` : `On the road to ${esc(r.to)}: back in <span class="num left"></span>`}</p>
+        ${back ? `<button class="btn go" data-act="unload" data-id="${r.id}" data-k="unload-${r.id}">Unload</button>` : ''}</div></div>`;
+    }
+    h += `<h3 class="sub">Roads <span lang="ja">街道</span> <span class="fig num">${free} of ${n} clerk${n > 1 ? 's' : ''} free</span></h3>`;
+    for (const r of G.routesOpen(S).slice().reverse()) {
+      const busy = S.trips.some(t => t.route === r.id);
+      h += `<div class="pass"><span class="tag" lang="ja" aria-hidden="true">${r.glyph}</span><div><h3>${esc(r.en)} <span lang="ja">${r.ja}</span></h3>
+        <p class="who">${hours(r.hours)} to ${esc(r.to)} · about +${fmt(G.tripPay(S, r))} ${unit()}</p>
+        <p class="goods">${r.goods.map(([g, en, ja]) => found.includes(r.id + ':' + g) ? `<span class="got">${esc(en)} <span lang="ja">${ja}</span></span>` : '<span>?</span>').join('')}</p></div>
+        ${busy ? '<span class="hired">On the road</span>' : `<button class="btn${free ? ' go' : ''}" data-act="send" data-id="${r.id}" data-k="send-${r.id}"${free ? '' : ' disabled'}>Send</button>`}</div>`;
+    }
+    if (next) h += `<p class="note after">The next road opens in ${next.year}: ${esc(next.en)}.</p>`;
+    if (n < 3) h += `<p class="note">${n === 1 ? 'A second clerk joins in 1603.' : 'A third clerk joins in 1868.'}</p>`;
+    return h;
+  }
+
   // ---------- the tea room ----------
   function renderTea() {
     let h = plaque('茶室', 'Tea room');
@@ -258,7 +283,7 @@
     return x;
   }
   const SHOP = { trades: renderTrades, upgrades: renderUpgrades, managers: renderManagers };
-  const VIEWS = { shop: renderShop, guests: renderGuests, tea: renderTea, chron: renderChron, house: renderHouse };
+  const VIEWS = { shop: renderShop, guests: renderGuests, trips: renderTrips, tea: renderTea, chron: renderChron, house: renderHouse };
 
   // ---------- keeping the screen current ----------
   // the trade rows' moving parts, found once after each rebuild
@@ -308,6 +333,12 @@
       if (r.last.ok !== o.ok) { r.last.ok = o.ok; r.buy.classList.toggle('ok', o.ok); r.buy.setAttribute('aria-disabled', !o.ok); }
     }
     if (tab !== 'shop' || sub !== 'trades') panel.querySelectorAll('[data-cost]').forEach(b => { const ok = S.money >= +b.dataset.cost; if (b.classList.contains('go') !== ok) { b.disabled = !ok; b.classList.toggle('go', ok); } });
+    if (tab === 'trips') panel.querySelectorAll('.road[data-trip]').forEach(el => {
+      const t = S.trips.find(x => x.route === el.dataset.trip); if (!t) return;
+      const len = G.ROUTE[t.route].hours * 3600, k = Math.min(1, Math.max(0, 1 - (t.until - S.t) / len));
+      el.querySelector('u').style.transform = `translateX(calc(${k - 1} * (100% - 10px)))`;
+      const l = el.querySelector('.left'); if (l) l.textContent = secs(Math.max(0, t.until - S.t));
+    });
     if (tab === 'tea') {
       const c = $('#teaclock');
       if (c) c.textContent = secs(G.teaOn(S) ? S.tea.until - S.t : G.teaReadyIn(S));
@@ -326,6 +357,9 @@
     // a dot only for something that can be done now: never on a shut room
     const ways = G.crossings(S);
     dot('shop', ups + mgrs + ways.length); dot('guests', vis.filter(g => G.welcomeCost(S, g) <= S.money).length);
+    const home = G.tripsReady(S), idle = Math.min(G.clerks(S) - S.trips.length, G.routesOpen(S).filter(r => !S.trips.some(t => t.route === r.id)).length);
+    dot('trips', home.length + idle);
+    for (const t of home) if (!announced.has('t' + t.until)) { announced.add('t' + t.until); if (announced.ready && tab !== 'trips') toast(`A clerk is home from ${G.ROUTE[t.route].to}`); }
     dot('tea', G.roomOpen(S, 'tea') ? (!G.teaReadyIn(S) && !G.teaOn(S) ? 1 : 0) + tasks : 0); dot('chron', S.unread.length);
     for (const [k, n] of [['upgrades', ups], ['managers', mgrs]]) { const d = panel.querySelector(`.subs [data-sub="${k}"] .dot`); if (d && d.textContent !== (n ? String(n) : '')) { d.textContent = n ? String(n) : ''; d.hidden = !n; } }
     // a new visitor is news
@@ -348,6 +382,7 @@
       upgrades: () => [S.upg.length, G.upgrades(S).filter(u => u.open).length], managers: () => [Object.keys(S.mgr).length, WORKS.filter(w => G.isOpen(S, w.id)).length] };
     const bits = { shop: () => [sub, ...shop[sub]()],
       guests: () => [S.guests.join(), G.visitors(S).map(g => g.id).join(), (G.nextGuest(S) || {}).id, WORKS.filter(w => G.isOpen(S, w.id)).length],
+      trips: () => [S.trips.map(t => t.route + (S.t >= t.until ? '!' : '')).join(), G.clerks(S), G.routesOpen(S).length, S.meta.goods.length],
       tea: () => { G.daily(S, new Date().toDateString()); return [G.roomOpen(S, 'tea'), G.teaOn(S), G.teaReadyIn(S) > 0, S.day.key, S.day.got.join(), S.day.tasks.filter(t => G.taskDone(S, t)).join()]; },
       chron: () => [S.unread.join(), S.readIds.length, S.chron.length, older],
       house: () => [S.meta.paths.length, Object.keys(S.choices).length, S.heads.length, S.reach.length, S.readIds.length, G.renownGain(S), S.meta.treasures.length] };
@@ -412,6 +447,11 @@
       seal.animate([{ transform: 'scale(1.8) rotate(-14deg)', opacity: 0 }, { transform: 'scale(.92) rotate(-8deg)', opacity: 1, offset: .55 }, { transform: 'scale(1) rotate(-8deg)', opacity: 1 }], { duration: 380, easing: 'cubic-bezier(.3,1.4,.6,1)', fill: 'forwards' });
       setTimeout(go, 750);
       return;
+    }
+    if (act === 'send' && G.sendTrip(S, id)) toast(`A clerk sets out for ${G.ROUTE[id].to}`);
+    if (act === 'unload') {
+      const u = G.unload(S, id);
+      if (u) toast(`Home from ${G.ROUTE[id].to}: ${u.good.en} ${u.good.ja}${u.fresh ? ', new: +1% for good' : ''} · +${fmt(u.pay)} ${unit()}${u.treasure ? ` · and a treasure: ${u.treasure.en}` : ''}`);
     }
     if (act === 'tea' && G.serveTea(S)) toast(`Tea is served: profit ×${G.teaX(S)} for 30 minutes`);
     if (act === 'claim') { const pay = G.claimTask(S, id); if (pay) toast(`+${fmt(pay)} ${unit()}`); }

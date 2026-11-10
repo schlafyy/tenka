@@ -176,6 +176,28 @@ h2.head span { color: var(--soft); font-size: 1rem; }
 .guest.soon .scroll { height: 16px; margin-top: 30px; padding: 0; border-radius: 8px; background: var(--cloth), var(--dye); }
 .guest.soon .scroll::before, .guest.soon .scroll::after { display: none; }
 
+/* journeys: each clerk's road as a dotted line from home, the house dye travelling along it; the roads as station signs */
+.road { margin: 0 0 10px; padding: 12px 14px; background: var(--slip); border-radius: 6px; box-shadow: var(--hang); }
+.road .ends { display: flex; justify-content: space-between; gap: 12px; font-size: .84rem; color: var(--soft); }
+.road .ends span:last-child { color: var(--ink); font-weight: 500; }
+.line { position: relative; height: 14px; margin: 4px 0 6px; overflow: hidden; background: radial-gradient(circle, var(--hair-2) 1.3px, transparent 1.8px) 0 50% / 8px 8px repeat-x; }
+.line u { position: absolute; inset: 0; transform: translateX(calc(-1 * (100% - 10px))); background: linear-gradient(var(--dye), var(--dye)) 0 50% / 100% 2px no-repeat; will-change: transform; }
+.line u::after { content: ''; position: absolute; right: 0; top: 2px; width: 10px; height: 10px; border-radius: 50%; background: var(--dye); box-shadow: 0 0 0 2px var(--slip); }
+.road .row { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.road.back .row { min-height: 42px; }
+.road p { font-size: .9rem; color: var(--ink-2); }
+.road.back .line u { transform: none; }
+.pass { display: grid; grid-template-columns: 44px minmax(0, 1fr) auto; gap: 12px; align-items: center; padding: 12px 0; border-bottom: 1px solid var(--hair); }
+.pass .tag { width: 44px; height: 44px; border-radius: 4px; display: grid; place-items: center; background: var(--dye); color: #fff; font: 700 1.25rem/1 var(--mincho); }
+.pass h3 { font-size: 1.05rem; line-height: 1.3; }
+.pass h3 span { color: var(--soft); font-size: .9rem; }
+.pass .who { font-size: .84rem; color: var(--soft); }
+.pass .goods { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 6px; }
+.pass .goods span { padding: 1px 7px; border-radius: 4px; background: #e9e6e1; font-size: .72rem; color: var(--faint); }
+.pass .goods .got { color: var(--ink-2); }
+.pass .goods .got span { padding: 0; background: none; color: var(--soft); font-size: inherit; }
+.pass .hired { color: var(--soft); font-size: .84rem; }
+
 /* the tea room: the ceremony on a tatami mat, and today's tasks */
 .tatami { display: grid; grid-template-columns: 80px minmax(0, 1fr); gap: 16px; align-items: center; padding: 18px 16px; border-radius: 3px;
   background: repeating-linear-gradient(0deg, rgba(60, 50, 10, .08) 0 1px, transparent 1px 3px), linear-gradient(90deg, #cec38b, #c5b97f 50%, #cec38b);
@@ -403,6 +425,7 @@ details.credits { margin-top: 10px; } details.credits summary { cursor: pointer;
   <nav id="tabs" aria-label="Sections">
     <button data-tab="shop"><span lang="ja">店</span><span class="l">Shop</span><i class="dot" hidden></i></button>
     <button data-tab="guests"><span lang="ja">客</span><span class="l">Guests</span><i class="dot" hidden></i></button>
+    <button data-tab="trips"><span lang="ja">旅</span><span class="l">Journeys</span><i class="dot" hidden></i></button>
     <button data-tab="tea"><span lang="ja">茶</span><span class="l">Tea room</span><i class="dot" hidden></i></button>
     <button data-tab="chron"><span lang="ja">記</span><span class="l">Chronicle</span><i class="dot" hidden></i></button>
     <button data-tab="house"><span lang="ja">家</span><span class="l">House</span><i class="dot" hidden></i></button>

@@ -196,6 +196,7 @@ const TASKS = [
   { id: 'improve', en: 'Buy an upgrade or hire a manager', n: 1 },
   { id: 'tea', en: 'Serve tea', n: 1, need: 'tea' },
   { id: 'welcome', en: 'Welcome a guest', n: 1, need: 'guest' },
+  { id: 'trip', en: 'Bring a clerk home from a journey', n: 1 },
 ];
 
 // Crossroads: real turning points where the house must choose its way. Each choice lasts the run (mods add to the house's
@@ -243,4 +244,29 @@ const CROSSROADS = [
     { id: 'games', en: 'Make games to play on them', text: 'Game studios earn double.', mods: { games: 1 }, done: 'The house makes games for the new phones.' }] },
 ];
 
-if (typeof module !== 'undefined') module.exports = { KOKU, SPECIAL, AGES, END_YEAR, WORKS, REALM_UPGRADES, HOUSES, NAMES, TREASURES, LATER_EVENTS, GUESTS, TASKS, CROSSROADS };
+// Journeys: the house sends a clerk along a real route; after its hours (game time) the clerk comes back with money and one
+// of the route's famous goods. Every good ever brought home adds a little profit for good.
+const ROUTES = [
+  { id: 'kyoto', year: 1467, hours: 1, glyph: '京', to: 'Kyoto', en: 'Up to the capital', ja: '京上り', text: 'The old capital buys and sells the finest of everything, war or no war.',
+    goods: [['brocade', 'Nishijin brocade', '西陣織'], ['kiyomizu', 'Kiyomizu ware', '清水焼'], ['uji', 'Uji tea', '宇治茶']] },
+  { id: 'sakai', year: 1500, hours: 2, glyph: '堺', to: 'Sakai', en: 'The free port of Sakai', ja: '堺', text: 'A merchant city that governs itself, with ships from Ryūkyū and Ming China.',
+    goods: [['incense', 'Incense wood', '香木'], ['sugar', 'Ryūkyū black sugar', '黒糖'], ['cutlery', 'Sakai kitchen knives', '堺包丁']] },
+  { id: 'hirado', year: 1550, hours: 4, glyph: '平', to: 'Hirado', en: 'The Nanban ships at Hirado', ja: '平戸', text: 'Portuguese carracks anchor at Hirado with goods no one in Japan has seen.',
+    goods: [['castella', 'Castella cake', 'カステラ'], ['spectacles', 'Spectacles', '眼鏡'], ['velvet', 'Velvet', 'ビロード']] },
+  { id: 'tokaido', year: 1603, hours: 2, glyph: '東', to: 'Edo', en: 'The Tōkaidō to Edo', ja: '東海道', text: 'Fifty-three post towns on the road from Kyoto to the shogun\'s new city.',
+    goods: [['soy', 'Noda soy sauce', '野田醤油'], ['nori', 'Asakusa nori', '浅草海苔'], ['prints', 'Ukiyo-e prints', '浮世絵']] },
+  { id: 'dejima', year: 1641, hours: 4, glyph: '崎', to: 'Nagasaki', en: 'Dejima', ja: '出島', text: 'The one window on the world: a small fan-shaped island where the Dutch may trade.',
+    goods: [['books', 'Dutch books', '蘭書'], ['telescope', 'A telescope', '遠眼鏡'], ['porcelain', 'Chinese porcelain', '唐物の磁器']] },
+  { id: 'kitamae', year: 1672, hours: 8, glyph: '北', to: 'Ezo', en: 'The Kitamae ships', ja: '北前船', text: 'Ships sail the Sea of Japan to Ezo and back, buying in every port they call at.',
+    goods: [['kombu', 'Ezo kelp', '昆布'], ['herring', 'Herring', '鰊'], ['salmon', 'Salted salmon', '塩鮭']] },
+  { id: 'kisha', year: 1872, hours: 1, glyph: '汽', to: 'Yokohama', en: 'The train to Yokohama', ja: '汽車', text: 'The first railway runs from Shinbashi to Yokohama in under an hour.',
+    goods: [['gyunabe', 'Beef hot pot', '牛鍋'], ['watch', 'A pocket watch', '懐中時計'], ['paper', 'A newspaper', '新聞']] },
+  { id: 'liner', year: 1896, hours: 8, glyph: '船', to: 'Seattle', en: 'The steamer to Seattle', ja: '外航船', text: 'Japanese liners cross the Pacific with silk and come back full.',
+    goods: [['cotton', 'American cotton', '綿花'], ['flour', 'Wheat flour', '小麦粉'], ['records', 'Gramophone records', 'レコード']] },
+  { id: 'shinkansen', year: 1964, hours: 1, glyph: '新', to: 'Osaka', en: 'The bullet train to Osaka', ja: '新幹線', text: 'Tokyo to Osaka in four hours, then three.',
+    goods: [['ekiben', 'Station bento', '駅弁'], ['yatsuhashi', 'Yatsuhashi sweets', '八ツ橋'], ['takoyaki', 'Takoyaki', 'たこ焼き']] },
+  { id: 'online', year: 1999, hours: 2, glyph: '網', to: 'the world', en: 'A shop on the internet', ja: '通販', text: 'One shop, open all night, to every country at once.',
+    goods: [['figures', 'Anime figures', 'フィギュア'], ['matcha', 'Matcha sweets', '抹茶スイーツ'], ['kimono', 'Old kimono', '古着の着物']] },
+];
+
+if (typeof module !== 'undefined') module.exports = { KOKU, SPECIAL, AGES, END_YEAR, WORKS, REALM_UPGRADES, HOUSES, NAMES, TREASURES, LATER_EVENTS, GUESTS, TASKS, CROSSROADS, ROUTES };

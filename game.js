@@ -23,6 +23,7 @@ const G = (() => {
   const TASK_PAY = .05;               // a finished task pays this share of what the run has earned (a gift, never a skip of years)
   const GUEST_WORK = 2, GUEST_ALL = .1, GUEST_BOND = .25; // a guest doubles their trade or adds a tenth to all; each bond adds a quarter of that
   const PATH = .01;                   // profit for good for each crossroads path ever taken
+  const TRIP_PAY = .012, TRIP_POW = .8, GOOD = .01, TRIP_TREASURE = .25; // a journey pays this share of the run's earnings times hours^TRIP_POW; each good ever found +1%; a treasure on one in four 8-hour voyages
 
   const PIDS = Object.keys(GEO.provinces);
   const ALL_ERAS = [...ERAS, [1989, 'Heisei', '平成'], [2019, 'Reiwa', '令和']];
@@ -90,7 +91,7 @@ const G = (() => {
   function profitAll(S) {
     const m = hm(S);
     return (1 + m.profit) * (1 + PROVINCE * (S.reach.length - 1) * (1 + m.reach) * (doing(S, 'reach').length ? 2 : 1)) *
-      (1 + CHAPTER * S.readIds.length * (doing(S, 'chapter').length ? 2 : 1) * (1 + m.chapter)) * (1 + PATH * (S.meta.paths || []).length) *
+      (1 + CHAPTER * S.readIds.length * (doing(S, 'chapter').length ? 2 : 1) * (1 + m.chapter)) * (1 + PATH * (S.meta.paths || []).length) * (1 + GOOD * (S.meta.goods || []).length) *
       (1 + TREASURE * S.meta.treasures.length) * (1 + RENOWN * S.meta.renown) * Math.pow(3, REALM_UPGRADES.filter(u => has(S, u.id)).length) *
       doing(S, 'all').reduce((x, g) => x * (1 + GUEST_ALL * lift(S, g)), 1) * (teaOn(S) ? teaX(S) : 1);
   }
@@ -245,6 +246,32 @@ const G = (() => {
     return true;
   }
 
+  // ---------- journeys: clerks sent along real routes, back after some hours with money and a famous good ----------
+  const ROUTE = Object.fromEntries(ROUTES.map(r => [r.id, r]));
+  const clerks = S => 1 + (S.year >= 1603) + (S.year >= 1868); // one more in Edo, one more in Meiji
+  const routesOpen = S => ROUTES.filter(r => S.year >= r.year);
+  const tripsReady = S => S.trips.filter(t => S.t >= t.until);
+  const tripPay = (S, r) => Math.max(50, S.earned * TRIP_PAY * Math.pow(r.hours, TRIP_POW));
+  function sendTrip(S, rid) {
+    const r = ROUTE[rid];
+    if (!r || S.year < r.year || S.trips.length >= clerks(S) || S.trips.some(t => t.route === rid)) return false;
+    S.trips.push({ route: rid, until: S.t + r.hours * 3600 });
+    return true;
+  }
+  // the clerk comes home: the money, one of the route's goods (a new one counts for good), now and then a treasure
+  function unload(S, rid) {
+    const i = S.trips.findIndex(t => t.route === rid && S.t >= t.until);
+    if (i < 0) return null;
+    const r = ROUTE[rid], pay = tripPay(S, r), [gid, en, ja] = pick(S, r.goods), key = rid + ':' + gid, fresh = !S.meta.goods.includes(key);
+    S.trips.splice(i, 1);
+    if (fresh) S.meta.goods.push(key);
+    const treasure = r.hours >= 8 && rand(S) < TRIP_TREASURE ? findTreasure(S) : null;
+    earn(S, pay);
+    note(S, { en: `A clerk comes home from ${r.to} with ${en.charAt(0).toLowerCase() + en.slice(1)} ${ja}.`, good: key });
+    bump(S, 'trip');
+    return { pay, good: { id: key, en, ja }, fresh, treasure };
+  }
+
   // ---------- provinces ----------
   const ageSpan = a => (AGES[a + 1] ? AGES[a + 1].from : END_YEAR) - AGES[a].from;
   const provincesPerYear = y => AGE_PROVINCES[ageOf(y)] / ageSpan(ageOf(y));
@@ -304,11 +331,11 @@ const G = (() => {
   const renownGain = S => Math.max(0, renownTotal(S) - S.meta.renown - S.meta.spent);
 
   // ---------- a run ----------
-  function newMeta() { return { runs: 0, renown: 0, spent: 0, lifetime: 0, treasures: [], seen: [], best: 1467, bond: {}, paths: [] }; }
+  function newMeta() { return { runs: 0, renown: 0, spent: 0, lifetime: 0, treasures: [], seen: [], best: 1467, bond: {}, paths: [], goods: [] }; }
   function newRun(meta, clan, seed = Date.now() | 0) {
     const h = HOUSES.find(x => x.clan === clan);
     const S = { v: 3, seed, house: clan, t: 0, year: 1467, money: 0, earned: 0, lv: { paddies: 1 }, prog: { paddies: null }, mgr: {}, upg: [],
-      reach: [h.home], pts: 1, unread: [], readIds: [], next: 0, chron: [], heads: [], head: null, done: false, guests: [], tea: null, day: null, choices: {}, meta };
+      reach: [h.home], pts: 1, unread: [], readIds: [], next: 0, chron: [], heads: [], head: null, done: false, guests: [], tea: null, day: null, choices: {}, trips: [], meta };
     S.head = { given: NAMES.lord[clan][0], from: 1467, until: 1467 + 25 };
     note(S, { en: `${headName(S)} leads the house from ${GEO.provinces[h.home].en} ${GEO.provinces[h.home].ja}.`, head: true });
     if (h.mods.startTreasure && !meta.treasures.length) findTreasure(S);
@@ -392,7 +419,7 @@ const G = (() => {
     return (v < 10 ? v.toFixed(2) : v < 100 ? v.toFixed(1) : v.toFixed(0)) + '\u00a0' + UNITS[k]; // a number never wraps away from its scale word
   }
 
-  return { PATH, chosen, crossings, choose, optionOf, TEA_LEN, TEA_EVERY, BOND_MAX, doing, bond, workBoost, visitors, nextGuest, welcomeCost, welcome, roomOpen, teaX, teaOn, teaReadyIn, serveTea,
+  return { GOOD, ROUTE, clerks, routesOpen, tripsReady, tripPay, sendTrip, unload, PATH, chosen, crossings, choose, optionOf, TEA_LEN, TEA_EVERY, BOND_MAX, doing, bond, workBoost, visitors, nextGuest, welcomeCost, welcome, roomOpen, teaX, teaOn, teaReadyIn, serveTea,
     daily, taskPay, taskDone, claimTask,
     T, SPEED_AT, PROFIT_AT, PROVINCE, CHAPTER, TREASURE, RENOWN, AWAY_HOURS, PIDS, rand, yearFor, earnedFor, ageOf, eraOf, kanjiYear, money,
     holdersAt, house, isOpen, profitAll, cycle, payout, rate, income, priceOf, maxBuy, offer, buy, nextMilestone, run, managerCost, hire, upgrades,

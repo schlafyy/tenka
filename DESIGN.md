@@ -289,6 +289,9 @@ A hanging scroll 78×120px: brocade in the house dye with the cloth weave, a woo
 ### Tea mat
 The tea ceremony sits on a tatami mat: woven straw (#cec38b to #c5b97f with a 3px weave) between two dark cloth borders (heri, 7px). A drawn tea bowl steams (three wisps, 2.6s) only while tea is served.
 
+### Journey road and station signs
+Each clerk on the road is a paper slip with two ends: the house's home province on the left in grey, and the destination on the right in ink. Between them runs a dotted road (hair-2 dots every 8px). The travelled part is a 2px line in the house dye with a 10px dye dot at its head, ringed in paper. It moves only by transform. Below the road it reads "On the road to Edo: back in 1 h 20 min", or, once home, "Home from Edo" with a gold Unload plate. The roads below are rows on the plaster, not boards. Each row has a 44px station sign in the house dye with a white Mincho 700 glyph (京, 東, 北…), the road's name, its hours and pay, and its three goods as small chips ("?" until found). The Send plate is gold while a clerk is free.
+
 ### Crossroads notice
 A paper slip (white, the hang shadow) under a 6px band of the house dye, at the top of the trades. It has the year and "A crossroads 岐路" in small grey, the title in Mincho 1.35rem with its Japanese name brushed in the dye, and the situation in Mincho 1rem. The two ways are plain filled plates (#ece8e1), each with its name in Gothic 500 and its effect in grey. A way never taken carries a small chip in the dye ("New path · +1% for good"), not gold, since it is a reward rather than a price. Choosing it stamps a vermilion seal (決, #b8322a) onto that plate (380ms, a slight overshoot), the plate tints, and the notice gives way to the next one after 750ms. With Reduce Motion the choice is immediate.
 

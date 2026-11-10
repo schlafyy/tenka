@@ -24,7 +24,7 @@ def used_chars():
 
 def brush_chars():
     # only what the curtain writes: clan names, era names and era years
-    js = ("Object.assign(globalThis, require('./data/map.js'), require('./data/game-data.js')); const s = new Set('平成令和元年一二三四五六七八九十天下座敷茶室年代記家岐路');"
+    js = ("Object.assign(globalThis, require('./data/map.js'), require('./data/game-data.js')); const s = new Set('平成令和元年一二三四五六七八九十天下座敷茶室年代記家岐路旅');"
           "for (const g of [...GUESTS, ...CROSSROADS]) for (const c of g.ja) s.add(c);"
           "for (const e of ERAS) for (const c of e[2]) s.add(c); for (const c of Object.values(CLANS)) for (const x of c.ja) s.add(x);"
           "process.stdout.write([...s].join(''))")

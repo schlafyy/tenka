@@ -91,6 +91,18 @@ assert(G.profitAll(B) < boom && B.chron.some(e => /bubble bursts/.test(e.en)), '
 const U = G.newRun(G.newMeta(), 'uesugi', 4);
 U.readIds = ['a', 'b', 'c', 'd', 'e'];
 assert(Math.abs(G.profitAll(U) - (1 + G.CHAPTER * 5 * 1.5)) < 1e-9, 'the Uesugi read chapters for 50% more');
+// journeys: clerks on real roads, home after their hours with money and a good; goods count for good
+for (const r of ROUTES) assert(r.goods.length === 3 && r.hours > 0 && ROUTES.filter(x => x.id === r.id).length === 1, 'route ' + r.id);
+const J = G.newRun(G.newMeta(), 'oda', 5); G.earn(J, 1e6);
+assert(G.sendTrip(J, 'kyoto') && !G.sendTrip(J, 'kyoto') && !G.sendTrip(J, 'tokaido'), 'one clerk at first, one per road, a road only from its year');
+assert(!G.unload(J, 'kyoto'), 'not home before the hours are up');
+const pAll = G.profitAll(J); G.tick(J, 3600);
+const got = G.unload(J, 'kyoto');
+assert(got && got.fresh && J.meta.goods.length === 1 && J.trips.length === 0, 'home with a good');
+assert(Math.abs(G.profitAll(J) / pAll - (1 + G.GOOD)) < 1e-9, 'a new good adds 1%');
+G.earn(J, G.earnedFor(1870)); assert.strictEqual(G.clerks(J), 3, 'three clerks by Meiji');
+G.sendTrip(J, 'kyoto'); const J2 = G.prestige(J);
+assert(J2.trips.length === 0 && J2.meta.goods.length === 1, 'a new beginning calls the clerks home; the goods stay');
 console.log('rules ok');
 
 if (process.argv[2] === 'quick') process.exit(0);
@@ -124,6 +136,8 @@ function act(S) {
     if (best.kind === 'guest') G.welcome(S, best.id);
   }
   for (const c of G.crossings(S)) G.choose(S, c.id, c.options[S.meta.runs % 2].id); // the bot tries the other way on each new beginning
+  for (const t of G.tripsReady(S)) G.unload(S, t.route);
+  for (const r of G.routesOpen(S).sort((a, b) => b.hours - a.hours)) G.sendTrip(S, r.id); // the longest roads first
   G.serveTea(S);
   G.daily(S, 'day' + Math.floor(S.t / 86400));
   for (const t of S.day.tasks) G.claimTask(S, t);
