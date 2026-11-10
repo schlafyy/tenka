@@ -1,5 +1,5 @@
 """Cuts the bundled Japanese fonts down to the characters the game uses (they are 2-15 MB whole).
-Run after changing any text: python tools/subset_fonts.py <folder with the full .ttf files>
+Run after changing any text: python tools/subset_fonts.py [folder with the full .ttf files, default fonts-src/]
 Sources (SIL Open Font License): github.com/google/fonts ofl/shipporiminchob1, ofl/zenkakugothicnew and ofl/yujisyuku,
 saved as <family>_<File>.ttf and <family>_OFL.txt."""
 import os, sys, string, subprocess
@@ -52,4 +52,4 @@ def main(src):
 
 
 if __name__ == "__main__":
-    main(sys.argv[1])
+    main(sys.argv[1] if len(sys.argv) > 1 else os.path.join(ROOT, "fonts-src"))

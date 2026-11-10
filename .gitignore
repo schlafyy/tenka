@@ -1,3 +1,6 @@
 __pycache__/
 # Impeccable working files (the repo is served by GitHub Pages, so they stay local)
 .impeccable/
+
+# the full font sources for tools/subset_fonts.py (43 MB, not served)
+fonts-src/
