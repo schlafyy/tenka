@@ -2,12 +2,13 @@
   "name": "Tenka 天下",
   "short_name": "Tenka",
   "description": "An idle game: one Japanese house, from the Ōnin War of 1467 to the present day.",
+  "id": "./",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
   "orientation": "portrait",
   "background_color": "#f4f3f0",
-  "theme_color": "#3b2b21",
+  "theme_color": "#34363a",
   "icons": [
     { "src": "icon-180.png", "sizes": "180x180", "type": "image/png" },
     { "src": "icon-512.png", "sizes": "512x512", "type": "image/png" }

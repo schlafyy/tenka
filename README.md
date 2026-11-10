@@ -40,6 +40,7 @@ A bot that plays half an hour, then checks in five times a day, reaches about 15
 | `test.js` | `node test.js` checks the data and rules, then lets a bot play to the present to show the pacing; `quick` skips the bot |
 | `tools/shots.py` | Plays the game in headless Chrome at phone and desktop sizes and saves screenshots; fails on any page error |
 | `tools/subset_fonts.py` | Cuts the fonts down to the characters used; re-run after adding text |
+| `docs/ios-readiness.md` | What the iPhone review found, what was fixed, and the path to the App Store |
 | `tools/perf.py` | Frame rate and long tasks at phone size with the CPU slowed 4x (roughly a mid-range phone) |
 | `tools/icon.py` | The icons, drawn from the game's roof and brush font |
 | `tools/portraits.py` | Fetches the guests' portraits (public domain or Creative Commons only) |

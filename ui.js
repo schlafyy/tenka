@@ -18,6 +18,9 @@
   let older = 25;              // chronicle entries shown
   let tab = 'shop', sub = 'trades', mode = 1;
   const panel = $('#panel');
+  const standalone = matchMedia('(display-mode: standalone)').matches || navigator.standalone === true; // opened from the Home Screen
+  // ask the browser to keep the save through storage clean-ups (granted to Home Screen apps; harmless where refused)
+  if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => {});
 
   // ---------- saving ----------
   // a save from before the guests and the tea room gets their empty places
@@ -231,8 +234,10 @@
       ${found.length ? `<div class="treasures">${found.map(t => `<div class="tr"><b>${esc(t.en)}</b><span lang="ja">${t.ja}</span><br>${esc(t.kind)}</div>`).join('')}</div>` : ''}
       <p class="note after">${TREASURES.length - found.length} still to find.</p>
       <h3 class="sub">Your save</h3>
+      ${standalone ? '' : `<p class="note">In a browser tab, the save can be cleared after a week without a visit (Safari does this). Add Tenka to your Home Screen to keep it: there it keeps its own save, so copy this one first and load it there.</p>`}
       <div class="tools"><button class="btn" data-act="copy">Copy save</button><button class="btn" data-act="paste">Load a save</button><button class="btn" data-act="restart">Start over</button></div>
       <p class="credits">Clan crests from Wikimedia Commons, each under its own licence. Province names and history from the Sengoku map project. Fonts: Shippori Mincho B1, Zen Kaku Gothic New and Yuji Syuku (SIL OFL). The history is written for the game from standard accounts and simplified; yields are approximate.</p>
+      <details class="credits"><summary>Crest credits</summary>${Object.entries(CRESTS).map(([k, c]) => `${esc(CLANS[k] ? CLANS[k].en : k)}: ${esc(c.artist || 'unknown')}, ${esc(c.licence)}, <a href="${esc(c.page)}" rel="noopener">Wikimedia Commons</a>`).join('<br>')}</details>
       <details class="credits"><summary>Portrait credits</summary>${Object.entries(PORTRAITS).map(([id, p]) => `${esc(GUESTS.find(g => g.id === id).en)}: ${esc(p.author)}, ${esc(p.licence)}, <a href="${esc(p.page)}" rel="noopener">Wikimedia Commons</a>`).join('<br>')}</details>`;
     return x;
   }

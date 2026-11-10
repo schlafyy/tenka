@@ -47,6 +47,8 @@ body { margin: 0; color: var(--ink); background: var(--roof); font: 400 15px/1.5
 :focus-visible { outline: 2px solid var(--wood); outline-offset: 2px; }
 .trade :focus-visible, .renown :focus-visible, #tabs :focus-visible, #house:focus-visible, .chosen :focus-visible { outline-color: var(--gilt); }
 button { font: inherit; color: inherit; background: none; border: 0; padding: 0; cursor: pointer; touch-action: manipulation; }
+/* quick taps on the controls never select text, zoom, or open the long-press menu */
+button, .prog, #house { -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; touch-action: manipulation; }
 p, h1, h2, h3 { margin: 0; }
 h1, h2, h3 { font-family: var(--mincho); font-weight: 400; }
 [lang="ja"] { font-family: var(--mincho); }
@@ -137,6 +139,11 @@ h2.head span { color: var(--soft); font-size: 1rem; }
 .subs .dot[hidden] { display: none; }
 .mode { flex: none; margin-left: auto; min-height: 34px; min-width: 76px; padding: 4px 12px; border-radius: 6px; background: #e8e4dd; color: var(--ink); font-weight: 500; font-size: .9rem; font-variant-numeric: tabular-nums; }
 .mode:active { transform: scale(.96); }
+/* the small plates are at least 44pt to a finger: an invisible margin around each one */
+.mode, #renown { position: relative; }
+.subs button::after, .mode::after { content: ''; position: absolute; inset: -5px 0; }
+#renown::after { content: ''; position: absolute; inset: -6px -4px; }
+.away .x::after { content: ''; position: absolute; inset: -6px; }
 
 /* a room's name board (hengaku): brushed gilt on dark wood */
 .plaque { position: relative; display: inline-flex; align-items: center; gap: 12px; margin: 20px 0 12px; padding: 7px 16px 7px 13px; border: 4px solid var(--wood-deep); background: var(--wood);
