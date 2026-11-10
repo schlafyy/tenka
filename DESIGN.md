@@ -289,6 +289,9 @@ A hanging scroll 78×120px: brocade in the house dye with the cloth weave, a woo
 ### Tea mat
 The tea ceremony sits on a tatami mat: woven straw (#cec38b to #c5b97f with a 3px weave) between two dark cloth borders (heri, 7px). A drawn tea bowl steams (three wisps, 2.6s) only while tea is served.
 
+### The street
+Every room's panel ends in the street, which grows to fill the space the room leaves (at least 172px) and bleeds to the panel edges. From the top down: the plaster sky, then the town across the road in two pale tones (#e7e1d7 far hills, #ddd5c9 buildings, #ece7df window bands) drawn by age, then a 64px packed-earth road (#e3dacb to #d8cdba, a darker curb line, faint ruts). People are flat kage-e silhouettes, drawn as SVG pictograms 50px high. The front lane is in wood-deep. The back lane is scaled to .66 and coloured #a49789, for distance. Walkers move by transform only and bob 1.4px in two steps; vehicles don't bob. At most five are on screen, and they spawn only while the street is in view. The house's own people carry a small paper name tag. With Reduce Motion, three people of the age stand still.
+
 ### Journey road and station signs
 Each clerk on the road is a paper slip with two ends: the house's home province on the left in grey, and the destination on the right in ink. Between them runs a dotted road (hair-2 dots every 8px). The travelled part is a 2px line in the house dye with a 10px dye dot at its head, ringed in paper. It moves only by transform. Below the road it reads "On the road to Edo: back in 1 h 20 min", or, once home, "Home from Edo" with a gold Unload plate. The roads below are rows on the plaster, not boards. Each row has a 44px station sign in the house dye with a white Mincho 700 glyph (京, 東, 北…), the road's name, its hours and pay, and its three goods as small chips ("?" until found). The Send plate is gold while a clerk is free.
 

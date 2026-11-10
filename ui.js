@@ -18,7 +18,7 @@
   let older = 25;              // chronicle entries shown
   let tab = 'shop', sub = 'trades', mode = 1;
   let choosing = false;        // a seal is coming down on a crossroads
-  const panel = $('#panel');
+  const panel = $('#panel'), view = $('#view');
   const standalone = matchMedia('(display-mode: standalone)').matches || navigator.standalone === true; // opened from the Home Screen
   // ask the browser to keep the save through storage clean-ups (granted to Home Screen apps; harmless where refused)
   if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => {});
@@ -392,7 +392,7 @@
     if (force || k !== structKey) {
       structKey = k;
       const f = document.activeElement && document.activeElement.dataset && document.activeElement.dataset.k;
-      panel.innerHTML = VIEWS[tab]();
+      view.innerHTML = VIEWS[tab]();
       cacheRows();
       if (f) { const t = panel.querySelector(`[data-k="${f}"]`); if (t) t.focus(); }
     }
@@ -431,6 +431,7 @@
     if (act === 'welcome' && G.welcome(S, id)) {
       const g = GUESTS.find(x => x.id === id);
       toast(`${g.en} joins the house`);
+      if (window.street) street.event('guest', g.en);
       render(true); save();
       // the guest's scroll unrolls as they join
       const sc = panel.querySelector(`[data-g="${id}"] .scroll`);
@@ -448,7 +449,7 @@
       setTimeout(go, 750);
       return;
     }
-    if (act === 'send' && G.sendTrip(S, id)) toast(`A clerk sets out for ${G.ROUTE[id].to}`);
+    if (act === 'send' && G.sendTrip(S, id)) { toast(`A clerk sets out for ${G.ROUTE[id].to}`); if (window.street) street.event('clerk', `To ${G.ROUTE[id].to}`); }
     if (act === 'unload') {
       const u = G.unload(S, id);
       if (u) toast(`Home from ${G.ROUTE[id].to}: ${u.good.en} ${u.good.ja}${u.fresh ? ', new: +1% for good' : ''} · +${fmt(u.pay)} ${unit()}${u.treasure ? ` · and a treasure: ${u.treasure.en}` : ''}`);
