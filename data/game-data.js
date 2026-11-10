@@ -198,4 +198,49 @@ const TASKS = [
   { id: 'welcome', en: 'Welcome a guest', n: 1, need: 'guest' },
 ];
 
-if (typeof module !== 'undefined') module.exports = { KOKU, SPECIAL, AGES, END_YEAR, WORKS, REALM_UPGRADES, HOUSES, NAMES, TREASURES, LATER_EVENTS, GUESTS, TASKS };
+// Crossroads: real turning points where the house must choose its way. Each choice lasts the run (mods add to the house's
+// own: a trade id doubles that trade, profit/cost/speed/reach/away/find/chapter as in HOUSES); 'until' ends it in that year.
+// Every path ever taken adds a little profit for good, so a new beginning is a chance to try the other way.
+const CROSSROADS = [
+  { id: 'nanban', year: 1550, en: 'Ships from the south', ja: '南蛮船', text: 'Portuguese ships begin calling at Hirado, buying Japanese silver for Chinese silk.', options: [
+    { id: 'ships', en: 'Trade with the Nanban ships', text: 'Silver mines earn double.', mods: { mine: 1 }, done: 'The house sells its silver to the Nanban ships at Hirado.' },
+    { id: 'home', en: 'Keep to the home markets', text: 'Rice paddies earn double.', mods: { paddies: 1 }, done: 'The house keeps to the rice of its own provinces.' }] },
+  { id: 'rakuichi', year: 1577, en: 'The free market', ja: '楽市楽座', text: 'At Azuchi the lord declares a free market: anyone may sell, and no guild may take its fee.', options: [
+    { id: 'free', en: 'Leave the guild and sell freely', text: 'Everything costs 10% less.', mods: { cost: -.1 }, done: 'The house leaves its guild and sells in the free market.' },
+    { id: 'guild', en: 'Stay under the guild\'s protection', text: 'Managers earn 25% more while you are away.', mods: { away: .25 }, done: 'The house stays with its guild and the guild\'s protection.' }] },
+  { id: 'edo', year: 1603, en: 'A new capital', ja: '江戸開府', text: 'The shogun rules from Edo, a new city of samurai who must be clothed and fed.', options: [
+    { id: 'branch', en: 'Open a branch in Edo', text: 'The indigo dye house earns double.', mods: { dyehouse: 1 }, done: 'The house opens a branch in the new city of Edo.' },
+    { id: 'osaka', en: 'Stay in Osaka, the kitchen of the realm', text: 'Castle towns earn double.', mods: { castletown: 1 }, done: 'The house stays in Osaka, where the realm\'s rice is sold.' }] },
+  { id: 'dejima', year: 1641, en: 'The closed country', ja: '鎖国', text: 'The ports close to the world. Only Dutch and Chinese ships may trade, and only at Nagasaki.', options: [
+    { id: 'nagasaki', en: 'Keep a buyer at Nagasaki', text: 'Treasures turn up 50% more often.', mods: { find: .5 }, done: 'The house keeps a buyer at Nagasaki for the Dutch ships\' rare goods.' },
+    { id: 'inland', en: 'Turn to the home provinces', text: 'Provinces give 25% more.', mods: { reach: .25 }, done: 'The house turns to the trade of the home provinces.' }] },
+  { id: 'kakene', year: 1683, en: 'Cash at marked prices', ja: '現金掛け値なし', text: 'A shop in Edo sells cloth to anyone, for cash, at the price on the tag, and the crowds pour in.', options: [
+    { id: 'cash', en: 'Sell for cash at fixed prices', text: 'Every trade runs 15% faster.', mods: { speed: .15 }, done: 'The house sells for cash at marked prices.' },
+    { id: 'credit', en: 'Keep credit for the great houses', text: 'Profit +10%.', mods: { profit: .1 }, done: 'The house keeps its year-end credit for the great households.' }] },
+  { id: 'dojima', year: 1730, en: 'Rice on paper', ja: '堂島米会所', text: 'The shogunate licenses the rice exchange at Dōjima, where rice is bought and sold as promises.', options: [
+    { id: 'paper', en: 'Trade rice on paper', text: 'The rice exchange earns double.', mods: { exchange: 1 }, done: 'The house takes a seat at the Dōjima exchange.' },
+    { id: 'real', en: 'Keep real rice in the storehouses', text: 'Rice paddies earn double.', mods: { paddies: 1 }, done: 'The house keeps its rice in its own storehouses.' }] },
+  { id: 'tenmei', year: 1783, en: 'The Tenmei famine', ja: '天明の飢饉', text: 'Mount Asama erupts, the harvests fail, and the hungry crowd at the storehouse doors.', options: [
+    { id: 'open', en: 'Open the storehouses to the hungry', text: 'Provinces give 25% more: the house is welcome everywhere.', mods: { reach: .25 }, done: 'The house opens its storehouses to the hungry.' },
+    { id: 'sell', en: 'Sell rice at famine prices', text: 'Profit +10%.', mods: { profit: .1 }, done: 'The house sells its rice at famine prices.' }] },
+  { id: 'yokohama', year: 1859, en: 'The open ports', ja: '開港', text: 'Yokohama opens to foreign ships. Silk and tea sell abroad for more than ever.', options: [
+    { id: 'silk', en: 'Open a shop at Yokohama', text: 'Silk mills earn double.', mods: { silk: 1 }, done: 'The house opens a shop at Yokohama to sell silk abroad.' },
+    { id: 'sake', en: 'Keep to sake and the coastal ships', text: 'Sake breweries earn double.', mods: { brewery: 1 }, done: 'The house keeps to sake and the old coastal trade.' }] },
+  { id: 'bank', year: 1876, en: 'The first banks', ja: '銀行', text: 'The new government lets merchant houses found private banks.', options: [
+    { id: 'bank', en: 'Found a bank', text: 'Everything costs 10% less.', mods: { cost: -.1 }, done: 'The house founds its own bank.' },
+    { id: 'shop', en: 'Stay a merchant house', text: 'Profit +10%.', mods: { profit: .1 }, done: 'The house stays a merchant house.' }] },
+  { id: 'kanto', year: 1923, en: 'The great earthquake', ja: '関東大震災', text: 'The great Kantō earthquake and its fires level Tokyo and Yokohama.', options: [
+    { id: 'rebuild', en: 'Rebuild in Tokyo, larger', text: 'Department stores earn double.', mods: { store: 1 }, done: 'The house rebuilds its Tokyo store, larger than before.' },
+    { id: 'west', en: 'Move the head office west to Osaka', text: 'Every trade runs 15% faster.', mods: { speed: .15 }, done: 'The house moves its head office west to Osaka.' }] },
+  { id: 'doubling', year: 1960, en: 'Double the income', ja: '所得倍増', text: 'The prime minister promises to double every family\'s income in ten years.', options: [
+    { id: 'cars', en: 'Make a car for every family', text: 'Car works earn double.', mods: { cars: 1 }, done: 'The house sets out to make a car for every family.' },
+    { id: 'tv', en: 'Make televisions and radios', text: 'Electric works earn double.', mods: { electric: 1 }, done: 'The house makes televisions and radios for every home.' }] },
+  { id: 'bubble', year: 1987, en: 'The bubble', ja: 'バブル', text: 'Land in Tokyo doubles in price every few years, and the banks will lend against anything.', options: [
+    { id: 'land', en: 'Buy land with borrowed money', text: 'Profit +50% until 1991.', mods: { profit: .5 }, until: 1991, done: 'The house borrows to buy land in Tokyo.', after: 'The bubble bursts. The house\'s land is worth a fraction of its debts.' },
+    { id: 'wait', en: 'Stay out of it', text: 'Profit +10%, for good.', mods: { profit: .1 }, done: 'The house stays out of the land boom.' }] },
+  { id: 'imode', year: 1999, en: 'The internet in a phone', ja: 'iモード', text: 'Phones that reach the internet go on sale, years before anywhere else.', options: [
+    { id: 'net', en: 'Build for the phones', text: 'Mobile networks earn double.', mods: { network: 1 }, done: 'The house builds for the new phones.' },
+    { id: 'games', en: 'Make games to play on them', text: 'Game studios earn double.', mods: { games: 1 }, done: 'The house makes games for the new phones.' }] },
+];
+
+if (typeof module !== 'undefined') module.exports = { KOKU, SPECIAL, AGES, END_YEAR, WORKS, REALM_UPGRADES, HOUSES, NAMES, TREASURES, LATER_EVENTS, GUESTS, TASKS, CROSSROADS };

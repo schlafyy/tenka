@@ -18,6 +18,7 @@ A business-tycoon idle game (in the manner of AdVenture Capitalist) on top of 55
 - **The year follows the money.** The more the house has earned, the later the year: the history arrives as you grow, and each trade opens in its year.
 - **Rooms of the house.** Five rooms along the bottom: the Shop (trades, upgrades and managers under one switch), Guests, the Tea room, the Chronicle and the House.
 - **Guests.** 25 real people visit the house in their own years, from the tea master Murata Jukō and Oda Nobunaga to Shibusawa Eiichi, Matsushita Kōnosuke and Iwata Satoru (living people are left out). Welcome one and they stay for the run: most double the trade they are known for or add 10% to all profit; Jukō opens the tea room, Sen no Rikyū makes tea stronger, Hokusai and Inō Tadataka make chapters and provinces count double. Each run you welcome a guest the bond grows (up to five), and so does their help. Portraits are period paintings and old photographs from Wikimedia Commons (credits in the House room); guests without one show their name, brushed.
+- **Crossroads.** Thirteen real turning points, from the Nanban ships at Hirado (1550) and the free market at Azuchi to the closed country, the Tenmei famine, the open ports, the great Kantō earthquake, the bubble and phones on the internet (1999). Each one offers the house two ways for the run, such as opening a branch in the new city of Edo or staying in Osaka. Each way changes one thing (a trade earns double, prices fall, trades run faster…), and the bubble's land deal pays only until 1991. A new beginning brings the choice again, and every way ever taken adds 1% profit for good (26 ways). The notice waits at the top of the trades; the House lists the ways taken.
 - **The tea room.** Serve tea for profit ×2 over 30 minutes, once every four hours. Three tasks a day (buy levels, read a chapter, welcome a guest…), each paying a twentieth of what the run has earned.
 - **The house curtain. The crest dyed across the curtain with the clan name and the era, then the year, the head of the house, the money, and a band of the five ages filling in the house's dye.
 - **Provinces and chronicle.** The house reaches a new province by itself every few years, always the richest next to its land (+4% profit each; listed in the House tab). The real history arrives as chapters with the clans' crests; reading one gives +2% profit.
@@ -25,7 +26,7 @@ A business-tycoon idle game (in the manner of AdVenture Capitalist) on top of 55
 
 ## Pacing (from the bot in `test.js`)
 
-A bot that plays half an hour, then checks in five times a day, reaches about 1520 in its first half hour and the present day in about 8 days, beginning again nine times. Simulated casual players take longer: 11.5 days checking in three times a day, 15–16 days at twice a day or with careless buying.
+A bot that plays half an hour, then checks in five times a day, reaches about 1520 in its first half hour and the present day in about 7.5 days, beginning again nine times. Simulated casual players take longer: about 12 days checking in three times a day, 15–18 days at twice a day or with careless buying.
 
 ## Files
 

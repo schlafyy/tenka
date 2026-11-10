@@ -73,6 +73,24 @@ const away = G.newRun(G.newMeta(), 'oda', 1);
 away.lv.paddies = 10; away.money = 1e4; G.hire(away, 'paddies');
 const rep = G.away(away, 3600);
 assert(rep.money > 0 && rep.managed, 'managers earn while you are away');
+// crossroads: one way per turning point for the run; every way taken counts for good
+for (const c of CROSSROADS) { assert(c.options.length === 2 && AGES.some(a => a.from <= c.year), 'crossroads ' + c.id); for (const o of c.options) for (const k of Object.keys(o.mods)) assert(['profit', 'cost', 'speed', 'reach', 'away', 'find', 'chapter'].includes(k) || G.T[k], 'mod ' + k); }
+const X = G.newRun(G.newMeta(), 'takeda', 2);
+X.lv.mine = 10; G.earn(X, G.earnedFor(1560));
+assert.deepStrictEqual(G.crossings(X).map(c => c.id), ['nanban'], 'a crossroads waits from its year');
+const mineWas = G.payout(X, 'mine');
+assert(!G.choose(X, 'rakuichi', 'free') && !G.choose(X, 'nanban', 'nope'), 'only a reached crossroads, only its own ways');
+assert(G.choose(X, 'nanban', 'ships') && !G.choose(X, 'nanban', 'home'), 'one way per run');
+assert(Math.abs(G.payout(X, 'mine') / mineWas - 2 * (1 + G.PATH) / (1 + 0)) < 1e-9, 'the way taken doubles its trade, and the path adds 1%');
+const X2 = G.prestige(X);
+assert(!Object.keys(X2.choices).length && X2.meta.paths.length === 1, 'a new beginning brings the choice again; the path stays');
+const B = G.newRun(G.newMeta(), 'oda', 3); B.lv.paddies = 1; G.earn(B, G.earnedFor(1988));
+for (const c of G.crossings(B)) G.choose(B, c.id, c.options[0].id);
+const boom = G.profitAll(B); G.earn(B, G.earnedFor(1992) - B.earned);
+assert(G.profitAll(B) < boom && B.chron.some(e => /bubble bursts/.test(e.en)), 'the bubble bursts in 1991');
+const U = G.newRun(G.newMeta(), 'uesugi', 4);
+U.readIds = ['a', 'b', 'c', 'd', 'e'];
+assert(Math.abs(G.profitAll(U) - (1 + G.CHAPTER * 5 * 1.5)) < 1e-9, 'the Uesugi read chapters for 50% more');
 console.log('rules ok');
 
 if (process.argv[2] === 'quick') process.exit(0);
@@ -105,6 +123,7 @@ function act(S) {
     if (best.kind === 'upg') G.buyUpgrade(S, best.id);
     if (best.kind === 'guest') G.welcome(S, best.id);
   }
+  for (const c of G.crossings(S)) G.choose(S, c.id, c.options[S.meta.runs % 2].id); // the bot tries the other way on each new beginning
   G.serveTea(S);
   G.daily(S, 'day' + Math.floor(S.t / 86400));
   for (const t of S.day.tasks) G.claimTask(S, t);

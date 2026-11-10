@@ -289,6 +289,9 @@ A hanging scroll 78×120px: brocade in the house dye with the cloth weave, a woo
 ### Tea mat
 The tea ceremony sits on a tatami mat: woven straw (#cec38b to #c5b97f with a 3px weave) between two dark cloth borders (heri, 7px). A drawn tea bowl steams (three wisps, 2.6s) only while tea is served.
 
+### Crossroads notice
+A paper slip (white, the hang shadow) under a 6px band of the house dye, at the top of the trades. It has the year and "A crossroads 岐路" in small grey, the title in Mincho 1.35rem with its Japanese name brushed in the dye, and the situation in Mincho 1rem. The two ways are plain filled plates (#ece8e1), each with its name in Gothic 500 and its effect in grey. A way never taken carries a small chip in the dye ("New path · +1% for good"), not gold, since it is a reward rather than a price. Choosing it stamps a vermilion seal (決, #b8322a) onto that plate (380ms, a slight overshoot), the plate tints, and the notice gives way to the next one after 750ms. With Reduce Motion the choice is immediate.
+
 ### Age band
 Five thin tracks (6px, 4px radius) over hairline, filling left to right with the house dye as the year advances, Mincho kanji age names below in soft ink (darker for past and current), and a 2px wood tick at the next trade's position.
 

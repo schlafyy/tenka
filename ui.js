@@ -17,6 +17,7 @@
   let report = null;           // what happened while you were away, until dismissed or the next purchase
   let older = 25;              // chronicle entries shown
   let tab = 'shop', sub = 'trades', mode = 1;
+  let choosing = false;        // a seal is coming down on a crossroads
   const panel = $('#panel');
   const standalone = matchMedia('(display-mode: standalone)').matches || navigator.standalone === true; // opened from the Home Screen
   // ask the browser to keep the save through storage clean-ups (granted to Home Screen apps; harmless where refused)
@@ -24,7 +25,7 @@
 
   // ---------- saving ----------
   // a save from before the guests and the tea room gets their empty places
-  function fresh(T) { T.guests = T.guests || []; if (!('tea' in T)) T.tea = null; if (!('day' in T)) T.day = null; T.meta.bond = T.meta.bond || {}; return T; }
+  function fresh(T) { T.choices = T.choices || {}; T.meta.paths = T.meta.paths || []; T.guests = T.guests || []; if (!('tea' in T)) T.tea = null; if (!('day' in T)) T.day = null; T.meta.bond = T.meta.bond || {}; return T; }
   function save() { if (!S) return; S.savedAt = Date.now(); try { localStorage.setItem(KEY, JSON.stringify(S)); } catch { /* private mode: the game still runs */ } }
   function load() { try { const s = localStorage.getItem(KEY); return s ? JSON.parse(s) : null; } catch { return null; } }
 
@@ -109,6 +110,8 @@
         <button class="x" data-act="dismiss" aria-label="Dismiss"><svg viewBox="0 0 12 12" fill="none"><path d="M1 1l10 10M11 1L1 11"/></svg></button></div>`;
     }
     if (S.done) h += `<div class="present"><h2>The present day</h2><p>The ${esc(CLANS[S.house].en)} have come from ${esc(P[G.house(S).home].en)} in 1467 to ${END_YEAR}. Begin again for renown, or keep growing.</p><button class="btn" data-act="tab" data-tab="house">See the house</button></div>`;
+    const cross = G.crossings(S)[0];
+    if (cross) h += crossCard(cross);
     if (!Object.keys(S.mgr).length && S.year < 1500) h += `<p class="tip">Tap a trade's square to run it. A full bar pays out. Managers run trades for you, even while you are away.</p>`;
     for (const w of WORKS.filter(w => G.isOpen(S, w.id))) {
       const id = w.id, ms = G.nextMilestone(S, id);
@@ -122,6 +125,14 @@
     }
     if (next) h += `<div class="trade shut"><div class="tile"><span class="g" lang="ja">${next.glyph}</span></div><h3>${esc(next.en)} <span lang="ja">${next.ja}</span></h3><p class="opens">Opens in ${next.year}, when the house has earned <span class="nb">${fmt(G.earnedFor(next.year))} ${unit()}</span>.</p></div>`;
     return h;
+  }
+  // a crossroads: the turning point, and the two ways the house can take for this run
+  function crossCard(c) {
+    return `<section class="cross" aria-labelledby="x-${c.id}"><p class="when"><span class="num">${c.year}</span> · A crossroads <span lang="ja">岐路</span></p>
+      <h2 id="x-${c.id}">${esc(c.en)} <span lang="ja">${c.ja}</span></h2><p class="why">${esc(c.text)}</p>
+      <div class="ways">${c.options.map(o => `<button class="way" data-act="choose" data-c="${c.id}" data-o="${o.id}" data-k="choose-${c.id}-${o.id}"><b>${esc(o.en)}</b>
+        <span>${esc(o.text)}${S.meta.paths.includes(c.id + ':' + o.id) ? ' · taken before' : ' <i class="new">New path · +1% for good</i>'}</span></button>`).join('')}</div>
+      <p class="note">The way holds for this run; a new beginning brings the choice again.</p></section>`;
   }
   const priceButton = (act, id, cost, label = '') => `<button class="btn${S.money >= cost ? ' go' : ''}" data-act="${act}" data-id="${id}" data-k="${act}-${id}" data-cost="${cost}"${S.money >= cost ? '' : ' disabled'}>${label}${fmt(cost)}</button>`;
   const SUBS = [['trades', 'Trades'], ['upgrades', 'Upgrades'], ['managers', 'Managers']];
@@ -229,6 +240,11 @@
       <p class="note">The house reaches a new province every few years, always the richest next to its land.</p>
       <div class="provs">${S.reach.map(p => `<span>${esc(P[p].en)} <span lang="ja">${P[p].ja}</span></span>`).join('')}</div>`;
     if (S.heads.length) x += `<h3 class="sub">Heads before</h3><ul class="heads">${S.heads.map(p => `<li><b>${esc(p.given)}</b> ${p.from}–${p.until}</li>`).join('')}</ul>`;
+    const reached = CROSSROADS.filter(c => c.year <= Math.max(S.year, m.best));
+    x += `<h3 class="sub">Crossroads <span lang="ja">岐路</span> <span class="fig num">${m.paths.length} of ${CROSSROADS.length * 2} ways taken, profit +${Math.round(m.paths.length * G.PATH * 100)}%</span></h3>
+      <p class="note">At each turning point the house takes one way for the run. Every way ever taken adds 1% profit for good.</p>
+      ${reached.length ? `<ul class="paths">${reached.map(c => `<li><span class="num">${c.year}</span> <b>${esc(c.en)}</b> ${c.options.map(o => { const ever = m.paths.includes(c.id + ':' + o.id); return `<span class="${ever ? 'ever' : ''}${S.choices[c.id] === o.id ? ' now' : ''}">${ever ? CHECK : ''}${esc(o.en)}${S.choices[c.id] === o.id ? ' · this run' : ''}</span>`; }).join('')}</li>`).join('')}</ul>` : ''}
+      ${CROSSROADS.length > reached.length ? `<p class="note after">${CROSSROADS.length - reached.length} more ahead.</p>` : ''}`;
     x += `<h3 class="sub">Treasures <span lang="ja">家宝</span> <span class="fig num">${found.length} of ${TREASURES.length}, profit +${Math.round(found.length * G.TREASURE * 100)}%</span></h3>
       <p class="note">One turns up for every few provinces reached. They stay with the house for good.</p>
       ${found.length ? `<div class="treasures">${found.map(t => `<div class="tr"><b>${esc(t.en)}</b><span lang="ja">${t.ja}</span><br>${esc(t.kind)}</div>`).join('')}</div>` : ''}
@@ -308,11 +324,14 @@
     const tasks = S.day.tasks.filter(t => G.taskDone(S, t) && !S.day.got.includes(t)).length;
     const vis = G.visitors(S);
     // a dot only for something that can be done now: never on a shut room
-    dot('shop', ups + mgrs); dot('guests', vis.filter(g => G.welcomeCost(S, g) <= S.money).length);
+    const ways = G.crossings(S);
+    dot('shop', ups + mgrs + ways.length); dot('guests', vis.filter(g => G.welcomeCost(S, g) <= S.money).length);
     dot('tea', G.roomOpen(S, 'tea') ? (!G.teaReadyIn(S) && !G.teaOn(S) ? 1 : 0) + tasks : 0); dot('chron', S.unread.length);
     for (const [k, n] of [['upgrades', ups], ['managers', mgrs]]) { const d = panel.querySelector(`.subs [data-sub="${k}"] .dot`); if (d && d.textContent !== (n ? String(n) : '')) { d.textContent = n ? String(n) : ''; d.hidden = !n; } }
     // a new visitor is news
     for (const g of vis) if (!announced.has(g.id)) { announced.add(g.id); if (announced.ready) toast(`A visitor: ${g.en} ${g.ja}`); }
+    // a crossroads is news only away from the trades, where its notice already shows
+    if (ways[0] && !announced.has(ways[0].id)) { announced.add(ways[0].id); if (announced.ready && !(tab === 'shop' && sub === 'trades')) toast(`A crossroads: ${ways[0].en}`); }
     announced.ready = true;
   }
   const announced = new Set();
@@ -325,13 +344,13 @@
   let structKey = '', topKey = '';
   function render(force) {
     if (!S) return;
-    const shop = { trades: () => [WORKS.filter(w => G.isOpen(S, w.id)).length, Object.keys(S.mgr).join(), WORKS.map(w => { const m = G.nextMilestone(S, w.id); return m && m.at; }).join(), S.done, !!report, mode],
+    const shop = { trades: () => [(G.crossings(S)[0] || {}).id, WORKS.filter(w => G.isOpen(S, w.id)).length, Object.keys(S.mgr).join(), WORKS.map(w => { const m = G.nextMilestone(S, w.id); return m && m.at; }).join(), S.done, !!report, mode],
       upgrades: () => [S.upg.length, G.upgrades(S).filter(u => u.open).length], managers: () => [Object.keys(S.mgr).length, WORKS.filter(w => G.isOpen(S, w.id)).length] };
     const bits = { shop: () => [sub, ...shop[sub]()],
       guests: () => [S.guests.join(), G.visitors(S).map(g => g.id).join(), (G.nextGuest(S) || {}).id, WORKS.filter(w => G.isOpen(S, w.id)).length],
       tea: () => { G.daily(S, new Date().toDateString()); return [G.roomOpen(S, 'tea'), G.teaOn(S), G.teaReadyIn(S) > 0, S.day.key, S.day.got.join(), S.day.tasks.filter(t => G.taskDone(S, t)).join()]; },
       chron: () => [S.unread.join(), S.readIds.length, S.chron.length, older],
-      house: () => [S.heads.length, S.reach.length, S.readIds.length, G.renownGain(S), S.meta.treasures.length] };
+      house: () => [S.meta.paths.length, Object.keys(S.choices).length, S.heads.length, S.reach.length, S.readIds.length, G.renownGain(S), S.meta.treasures.length] };
     const tk = S.house + '|' + S.head.given + '|' + S.reach.length;
     if (tk !== topKey) { topKey = tk; topYear = null; renderTop(); }
     const k = tab + '|' + S.house + '|' + bits[tab]().join('|');
@@ -381,6 +400,17 @@
       // the guest's scroll unrolls as they join
       const sc = panel.querySelector(`[data-g="${id}"] .scroll`);
       if (sc && !reduced) { sc.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); sc.animate([{ clipPath: 'inset(0 0 100% 0)' }, { clipPath: 'inset(0 0 0 0)' }], { duration: 900, easing: 'cubic-bezier(.16,1,.3,1)' }); }
+      return;
+    }
+    if (act === 'choose') {
+      if (choosing) return;
+      const o = G.optionOf(a.dataset.c, a.dataset.o), go = () => { choosing = false; if (G.choose(S, a.dataset.c, a.dataset.o)) toast(o.done); render(); save(); };
+      if (reduced) return go();
+      choosing = true;
+      const seal = document.createElement('b'); seal.className = 'seal'; seal.lang = 'ja'; seal.setAttribute('aria-hidden', 'true'); seal.textContent = '決';
+      a.append(seal); a.classList.add('taken');
+      seal.animate([{ transform: 'scale(1.8) rotate(-14deg)', opacity: 0 }, { transform: 'scale(.92) rotate(-8deg)', opacity: 1, offset: .55 }, { transform: 'scale(1) rotate(-8deg)', opacity: 1 }], { duration: 380, easing: 'cubic-bezier(.3,1.4,.6,1)', fill: 'forwards' });
+      setTimeout(go, 750);
       return;
     }
     if (act === 'tea' && G.serveTea(S)) toast(`Tea is served: profit ×${G.teaX(S)} for 30 minutes`);

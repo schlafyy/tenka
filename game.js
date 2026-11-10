@@ -6,7 +6,7 @@ const G = (() => {
   const YEARMAP = [[1467, 0], [1603, 13], [1868, 25], [1926, 31], [1989, 39], [2026, 45]];
   const OPEN_AT = 30;                 // a trade's first level costs a thirtieth of what the house had earned when it opened
   const TIME0 = .6, TIMEK = 2.3;      // seconds a trade's cycle takes: the first trade's, and times this for each later one
-  const REV = .03, REVK = .75;         // a level's payout per cycle: its price times REV, times REVK for each later trade (low, since guests, tea and tasks lift it)
+  const REV = .03, REVK = .60;         // a level's payout per cycle: its price times REV, times REVK for each later trade (low, since guests, tea, tasks and crossroads lift it)
   const GROW0 = 1.08, GROWK = .004;   // each level costs this much more than the last (later trades grow a little steeper)
   const SPEED_AT = [25, 50, 100, 200, 300, 400];               // levels that halve the cycle
   const PROFIT_AT = [500, 600, 700, 800, 900, 1000, 1200, 1500]; // levels that triple the profit
@@ -22,6 +22,7 @@ const G = (() => {
   const TEA_X = 2, TEA_LEN = 1800, TEA_EVERY = 4 * 3600; // tea: profit times this for TEA_LEN seconds, once every TEA_EVERY
   const TASK_PAY = .05;               // a finished task pays this share of what the run has earned (a gift, never a skip of years)
   const GUEST_WORK = 2, GUEST_ALL = .1, GUEST_BOND = .25; // a guest doubles their trade or adds a tenth to all; each bond adds a quarter of that
+  const PATH = .01;                   // profit for good for each crossroads path ever taken
 
   const PIDS = Object.keys(GEO.provinces);
   const ALL_ERAS = [...ERAS, [1989, 'Heisei', '平成'], [2019, 'Reiwa', '令和']];
@@ -80,7 +81,7 @@ const G = (() => {
     return [w.id, { j, w, cost, grow: GROW0 + GROWK * j, time: TIME0 * Math.pow(TIMEK, j), rev: cost * REV * Math.pow(REVK, j) }];
   }));
   const house = S => HOUSES.find(h => h.clan === S.house);
-  const hm = S => new Proxy(house(S).mods, { get: (o, k) => o[k] || 0 });
+  const hm = S => new Proxy(house(S).mods, { get: (o, k) => (o[k] || 0) + chosen(S).reduce((s, c) => s + (c.mods[k] || 0), 0) });
   const isOpen = (S, id) => S.year >= T[id].w.year;
   const count = (a, n) => a.filter(x => n >= x).length;
   const has = (S, u) => S.upg.includes(u);
@@ -89,7 +90,7 @@ const G = (() => {
   function profitAll(S) {
     const m = hm(S);
     return (1 + m.profit) * (1 + PROVINCE * (S.reach.length - 1) * (1 + m.reach) * (doing(S, 'reach').length ? 2 : 1)) *
-      (1 + CHAPTER * S.readIds.length * (doing(S, 'chapter').length ? 2 : 1)) *
+      (1 + CHAPTER * S.readIds.length * (doing(S, 'chapter').length ? 2 : 1) * (1 + m.chapter)) * (1 + PATH * (S.meta.paths || []).length) *
       (1 + TREASURE * S.meta.treasures.length) * (1 + RENOWN * S.meta.renown) * Math.pow(3, REALM_UPGRADES.filter(u => has(S, u.id)).length) *
       doing(S, 'all').reduce((x, g) => x * (1 + GUEST_ALL * lift(S, g)), 1) * (teaOn(S) ? teaX(S) : 1);
   }
@@ -227,6 +228,23 @@ const G = (() => {
     return pay;
   }
 
+  // ---------- crossroads: a real turning point, and the way the house takes for this run ----------
+  const CROSS = Object.fromEntries(CROSSROADS.map(c => [c.id, c]));
+  const optionOf = (cid, oid) => CROSS[cid].options.find(o => o.id === oid);
+  // the choices of this run still in force (one bought on borrowed money ends in its year)
+  const chosen = S => Object.entries(S.choices || {}).map(([c, o]) => optionOf(c, o)).filter(o => !o.until || S.year < o.until);
+  const crossings = S => CROSSROADS.filter(c => S.year >= c.year && !(c.id in (S.choices || {})));
+  function choose(S, cid, oid) {
+    if (!crossings(S).some(c => c.id === cid)) return false;
+    const o = optionOf(cid, oid);
+    if (!o) return false;
+    S.choices[cid] = oid;
+    const path = cid + ':' + oid;
+    if (!S.meta.paths.includes(path)) S.meta.paths.push(path);
+    note(S, { en: o.done, path });
+    return true;
+  }
+
   // ---------- provinces ----------
   const ageSpan = a => (AGES[a + 1] ? AGES[a + 1].from : END_YEAR) - AGES[a].from;
   const provincesPerYear = y => AGE_PROVINCES[ageOf(y)] / ageSpan(ageOf(y));
@@ -286,11 +304,11 @@ const G = (() => {
   const renownGain = S => Math.max(0, renownTotal(S) - S.meta.renown - S.meta.spent);
 
   // ---------- a run ----------
-  function newMeta() { return { runs: 0, renown: 0, spent: 0, lifetime: 0, treasures: [], seen: [], best: 1467, bond: {} }; }
+  function newMeta() { return { runs: 0, renown: 0, spent: 0, lifetime: 0, treasures: [], seen: [], best: 1467, bond: {}, paths: [] }; }
   function newRun(meta, clan, seed = Date.now() | 0) {
     const h = HOUSES.find(x => x.clan === clan);
     const S = { v: 3, seed, house: clan, t: 0, year: 1467, money: 0, earned: 0, lv: { paddies: 1 }, prog: { paddies: null }, mgr: {}, upg: [],
-      reach: [h.home], pts: 1, unread: [], readIds: [], next: 0, chron: [], heads: [], head: null, done: false, guests: [], tea: null, day: null, meta };
+      reach: [h.home], pts: 1, unread: [], readIds: [], next: 0, chron: [], heads: [], head: null, done: false, guests: [], tea: null, day: null, choices: {}, meta };
     S.head = { given: NAMES.lord[clan][0], from: 1467, until: 1467 + 25 };
     note(S, { en: `${headName(S)} leads the house from ${GEO.provinces[h.home].en} ${GEO.provinces[h.home].ja}.`, head: true });
     if (h.mods.startTreasure && !meta.treasures.length) findTreasure(S);
@@ -326,9 +344,10 @@ const G = (() => {
     S.earned += x;
     const y = Math.max(S.year, yearFor(S.earned));
     if (y === S.year) return;
-    const was = ageOf(S.year);
+    const was = ageOf(S.year), from = S.year;
     for (let yy = S.year; yy < y; yy++) S.pts += provincesPerYear(yy);
     S.year = y;
+    for (const [c, oid] of Object.entries(S.choices || {})) { const o = optionOf(c, oid); if (o.until > from && o.until <= y) note(S, { en: o.after }); }
     if (ageOf(y) !== was) note(S, { en: `A new age: ${AGES[ageOf(y)].en} ${AGES[ageOf(y)].ja}.`, age: ageOf(y) });
     arrive(S);
     // the house reaches the richest province within reach by itself
@@ -373,7 +392,7 @@ const G = (() => {
     return (v < 10 ? v.toFixed(2) : v < 100 ? v.toFixed(1) : v.toFixed(0)) + '\u00a0' + UNITS[k]; // a number never wraps away from its scale word
   }
 
-  return { TEA_LEN, TEA_EVERY, BOND_MAX, doing, bond, workBoost, visitors, nextGuest, welcomeCost, welcome, roomOpen, teaX, teaOn, teaReadyIn, serveTea,
+  return { PATH, chosen, crossings, choose, optionOf, TEA_LEN, TEA_EVERY, BOND_MAX, doing, bond, workBoost, visitors, nextGuest, welcomeCost, welcome, roomOpen, teaX, teaOn, teaReadyIn, serveTea,
     daily, taskPay, taskDone, claimTask,
     T, SPEED_AT, PROFIT_AT, PROVINCE, CHAPTER, TREASURE, RENOWN, AWAY_HOURS, PIDS, rand, yearFor, earnedFor, ageOf, eraOf, kanjiYear, money,
     holdersAt, house, isOpen, profitAll, cycle, payout, rate, income, priceOf, maxBuy, offer, buy, nextMilestone, run, managerCost, hire, upgrades,

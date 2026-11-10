@@ -13,7 +13,7 @@ with sync_playwright() as p:
     pg = ctx.new_page(); pg.goto(URL); pg.wait_for_selector("#pick:not([hidden])")
     pg.click("#pick [data-act='begin']")
     pg.evaluate("""() => { const G = tenka.G, S = tenka.S; S.money = 1e60; G.earn(S, G.earnedFor(1990));
-      for (const w of WORKS) { G.buy(S, w.id, 100); if (w.id.length % 2) G.hire(S, w.id); } for (const w of WORKS) G.run(S, w.id); S.money = 1e40; tenka.S = S; }""")
+      for (const w of WORKS) { G.buy(S, w.id, 100); if (w.id.length % 2) G.hire(S, w.id); } for (const w of WORKS) G.run(S, w.id); for (const c of G.crossings(S)) G.choose(S, c.id, c.options[0].id); S.money = 1e40; tenka.S = S; }""")
     cdp = ctx.new_cdp_session(pg); cdp.send("Emulation.setCPUThrottlingRate", {"rate": 4})
     pg.wait_for_timeout(1000)
     r = pg.evaluate("""() => new Promise(res => { const long = []; new PerformanceObserver(l => l.getEntries().forEach(e => long.push(Math.round(e.duration)))).observe({ type: 'longtask', buffered: false });
