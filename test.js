@@ -10,6 +10,7 @@ assert.strictEqual(PIDS.length, 68);
 for (const p of PIDS) { assert(KOKU[p] > 0, 'koku for ' + p); for (const q of ADJ[p]) assert(ADJ[q].includes(p), `border ${p}-${q} one-way`); }
 for (const p of Object.keys(SPECIAL)) assert(GEO.provinces[p], 'unknown province ' + p);
 for (const h of HOUSES) { assert(CLANS[h.clan] && CRESTS[h.clan], 'clan and crest ' + h.clan); assert(GEO.provinces[h.home]); assert(NAMES.lord[h.clan], 'names ' + h.clan); }
+assert.strictEqual(G.fmt(1e60), "1.00e60"); // numbers past the named scales stay short
 for (const w of WORKS) {
   assert(w.year >= AGES[w.age].from && (!AGES[w.age + 1] || w.year < AGES[w.age + 1].from), 'trade in its age: ' + w.id);
   assert(w.manager && w.upgrades.length === 3, 'manager and upgrades: ' + w.id);

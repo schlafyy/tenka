@@ -35,6 +35,13 @@ const PORTRAITS = {
   "licence": "Public domain",
   "author": "Kanō Tan'yū"
  },
+ "shinroku": {
+  "src": "portraits/shinroku.jpg",
+  "file": "Konoike_Shinroku.jpg",
+  "page": "https://commons.wikimedia.org/wiki/File:Konoike_Shinroku.jpg",
+  "licence": "Public domain",
+  "author": "デジカメで撮影"
+ },
  "takatoshi": {
   "src": "portraits/takatoshi.jpg",
   "file": "Mitsui_Takatoshi.jpg",
@@ -42,12 +49,26 @@ const PORTRAITS = {
   "licence": "Public domain",
   "author": "unknown"
  },
+ "tadataka": {
+  "src": "portraits/tadataka.jpg",
+  "file": "Ino_Tadataka_(cropped).jpg",
+  "page": "https://commons.wikimedia.org/wiki/File:Ino_Tadataka_(cropped).jpg",
+  "licence": "Public domain",
+  "author": "Aoki Katsujirō"
+ },
  "hokusai": {
   "src": "portraits/hokusai.jpg",
   "file": "Hokusai_as_an_old_man.jpg",
   "page": "https://commons.wikimedia.org/wiki/File:Hokusai_as_an_old_man.jpg",
   "licence": "CC0",
   "author": "missing name"
+ },
+ "sontoku": {
+  "src": "portraits/sontoku.jpg",
+  "file": "Ninomiya-Sontoku.jpg",
+  "page": "https://commons.wikimedia.org/wiki/File:Ninomiya-Sontoku.jpg",
+  "licence": "Public domain",
+  "author": "岡本秋暉（（1807-1862）"
  },
  "ryoma": {
   "src": "portraits/ryoma.jpg",
@@ -70,12 +91,26 @@ const PORTRAITS = {
   "licence": "Public domain",
   "author": "Unknown photographer"
  },
+ "masaru": {
+  "src": "portraits/masaru.jpg",
+  "file": "Inoue_Masaru.jpg",
+  "page": "https://commons.wikimedia.org/wiki/File:Inoue_Masaru.jpg",
+  "licence": "Public domain",
+  "author": "Unknown authorUnknown author"
+ },
  "yukichi": {
   "src": "portraits/yukichi.jpg",
   "file": "Fukuzawa_Yukichi_1891_(cropped).jpg",
   "page": "https://commons.wikimedia.org/wiki/File:Fukuzawa_Yukichi_1891_(cropped).jpg",
   "licence": "Public domain",
   "author": "Fukuzawa Research Center"
+ },
+ "osuke": {
+  "src": "portraits/osuke.jpg",
+  "file": "Ousuke_Hibi.jpg",
+  "page": "https://commons.wikimedia.org/wiki/File:Ousuke_Hibi.jpg",
+  "licence": "Public domain",
+  "author": "Unknown authorUnknown author"
  },
  "konosuke": {
   "src": "portraits/konosuke.jpg",

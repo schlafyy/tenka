@@ -148,12 +148,14 @@ h2.head span { color: var(--soft); font-size: 1rem; }
 
 /* guests: each one a hanging scroll with their portrait (or their name, brushed) */
 .guest { display: grid; grid-template-columns: 78px minmax(0, 1fr); gap: 0 16px; padding: 18px 0 16px; border-bottom: 1px solid var(--hair); }
-.scroll { position: relative; width: 78px; height: 120px; margin-top: 4px; padding: 8px 7px 10px; background: var(--cloth), var(--dye); box-shadow: var(--hang); }
+.scroll { position: relative; width: 78px; height: 120px; margin-top: 4px; padding: 8px 7px 10px; box-shadow: var(--hang);
+  /* the gold ichimonji bands above and below the picture, on the mount itself so the portrait's sepia never dulls them */
+  background: linear-gradient(#d4b266, #b8924a) 7px 8px / calc(100% - 14px) 5px no-repeat, linear-gradient(#d4b266, #b8924a) 7px calc(100% - 10px) / calc(100% - 14px) 5px no-repeat, var(--cloth), var(--dye); }
 .scroll::before, .scroll::after { content: ''; position: absolute; left: -4px; right: -4px; height: 5px; border-radius: 3px; background: var(--wood); }
 .scroll::before { top: -3px; }
 .scroll::after { bottom: -4px; height: 6px; background: var(--wood-deep); }
-.scroll img { display: block; width: 100%; height: 100%; object-fit: cover; object-position: 50% 18%; background: #eee8db; filter: sepia(.28) saturate(.75) contrast(1.03); border-block: 5px solid #c4a35a; }
-.scroll b { display: flex; height: 100%; align-items: center; justify-content: center; background: #f3efe6; border-block: 5px solid #c4a35a; writing-mode: vertical-rl; font: 400 min(1.15rem, calc(90px / var(--n) / 1.05))/1 var(--brush); color: var(--ink); letter-spacing: .05em; }
+.scroll img { display: block; width: 100%; height: 100%; object-fit: cover; object-position: 50% 18%; background: #eee8db; filter: sepia(.28) saturate(.75) contrast(1.03); margin-block: 5px; height: calc(100% - 10px); }
+.scroll b { display: flex; height: 100%; align-items: center; justify-content: center; background: #f3efe6; margin-block: 5px; height: calc(100% - 10px); writing-mode: vertical-rl; font: 400 min(1.15rem, calc(90px / var(--n) / 1.05))/1 var(--brush); color: var(--ink); letter-spacing: .05em; }
 .guest h3 { font-size: 1.15rem; line-height: 1.25; }
 .guest h3 span { color: var(--soft); font-size: .9rem; }
 .guest .who { font-size: .84rem; color: var(--soft); }
@@ -164,7 +166,7 @@ h2.head span { color: var(--soft); font-size: 1rem; }
 .bond i { width: 7px; height: 7px; border-radius: 50%; background: var(--hair-2); }
 .bond i.on { background: var(--gold); box-shadow: inset 0 0 0 1px var(--gold-line); }
 /* the next guest: their scroll still rolled up */
-.guest.soon .scroll { height: 16px; margin-top: 30px; padding: 0; border-radius: 8px; }
+.guest.soon .scroll { height: 16px; margin-top: 30px; padding: 0; border-radius: 8px; background: var(--cloth), var(--dye); }
 .guest.soon .scroll::before, .guest.soon .scroll::after { display: none; }
 
 /* the tea room: the ceremony on a tatami mat, and today's tasks */

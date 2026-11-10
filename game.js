@@ -367,7 +367,9 @@ const G = (() => {
     if (!isFinite(n)) return '∞';
     if (n < 10) return (Math.floor(n * 10) / 10).toString();
     if (n < 1e6) return Math.floor(n).toLocaleString('en-US');
-    const k = Math.min(UNITS.length - 1, Math.floor(Math.log10(n) / 3)), v = n / Math.pow(10, k * 3);
+    const k = Math.floor(Math.log10(n) / 3);
+    if (k >= UNITS.length) return n.toExponential(2).replace('e+', 'e'); // past the named scales (a house that keeps growing after the present day)
+    const v = n / Math.pow(10, k * 3);
     return (v < 10 ? v.toFixed(2) : v < 100 ? v.toFixed(1) : v.toFixed(0)) + '\u00a0' + UNITS[k]; // a number never wraps away from its scale word
   }
 
