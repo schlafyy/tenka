@@ -1,0 +1,40 @@
+# Builds the iOS app on GitHub's free macOS runners (the repo is public) and keeps Tenka.ipa with the run.
+# The .ipa is unsigned: install it with Sideloadly and your Apple ID (free accounts: it lasts 7 days).
+# Later, with a paid Apple Developer account, a signing step here can send it to TestFlight instead.
+name: iOS app
+on:
+  workflow_dispatch:
+  push:
+    branches: [master]
+    paths: ['*.js', '*.html', 'data/**', 'fonts/**', 'crests/**', 'portraits/**', 'art/**', 'icon*.png', 'ios/**', 'capacitor.config.json', 'package*.json', '.github/workflows/ios.yml']
+jobs:
+  build:
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm test -- quick
+      - name: Copy the game into the app
+        run: npm run ios
+      - name: Build (unsigned)
+        run: |
+          xcodebuild -project ios/App/App.xcodeproj -scheme App -configuration Release -sdk iphoneos \
+            -destination 'generic/platform=iOS' -derivedDataPath build \
+            CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY="" build > build.log 2>&1 \
+            || { grep -E "error:|warning: .*deprecated" build.log | head -40; tail -80 build.log; exit 1; }
+          tail -3 build.log
+      - name: Package Tenka.ipa
+        run: |
+          mkdir Payload
+          cp -R build/Build/Products/Release-iphoneos/App.app Payload/
+          zip -qry Tenka.ipa Payload
+          ls -l Tenka.ipa
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Tenka-ipa
+          path: Tenka.ipa
+          retention-days: 30
