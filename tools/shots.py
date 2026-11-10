@@ -49,14 +49,30 @@ with sync_playwright() as p:
             if b.count():
                 b.click()
         shot(pg, f"{name}-3-tapping")
-        pg.click(".modes [data-mode='max']")
+        for _ in range(3):
+            pg.click(".mode")  # x1 -> x10 -> x100 -> Max
         pg.evaluate(FORWARD, 1)
         pg.wait_for_timeout(600)
         shot(pg, f"{name}-4-hour")
-        for t in ["upgrades", "managers", "chron", "house"]:
+        for t in ["upgrades", "managers"]:
+            pg.click(f".subs [data-sub='{t}']")
+            shot(pg, f"{name}-5-{t}")
+        pg.click(".subs [data-sub='trades']")
+        # the guests: welcome whoever is visiting, then serve tea
+        pg.click("#tabs [data-tab='guests']")
+        shot(pg, f"{name}-5-guests")
+        for _ in range(3):
+            b = pg.locator(".guest.waiting .btn.go")
+            if b.count(): b.first.click(); pg.wait_for_timeout(300)
+        shot(pg, f"{name}-5-guests-after")
+        pg.click("#tabs [data-tab='tea']")
+        if pg.locator("[data-act='tea']").count(): pg.click("[data-act='tea']")
+        pg.wait_for_timeout(1500)
+        shot(pg, f"{name}-5-tea")
+        for t in ["chron", "house"]:
             pg.click(f"#tabs [data-tab='{t}']")
             shot(pg, f"{name}-5-{t}")
-        pg.click("#tabs [data-tab='trades']")
+        pg.click("#tabs [data-tab='shop']")
         # six hours away
         pg.close()
         pg = ctx.new_page(); watch(pg)
@@ -66,7 +82,8 @@ with sync_playwright() as p:
         shot(pg, f"{name}-7-back")
         pg.evaluate(FORWARD, 30)
         shot(pg, f"{name}-8-later")
-        pg.click("#tabs [data-tab='house']")
+        pg.evaluate("() => { tenka.S.earned = Math.max(tenka.S.earned, 1e15); }")  # enough earned for renown to begin again
+        pg.click("#renown")
         pg.on("dialog", lambda d: d.accept())
         pg.click("[data-act='again']")
         pg.wait_for_selector("#pick:not([hidden])")

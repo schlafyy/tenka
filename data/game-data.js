@@ -132,4 +132,70 @@ const LATER_EVENTS = [
   { id: 'expo25', year: 2025, en: 'Expo 2025', ja: '大阪・関西万博', at: 'settsu', sides: [], short: 'The world\'s fair comes back to Osaka, on the island of Yumeshima, inside a ring of wooden beams two kilometres round.' },
 ];
 
-if (typeof module !== 'undefined') module.exports = { KOKU, SPECIAL, AGES, END_YEAR, WORKS, REALM_UPGRADES, HOUSES, NAMES, TREASURES, LATER_EVENTS };
+// Guests: real people who visit the house from the year given, in the order they come. Welcomed, they stay for the run and
+// do one thing for the house: double a trade's profit (work), raise all profit by a tenth (all), open the tea room (room), make tea
+// stronger (tea), or make chapters or provinces count double (chapter, reach). Living people are left out.
+const GUESTS = [
+  { id: 'juko', en: 'Murata Jukō', ja: '村田珠光', life: '1423–1502', from: 1467, role: 'Tea master', does: { room: 'tea' },
+    text: 'Began the quiet, plain way of tea that became wabi-cha.' },
+  { id: 'jutei', en: 'Kamiya Jutei', ja: '神屋寿禎', life: 'active 1526–1539', from: 1526, role: 'Hakata merchant', does: { work: 'mine' },
+    text: 'Opened the Iwami silver mine and brought in a new way to refine its silver.' },
+  { id: 'nobunaga', en: 'Oda Nobunaga', ja: '織田信長', life: '1534–1582', from: 1568, role: 'Lord of Owari', does: { work: 'castletown' },
+    text: 'Opened his castle towns to free markets and free guilds.' },
+  { id: 'rikyu', en: 'Sen no Rikyū', ja: '千利休', life: '1522–1591', from: 1572, role: 'Tea master', does: { tea: 3 },
+    text: 'Perfected the tea ceremony in a tiny, rustic tea room.' },
+  { id: 'hideyoshi', en: 'Toyotomi Hideyoshi', ja: '豊臣秀吉', life: '1537–1598', from: 1585, role: 'Regent', does: { work: 'paddies' },
+    text: 'Had every rice field in the realm measured with one rod.' },
+  { id: 'ieyasu', en: 'Tokugawa Ieyasu', ja: '徳川家康', life: '1543–1616', from: 1603, role: 'Shōgun', does: { all: 1 },
+    text: 'Founded the shogunate in Edo and the long peace that followed.' },
+  { id: 'shinroku', en: 'Yamanaka Shinroku', ja: '山中新六', life: '1570–1651', from: 1610, role: 'Sake brewer', does: { work: 'brewery' },
+    text: 'Brewed clear sake in Itami and founded the Kōnoike merchant house.' },
+  { id: 'koan', en: 'Yodoya Koan', ja: '淀屋个庵', life: '1576–1643', from: 1620, role: 'Rice merchant', does: { work: 'exchange' },
+    text: 'Let rice traders meet at his Osaka house, the start of the Dōjima rice market.' },
+  { id: 'takatoshi', en: 'Mitsui Takatoshi', ja: '三井高利', life: '1622–1694', from: 1673, role: 'Cloth merchant', does: { work: 'dyehouse' },
+    text: 'Opened the Echigoya cloth shop in Edo, selling for cash at fixed prices.' },
+  { id: 'baigan', en: 'Ishida Baigan', ja: '石田梅岩', life: '1685–1744', from: 1729, role: 'Teacher', does: { all: 1 },
+    text: 'Taught that honest trade is a moral way of life.' },
+  { id: 'tadataka', en: 'Inō Tadataka', ja: '伊能忠敬', life: '1745–1818', from: 1800, role: 'Surveyor', does: { reach: 2 },
+    text: 'Walked the coasts of Japan to draw its first accurate map.' },
+  { id: 'hokusai', en: 'Katsushika Hokusai', ja: '葛飾北斎', life: '1760–1849', from: 1814, role: 'Artist', does: { chapter: 2 },
+    text: 'Drew the Great Wave and the Thirty-six Views of Mount Fuji.' },
+  { id: 'sontoku', en: 'Ninomiya Sontoku', ja: '二宮尊徳', life: '1787–1856', from: 1820, role: 'Farm reformer', does: { all: 1 },
+    text: 'Brought ruined villages back with thrift, hard work and shared savings.' },
+  { id: 'ryoma', en: 'Sakamoto Ryōma', ja: '坂本龍馬', life: '1836–1867', from: 1865, role: 'Reformer', does: { all: 1 },
+    text: 'Founded the Kameyama Shachū trading company in Nagasaki.' },
+  { id: 'yukichi', en: 'Fukuzawa Yukichi', ja: '福沢諭吉', life: '1835–1901', from: 1868, role: 'Educator', does: { all: 1 },
+    text: 'Founded Keiō and wrote An Encouragement of Learning.' },
+  { id: 'eiichi', en: 'Shibusawa Eiichi', ja: '渋沢栄一', life: '1840–1931', from: 1872, role: 'Industrialist', does: { work: 'silk' },
+    text: 'Helped found the Tomioka silk mill and some 500 companies.' },
+  { id: 'yataro', en: 'Iwasaki Yatarō', ja: '岩崎弥太郎', life: '1835–1885', from: 1873, role: 'Founder of Mitsubishi', does: { all: 1 },
+    text: 'Built a shipping line into the Mitsubishi group.' },
+  { id: 'masaru', en: 'Inoue Masaru', ja: '井上勝', life: '1843–1910', from: 1880, role: 'Railway engineer', does: { work: 'railway' },
+    text: 'Led the building of Japan\'s first railways.' },
+  { id: 'osuke', en: 'Hibi Ōsuke', ja: '日比翁助', life: '1860–1931', from: 1904, role: 'Merchant', does: { work: 'store' },
+    text: 'Turned Mitsukoshi into Japan\'s first department store.' },
+  { id: 'konosuke', en: 'Matsushita Kōnosuke', ja: '松下幸之助', life: '1894–1989', from: 1926, role: 'Founder of Panasonic', does: { work: 'electric' },
+    text: 'Began with a two-way light socket and built an electrical giant.' },
+  { id: 'soichiro', en: 'Honda Sōichirō', ja: '本田宗一郎', life: '1906–1991', from: 1955, role: 'Founder of Honda', does: { work: 'cars' },
+    text: 'Went from piston rings to motorcycles and cars.' },
+  { id: 'ibuka', en: 'Ibuka Masaru', ja: '井深大', life: '1908–1997', from: 1976, role: 'Co-founder of Sony', does: { work: 'chips' },
+    text: 'Made Japan\'s first transistor radio.' },
+  { id: 'tezuka', en: 'Tezuka Osamu', ja: '手塚治虫', life: '1928–1989', from: 1980, role: 'Manga artist', does: { work: 'robots' },
+    text: 'Created Astro Boy, who inspired a generation of robot builders.' },
+  { id: 'yamauchi', en: 'Yamauchi Hiroshi', ja: '山内溥', life: '1927–2013', from: 1989, role: 'Head of Nintendo', does: { work: 'games' },
+    text: 'Turned a playing-card maker into a video game company.' },
+  { id: 'iwata', en: 'Iwata Satoru', ja: '岩田聡', life: '1959–2015', from: 2002, role: 'Game maker', does: { all: 1 },
+    text: 'Programmer, then president of Nintendo, who made games for everyone.' },
+];
+
+// Today's tasks in the tea room: three a day, drawn from these. n is the target; 'need' is a room or state that must be open.
+const TASKS = [
+  { id: 'levels', en: 'Buy {n} levels', n: 25 },
+  { id: 'taps', en: 'Run trades by hand {n} times', n: 20 },
+  { id: 'read', en: 'Read a chapter', n: 1 },
+  { id: 'improve', en: 'Buy an upgrade or hire a manager', n: 1 },
+  { id: 'tea', en: 'Serve tea', n: 1, need: 'tea' },
+  { id: 'welcome', en: 'Welcome a guest', n: 1, need: 'guest' },
+];
+
+if (typeof module !== 'undefined') module.exports = { KOKU, SPECIAL, AGES, END_YEAR, WORKS, REALM_UPGRADES, HOUSES, NAMES, TREASURES, LATER_EVENTS, GUESTS, TASKS };

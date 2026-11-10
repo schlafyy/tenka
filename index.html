@@ -107,7 +107,15 @@ h1, h2, h3 { font-family: var(--mincho); font-weight: 400; }
 .age .k { display: block; margin-top: 5px; font: 400 .84rem/1 var(--mincho); color: var(--soft); text-align: center; }
 .age.now .k { color: var(--ink); }
 .age.past .k { color: var(--ink-2); }
-#next { font-size: .84rem; color: var(--soft); margin: 8px 18px 0; padding-bottom: 12px; border-bottom: 1px solid var(--hair); }
+/* the age and next trade, and the renown plate: renown is always one tap away */
+.nextrow { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin: 8px 18px 0; padding-bottom: 10px; border-bottom: 1px solid var(--hair); }
+#next { font-size: .84rem; color: var(--soft); min-width: 0; }
+#renown { flex: none; display: inline-flex; align-items: baseline; gap: 6px; min-height: 32px; padding: 5px 10px; border-radius: 6px; background: #e6e2dc; font-size: .84rem; font-weight: 500; color: var(--ink); white-space: nowrap; transition: background .2s, color .2s; }
+#renown b { font: 400 .95rem/1 var(--mincho); }
+#renown { align-items: center; }
+#renown span { display: flex; flex-direction: column; line-height: 1.2; text-align: left; }
+#renown small { font-size: .72rem; }
+#renown.go { background: var(--gold); color: var(--wood); box-shadow: 0 1px 2px rgba(44, 32, 25, .25); }
 
 /* crest discs: the crest in white on its clan's deep dye */
 .disc { width: 34px; height: 34px; flex: none; border-radius: 50%; display: block; }
@@ -120,9 +128,61 @@ h1, h2, h3 { font-family: var(--mincho); font-weight: 400; }
 h2.head { font-size: 1.5rem; display: flex; align-items: baseline; gap: 8px; line-height: 1.2; }
 h2.head span { color: var(--soft); font-size: 1rem; }
 .bar-row { position: sticky; top: -14px; z-index: 4; display: flex; align-items: center; justify-content: flex-end; margin: 0 -18px 2px; padding: 8px 18px 10px; background: linear-gradient(var(--plaster) 78%, rgba(244, 243, 240, 0)); }
-.modes { display: inline-flex; padding: 3px; border-radius: 8px; background: #e8e4dd; }
-.modes button { min-width: 52px; min-height: 34px; padding: 4px 10px; border-radius: 6px; color: var(--soft); font-weight: 500; font-size: .9rem; transition: background .2s var(--ease), color .2s; }
-.modes button[aria-pressed="true"] { background: var(--wood); color: var(--on-wood); box-shadow: 0 1px 2px rgba(44, 32, 25, .25); }
+/* the shop's three counters, and how many to buy at once (one plate that cycles x1, x10, x100, Max) */
+.bar-row { gap: 10px; justify-content: space-between !important; }
+.subs { display: inline-flex; padding: 3px; border-radius: 8px; background: #e8e4dd; }
+.subs button { position: relative; min-height: 34px; padding: 4px 11px; border-radius: 6px; color: var(--soft); font-weight: 500; font-size: .9rem; transition: background .2s var(--ease), color .2s; }
+.subs button[aria-selected="true"] { background: var(--wood); color: var(--on-wood); box-shadow: 0 1px 2px rgba(44, 32, 25, .25); }
+.subs .dot { font-style: normal; position: absolute; top: -5px; right: -3px; min-width: 16px; height: 16px; padding: 0 4px; border-radius: 50px; background: var(--gold); color: var(--wood); font-size: .72rem; line-height: 16px; text-align: center; }
+.subs .dot[hidden] { display: none; }
+.mode { flex: none; min-height: 34px; min-width: 76px; padding: 4px 12px; border-radius: 6px; background: #e8e4dd; color: var(--ink); font-weight: 500; font-size: .9rem; font-variant-numeric: tabular-nums; }
+.mode:active { transform: scale(.96); }
+
+/* a room's name board (hengaku): brushed gilt on dark wood */
+.plaque { position: relative; display: inline-flex; align-items: center; gap: 12px; margin: 20px 0 12px; padding: 7px 16px 7px 13px; border: 4px solid var(--wood-deep); background: var(--wood);
+  box-shadow: inset 0 0 0 1px rgba(226, 194, 127, .55), 0 1px 0 rgba(44, 32, 25, .2); color: var(--on-wood); font: 500 .9rem var(--gothic); }
+/* the cord it hangs from, and its nail */
+.plaque::before { content: ''; position: absolute; left: 50%; top: -19px; width: 34px; height: 16px; margin-left: -17px; border: 1.5px solid var(--wood-2); border-bottom: 0; border-radius: 17px 17px 0 0; }
+.plaque::after { content: ''; position: absolute; left: 50%; top: -22px; width: 6px; height: 6px; margin-left: -3px; border-radius: 50%; background: var(--wood-deep); }
+.plaque b { font: 400 1.6rem/1 var(--brush); color: var(--gilt); letter-spacing: .06em; }
+
+/* guests: each one a hanging scroll with their portrait (or their name, brushed) */
+.guest { display: grid; grid-template-columns: 78px 1fr; gap: 0 16px; padding: 18px 0 16px; border-bottom: 1px solid var(--hair); }
+.scroll { position: relative; width: 78px; height: 120px; margin-top: 4px; padding: 8px 7px 10px; background: var(--cloth), var(--dye); box-shadow: var(--hang); }
+.scroll::before, .scroll::after { content: ''; position: absolute; left: -4px; right: -4px; height: 5px; border-radius: 3px; background: var(--wood); }
+.scroll::before { top: -3px; }
+.scroll::after { bottom: -4px; height: 6px; background: var(--wood-deep); }
+.scroll img { display: block; width: 100%; height: 100%; object-fit: cover; object-position: 50% 18%; background: #eee8db; filter: sepia(.28) saturate(.75) contrast(1.03); border-block: 5px solid #c4a35a; }
+.scroll b { display: flex; height: 100%; align-items: center; justify-content: center; background: #f3efe6; border-block: 5px solid #c4a35a; writing-mode: vertical-rl; font: 400 min(1.15rem, calc(90px / var(--n) / 1.05))/1 var(--brush); color: var(--ink); letter-spacing: .05em; }
+.guest h3 { font-size: 1.15rem; line-height: 1.25; }
+.guest h3 span { color: var(--soft); font-size: .9rem; }
+.guest .who { font-size: .84rem; color: var(--soft); }
+.guest .what { font-family: var(--mincho); font-size: 1rem; line-height: 1.6; color: var(--ink-2); margin: 6px 0; }
+.guest .gift { font-size: .84rem; font-weight: 500; margin-bottom: 10px; }
+.guest .in { display: flex; align-items: center; gap: 8px; font-size: .84rem; color: var(--soft); }
+.bond { display: inline-flex; gap: 3px; }
+.bond i { width: 7px; height: 7px; border-radius: 50%; background: var(--hair-2); }
+.bond i.on { background: var(--gold); box-shadow: inset 0 0 0 1px var(--gold-line); }
+/* the next guest: their scroll still rolled up */
+.guest.soon .scroll { height: 16px; margin-top: 30px; padding: 0; border-radius: 8px; }
+.guest.soon .scroll::before, .guest.soon .scroll::after { display: none; }
+
+/* the tea room: the ceremony on a tatami mat, and today's tasks */
+.tatami { display: grid; grid-template-columns: 80px 1fr; gap: 16px; align-items: center; padding: 18px 16px; border-radius: 3px;
+  background: repeating-linear-gradient(0deg, rgba(60, 50, 10, .08) 0 1px, transparent 1px 3px), linear-gradient(90deg, #cec38b, #c5b97f 50%, #cec38b);
+  border-top: 7px solid #2b2a26; border-bottom: 7px solid #2b2a26; color: var(--ink); box-shadow: var(--hang); }
+.tatami h3 { font-size: 1.15rem; }
+.tatami p { font-size: .9rem; color: #463f2c; }
+.tatami .btn.go { margin-top: 10px; }
+.clock { margin-top: 8px; font-weight: 500; }
+.bowl { width: 80px; height: 72px; overflow: visible; }
+.bowl .steam path { opacity: 0; }
+.bowl.on .steam path { animation: steam 3.2s ease-out infinite; }
+.bowl.on .steam path + path { animation-delay: 1.6s; }
+@keyframes steam { 0% { opacity: 0; transform: translateY(8px); } 35% { opacity: .9; } 100% { opacity: 0; transform: translateY(-10px); } }
+.task { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--hair); }
+.task h3 { font-size: 1.05rem; line-height: 1.3; }
+.task p { font-size: .84rem; color: var(--soft); }
 .tip { font-size: .84rem; color: var(--soft); margin: 8px 0 0; }
 .note { color: var(--soft); font-size: .9rem; margin: 2px 0 10px; }
 .note.after { margin: 14px 0 0; }
@@ -228,6 +288,7 @@ h3.sub .fig { font-size: .9rem; color: var(--soft); }
 .tr b { display: block; font: 400 1.05rem/1.25 var(--mincho); color: var(--ink); }
 .tools { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
 .credits { margin-top: 24px; font-size: .72rem; color: var(--soft); line-height: 1.5; }
+details.credits { margin-top: 10px; } details.credits summary { cursor: pointer; } details.credits a { color: inherit; text-underline-offset: 2px; }
 
 /* the tabs: the shop's wooden sill */
 #tabs { flex: none; display: flex; background: var(--wood); padding-bottom: env(safe-area-inset-bottom); }
@@ -292,19 +353,19 @@ h3.sub .fig { font-size: .9rem; color: var(--soft); }
 <div id="app">
   <header id="top">
     <div class="eave" aria-hidden="true"></div><div class="beam" aria-hidden="true"></div>
-    <button id="house"></button>
+    <div id="house" role="img"></div>
     <div class="sign">
       <div class="when"><div id="year" class="num"></div><div id="era"></div></div>
       <p class="wealth num"><span id="money"></span><small><span id="unit"></span> · <span id="rate"></span></small></p>
     </div>
     <div class="ages" id="ages" aria-hidden="true"></div>
-    <p id="next"></p>
+    <div class="nextrow"><p id="next"></p><button id="renown"></button></div>
   </header>
   <main id="panel"></main>
   <nav id="tabs" aria-label="Sections">
-    <button data-tab="trades"><span lang="ja">商</span><span class="l">Trades</span><i class="dot" hidden></i></button>
-    <button data-tab="upgrades"><span lang="ja">改</span><span class="l">Upgrades</span><i class="dot" hidden></i></button>
-    <button data-tab="managers"><span lang="ja">人</span><span class="l">Managers</span><i class="dot" hidden></i></button>
+    <button data-tab="shop"><span lang="ja">店</span><span class="l">Shop</span><i class="dot" hidden></i></button>
+    <button data-tab="guests"><span lang="ja">客</span><span class="l">Guests</span><i class="dot" hidden></i></button>
+    <button data-tab="tea"><span lang="ja">茶</span><span class="l">Tea room</span><i class="dot" hidden></i></button>
     <button data-tab="chron"><span lang="ja">記</span><span class="l">Chronicle</span><i class="dot" hidden></i></button>
     <button data-tab="house"><span lang="ja">家</span><span class="l">House</span><i class="dot" hidden></i></button>
   </nav>
@@ -313,6 +374,7 @@ h3.sub .fig { font-size: .9rem; color: var(--soft); }
 <div id="toast" aria-live="polite"></div>
 <script src="data/map.js"></script>
 <script src="data/game-data.js"></script>
+<script src="data/portraits.js"></script>
 <script src="game.js"></script>
 <script src="ui.js"></script>
 <script>

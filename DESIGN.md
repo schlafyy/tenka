@@ -259,8 +259,8 @@ On each payout the square pulses and the payout's figure rises off the board in 
 ### Buy plate and buttons
 Plates are filled, never outlined. On wood, the resting plate is a black wash with soft on-wood text; when affordable it becomes gold with wood text, a lighter gold on hover and a 98% press. On plaster, the plain button is the plate tone (6px radius, 42px tall) that darkens on hover; go buttons are gold. Disabled buttons keep their fill and drop to soft ink. Focus is a 2px wood outline at 2px offset, gilt on wood and on the sill.
 
-### Buy-mode switch
-Sticky at the top of the trades list, on a plaster band that fades into the boards scrolling under it. A recessed track (8px radius, 3px padding) holding ×1, ×10, ×100 and Max; the pressed segment is wood with on-wood text.
+### Shop row and buy-mode plate
+The Shop opens on a sticky row: a recessed segmented switch for Trades / Upgrades / Managers (the selected one in wood, gold count dots for what can be bought) and one recessed plate that cycles Buy ×1, ×10, ×100, Max. Sticky at the top of the trades list, on a plaster band that fades into the boards scrolling under it. A recessed track (8px radius, 3px padding) holding ×1, ×10, ×100 and Max; the pressed segment is wood with on-wood text.
 
 ### Item (upgrade, manager)
 A smaller signboard: a 44px gilt tag, name, one-line description, and a price button or a gilt "hired" check at the right (min 92px).
@@ -277,6 +277,18 @@ A wood bar at the bottom, five equal tabs each with a Mincho kanji (1.3rem) over
 ### Curtain (house header and house cards)
 The shop front, top down: a tiled roof edge (58px: courses of ridge and trough tiles from `art/roof.svg` running up behind the status bar and darkening toward the top, then the eave of dull grey fired-clay tiles: round tile ends with a three-comma tomoe in relief over scalloped trough lips, one repeating bay in `art/eave.svg`), a 12px wooden lintel with grain, then the noren hung below it: three separate cotton panels in the house dye (126px tall, side panels flexible, middle 74px, 4px gaps showing the dim shop inside), each with a darker sewn sleeve at the top, a hem line, soft vertical fold shading and a faint weave; the weave sits under the crest and lettering, which are undyed white. One crest is dyed across all three panels, sized per crest from how much of its square the drawing fills (`CREST_FILL` in ui.js) so the drawing always runs 14px past each slit and clears the sleeve and hem. The clan's kanji are brushed down the left panel and the era year down the right in Yuji Syuku (the `Brush` face, a small subset of only clan names and era years). The panels cast a soft shadow on the plaster below. Tapping the curtain sets the panels swaying one after another (rotate from the top, 1.1s), then opens the House tab. On its own, a breeze stirs the panels for about two seconds in every eleven, and the season drifts across the shop front by the real month (cherry petals in spring, green leaves in summer, maple leaves in autumn, snow in winter; seven pieces, fading out at the hem; hidden under reduced motion). It is the button that opens the House tab. House cards on the choice screen repeat it small in the same cloth (weave, folds, darker sleeve): wood top border, two slits at the hem showing the dim shop, a 52px crest; the selected card lifts 3px with a plaster-and-wood double ring. The chosen-house card wears a 72px mini curtain across the top of a wood board.
 
+### Renown plate
+A small recessed plate (名声 Renown n · +gain) to the right of the next-trade line under the age band; gold when beginning again pays (gain at least ten and at least the current renown). It opens the House. The curtain itself is decoration: a touch only sways it.
+
+### Name board (hengaku)
+Each room other than the Shop opens under a name board: dark wood, brushed gilt kanji (Yuji Syuku, 1.6rem) and the English name in Zen Gothic 500 beside it.
+
+### Guest scroll
+A hanging scroll 78×120px: brocade in the house dye with the cloth weave, a wooden roller on top and a darker one below, the portrait set in it (object-fit cover, sepia .28, saturation .75) or, without a portrait, the name brushed vertically on paper. The next guest to come shows as a rolled scroll. Welcoming unrolls the scroll from the top (clip-path, 900ms). Bond shows as five small dots, gold when filled.
+
+### Tea mat
+The tea ceremony sits on a tatami mat: woven straw (#cec38b to #c5b97f with a 3px weave) between two dark cloth borders (heri, 7px). A drawn tea bowl steams (three wisps, 2.6s) only while tea is served.
+
 ### Age band
 Five thin tracks (6px, 4px radius) over hairline, filling left to right with the house dye as the year advances, Mincho kanji age names below in soft ink (darker for past and current), and a 2px wood tick at the next trade's position.
 
@@ -286,6 +298,7 @@ Year in Mincho at the left, a 38px crest disc (crest on a darkened dye, or the p
 ## Do's and Don'ts
 
 ### Do:
+- Give each room one material of its own inside the shop-front world (scrolls for guests, tatami for tea, signboards for trades), and keep gold for what can be done now.
 - **Do** read the dye from `--dye` and `--dye-lit`; give any new dyed surface those variables.
 - **Do** reserve gold for what is actionable now; use the black wash or the plate tone for everything else.
 - **Do** put gilt letters and figures on wood only; put sumi and soft ink on plaster only.

@@ -16,10 +16,12 @@
   let S = null;                // the game state
   let report = null;           // what happened while you were away, until dismissed or the next purchase
   let older = 25;              // chronicle entries shown
-  let tab = 'trades', mode = 1;
+  let tab = 'shop', sub = 'trades', mode = 1;
   const panel = $('#panel');
 
   // ---------- saving ----------
+  // a save from before the guests and the tea room gets their empty places
+  function fresh(T) { T.guests = T.guests || []; if (!('tea' in T)) T.tea = null; if (!('day' in T)) T.day = null; T.meta.bond = T.meta.bond || {}; return T; }
   function save() { if (!S) return; S.savedAt = Date.now(); try { localStorage.setItem(KEY, JSON.stringify(S)); } catch { /* private mode: the game still runs */ } }
   function load() { try { const s = localStorage.getItem(KEY); return s ? JSON.parse(s) : null; } catch { return null; } }
 
@@ -61,7 +63,8 @@
     dyeTheHouse();
     const cr = crest(S.house, 'crest'), [fw, fh] = CREST_FILL[S.house] || [.85, .85];
     $('#house').style.setProperty('--c', Math.min(110 / fw, 100 / fh) + 'px'); // the drawing runs 14px into each side panel and clears the sleeve and hem
-    $('#house').innerHTML = `<span class="pn l" aria-hidden="true">${cr}<b class="v" lang="ja" style="--n:${CLANS[S.house].ja.length}">${CLANS[S.house].ja}</b></span><span class="pn m" aria-hidden="true">${cr}</span><span class="pn r" aria-hidden="true">${cr}<b class="v" lang="ja"></b></span><span class="sr">The ${esc(CLANS[S.house].en)} house, led by ${esc(G.headName(S))}: open the house</span>`;
+    $('#house').innerHTML = `<span class="pn l" aria-hidden="true">${cr}<b class="v" lang="ja" style="--n:${CLANS[S.house].ja.length}">${CLANS[S.house].ja}</b></span><span class="pn m" aria-hidden="true">${cr}</span><span class="pn r" aria-hidden="true">${cr}<b class="v" lang="ja"></b></span>`;
+    $('#house').setAttribute('aria-label', `The curtain of the ${CLANS[S.house].en} house`);
     $('#ages').innerHTML = AGES.map(a => `<div class="age"><div class="band"><i></i></div><span class="k" lang="ja">${a.ja.split('・')[0]}</span></div>`).join('');
     ages = [...document.querySelectorAll('#ages .age')];
   }
@@ -103,7 +106,6 @@
         <button class="x" data-act="dismiss" aria-label="Dismiss"><svg viewBox="0 0 12 12" fill="none"><path d="M1 1l10 10M11 1L1 11"/></svg></button></div>`;
     }
     if (S.done) h += `<div class="present"><h2>The present day</h2><p>The ${esc(CLANS[S.house].en)} have come from ${esc(P[G.house(S).home].en)} in 1467 to ${END_YEAR}. Begin again for renown, or keep growing.</p><button class="btn" data-act="tab" data-tab="house">See the house</button></div>`;
-    h += `<div class="bar-row"><div class="modes" role="group" aria-label="How many to buy">${MODES.map(([m, l]) => `<button data-act="mode" data-mode="${m}" aria-pressed="${mode === m}">${l}</button>`).join('')}</div></div>`;
     if (!Object.keys(S.mgr).length && S.year < 1500) h += `<p class="tip">Tap a trade's square to run it. A full bar pays out. Managers run trades for you, even while you are away.</p>`;
     for (const w of WORKS.filter(w => G.isOpen(S, w.id))) {
       const id = w.id, ms = G.nextMilestone(S, id);
@@ -118,17 +120,73 @@
     if (next) h += `<div class="trade shut"><div class="tile"><span class="g" lang="ja">${next.glyph}</span></div><h3>${esc(next.en)} <span lang="ja">${next.ja}</span></h3><p class="opens">Opens in ${next.year}, when the house has earned <span class="nb">${fmt(G.earnedFor(next.year))} ${unit()}</span>.</p></div>`;
     return h;
   }
-  const priceButton = (act, id, cost) => `<button class="btn${S.money >= cost ? ' go' : ''}" data-act="${act}" data-id="${id}" data-k="${act}-${id}" data-cost="${cost}"${S.money >= cost ? '' : ' disabled'}>${fmt(cost)}</button>`;
+  const priceButton = (act, id, cost, label = '') => `<button class="btn${S.money >= cost ? ' go' : ''}" data-act="${act}" data-id="${id}" data-k="${act}-${id}" data-cost="${cost}"${S.money >= cost ? '' : ' disabled'}>${label}${fmt(cost)}</button>`;
+  const SUBS = [['trades', 'Trades'], ['upgrades', 'Upgrades'], ['managers', 'Managers']];
+  function renderShop() {
+    return `<div class="bar-row"><div class="subs" role="tablist" aria-label="The shop">${SUBS.map(([k, l]) => `<button role="tab" data-act="sub" data-sub="${k}" aria-selected="${sub === k}">${l}<i class="dot" hidden></i></button>`).join('')}</div>
+      ${sub === 'trades' ? `<button class="mode" data-act="mode" aria-label="How many to buy at once; tap to change">Buy ${MODES.find(m => m[0] === mode)[1]}</button>` : ''}</div>` + SHOP[sub]();
+  }
+  const plaque = (ja, en) => `<h2 class="plaque"><b lang="ja">${ja}</b><span>${en}</span></h2>`;
+
+  // ---------- the guests: real people of each age, each a hanging scroll ----------
+  const scrollArt = g => `<div class="scroll" aria-hidden="true">${PORTRAITS[g.id] ? `<img src="${PORTRAITS[g.id].src}" alt="" loading="lazy" decoding="async">` : `<b lang="ja" style="--n:${g.ja.length}">${g.ja}</b>`}</div>`;
+  const gift = g => g.does.work ? `${WORK[g.does.work].en} profit ×2${G.isOpen(S, g.does.work) ? '' : ` (opens in ${WORK[g.does.work].year})`}` : g.does.all ? 'All profit +10%' :
+    g.does.room ? 'Opens the tea room' : g.does.tea ? 'Tea triples profit instead of doubling it' : g.does.chapter ? 'Chapters count double' : 'Provinces count double';
+  const bondDots = b => `<span class="bond" role="img" aria-label="Bond ${b} of ${G.BOND_MAX}">${Array.from({ length: G.BOND_MAX }, (_, i) => `<i class="${i < b ? 'on' : ''}"></i>`).join('')}</span>`;
+  function guestCard(g, state) {
+    const b = G.bond(S, g.id);
+    return `<div class="guest ${state}" data-g="${g.id}">${state === 'soon' ? '<div class="scroll" aria-hidden="true"></div>' : scrollArt(g)}<div>
+      <h3>${esc(g.en)} <span lang="ja">${g.ja}</span></h3><p class="who">${esc(g.role)} · ${g.life}</p>
+      ${state === 'soon' ? `<p class="what">Visits the house in ${g.from}.</p>` : `<p class="what">${esc(g.text)}</p><p class="gift">${gift(g)}${b > 1 ? `, more with each bond` : ''}</p>`}
+      ${state === 'waiting' ? priceButton('welcome', g.id, G.welcomeCost(S, g), 'Welcome · ') : state === 'in' ? `<p class="in">With the house ${bondDots(b)}</p>` : ''}</div></div>`;
+  }
+  function renderGuests() {
+    const waiting = G.visitors(S), stay = GUESTS.filter(g => S.guests.includes(g.id)), soon = G.nextGuest(S);
+    let h = plaque('座敷', 'Guests') + `<p class="note">Famous people of each age visit the house in their own years. Welcome one and they stay for this run. Each run you welcome them the bond grows, and so does their help. ${Object.keys(S.meta.bond || {}).length} of ${GUESTS.length} met so far.</p>`;
+    if (waiting.length) h += `<h3 class="sub">Visiting now</h3>` + waiting.map(g => guestCard(g, 'waiting')).join('');
+    if (soon) h += `<h3 class="sub">Coming</h3>` + guestCard(soon, 'soon');
+    if (stay.length) h += `<h3 class="sub">With the house</h3>` + stay.slice().reverse().map(g => guestCard(g, 'in')).join('');
+    return h;
+  }
+
+  // ---------- the tea room ----------
+  function renderTea() {
+    let h = plaque('茶室', 'Tea room');
+    if (!G.roomOpen(S, 'tea')) return h + `<p class="note">The tea room is shut. Welcome Murata Jukō <span lang="ja">村田珠光</span>, the tea master, in the Guests room to open it.</p><button class="btn" data-act="tab" data-tab="guests">Go to the guests</button>`;
+    const on = G.teaOn(S), wait = G.teaReadyIn(S) > 0, x = G.teaX(S);
+    const why = x > 2 ? ` (${G.doing(S, 'tea').map(g => g.en).join(', ')} is staying)` : '';
+    h += `<div class="tatami"><svg class="bowl${on ? ' on' : ''}" viewBox="0 0 80 72" aria-hidden="true">
+        <defs><linearGradient id="raku" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3a2a22"/><stop offset=".55" stop-color="#1f1714"/><stop offset="1" stop-color="#120d0b"/></linearGradient>
+        <filter id="soft"><feGaussianBlur stdDeviation="1.1"/></filter></defs>
+        <g class="steam" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" filter="url(#soft)">
+          <path d="M33 30c-5-6 5-9 0-15s4-9 1-13"/><path d="M46 30c5-6-5-10 1-16s-3-8 1-12"/></g>
+        <path d="M8 34c1-2 9-3 32-3s30 1 32 3c-1 13-6 25-15 30-5 3-28 3-34 0C14 59 9 47 8 34z" fill="url(#raku)"/>
+        <path d="M14 46c4 5 6 1 9 6M60 44c-3 6-6 2-8 8" stroke="#5c4433" stroke-width="2" fill="none" opacity=".7"/>
+        <ellipse cx="40" cy="33.5" rx="30" ry="3.6" fill="#7d8c4c"/>
+        <path d="M9 33c3-2 12-3 31-3s28 1 31 3" fill="none" stroke="#5a443a" stroke-width="1.6"/>
+        <rect x="29" y="64" width="22" height="6" rx="2" fill="#120d0b"/></svg><div>
+      <h3>Tea ceremony <span lang="ja">茶の湯</span></h3>
+      <p>${on ? `Tea is served: profit ×${x}${why}.` : wait ? 'The kettle is heating for the next bowl.' : `Serve tea and every trade earns ×${x} for 30 minutes${why}.`}</p>
+      ${on ? `<p class="clock"><span id="teaclock" class="num"></span> left</p>` : wait ? `<p class="clock">Ready in <span id="teaclock" class="num"></span></p>` : `<button class="btn go" data-act="tea" data-k="tea">Serve tea</button>`}</div></div>`;
+    const d = S.day;
+    h += `<h3 class="sub">Today's tasks <span lang="ja">今日の務め</span></h3><p class="note">Three a day, new each day. Each pays a twentieth of what this run has earned.</p>`;
+    for (const id of d.tasks) {
+      const t = TASKS.find(x => x.id === id), done = G.taskDone(S, id), got = d.got.includes(id);
+      h += `<div class="task"><div><h3>${esc(t.en.replace('{n}', t.n))}</h3><p class="num" data-task="${id}"></p></div>
+        ${got ? `<span class="hired">${CHECK} Done</span>` : `<button class="btn${done ? ' go' : ''}" data-act="claim" data-id="${id}" data-k="claim-${id}"${done ? '' : ' disabled'}>${done ? 'Claim' : 'Not yet'}</button>`}</div>`;
+    }
+    return h;
+  }
   function renderUpgrades() {
     const all = G.upgrades(S), open = all.filter(u => u.open && !u.owned), owned = all.filter(u => u.owned).length;
-    let h = `<h2 class="head">Upgrades <span lang="ja">改良</span></h2><p class="note">${owned} of ${all.length} bought. Each one triples a trade's profit; the great works of each age triple them all.</p>`;
+    let h = `<p class="note">${owned} of ${all.length} bought. Each one triples a trade's profit; the great works of each age triple them all.</p>`;
     h += open.slice(0, 12).map(u => `<div class="item"><span class="tag" lang="ja" aria-hidden="true">${u.realm ? '天' : WORK[u.work].glyph}</span><h3>${esc(u.en)} <span lang="ja">${u.ja}</span></h3><p>${esc(u.text)}</p>
       ${priceButton('upg', u.id, u.cost)}</div>`).join('');
     if (!open.length) h += `<p class="note">New upgrades come with new trades and new ages.</p>`;
     return h;
   }
   function renderManagers() {
-    let h = `<h2 class="head">Managers <span lang="ja">支配人</span></h2><p class="note">A manager runs a trade for you, without a tap, and keeps it running while you are away (up to ${G.AWAY_HOURS} hours).</p>`;
+    let h = `<p class="note">A manager runs a trade for you, without a tap, and keeps it running while you are away (up to ${G.AWAY_HOURS} hours).</p>`;
     for (const w of WORKS.filter(w => G.isOpen(S, w.id))) {
       const c = G.managerCost(S, w.id);
       h += `<div class="item"><span class="tag" lang="ja" aria-hidden="true">${w.glyph}</span><h3>${esc(w.manager[0])} <span lang="ja">${w.manager[1]}</span></h3><p>Runs the ${esc(w.en.toLowerCase())}.</p>
@@ -144,7 +202,7 @@
       ${unread ? `<button class="btn go" data-act="read" data-id="${e.id}" data-k="r-${e.id}">Read · profit +${Math.round(G.CHAPTER * 100)}%</button>` : `<p class="story">${esc(e.short)}</p>`}</div></li>`;
   }
   function renderChron() {
-    let h = `<h2 class="head">Chronicle <span lang="ja">年代記</span></h2>`;
+    let h = plaque('年代記', 'Chronicle');
     if (S.unread.length) {
       h += `<ol class="entries">${S.unread.map(id => chapterHtml(CHAPTER[id], true)).join('')}</ol>`;
       if (S.unread.length > 1) h += `<button class="btn more" data-act="readall">Read all ${S.unread.length}</button>`;
@@ -157,7 +215,7 @@
   function renderHouse() {
     const h = G.house(S), m = S.meta, gain = G.renownGain(S);
     const found = TREASURES.filter(x => m.treasures.includes(x.id));
-    let x = `<h2 class="head">The house <span lang="ja">家</span></h2>
+    let x = `${plaque('家', 'The house')}
       <div class="facts"><p><b>${clanName(S.house)}</b>, from ${placeName(h.home)}. ${esc(h.motto)} <span lang="ja">${h.mottoJa}</span>: ${esc(h.text.toLowerCase())}</p>
       <p>Head of the house: <b>${esc(G.headName(S))}</b>, since ${S.head.from}. Your house follows its own line of heads; the history around it is the real one.</p>
       <p>${S.readIds.length} chapters read · everything together: profit ×${fmt(G.profitAll(S))}</p></div>
@@ -174,10 +232,12 @@
       <p class="note after">${TREASURES.length - found.length} still to find.</p>
       <h3 class="sub">Your save</h3>
       <div class="tools"><button class="btn" data-act="copy">Copy save</button><button class="btn" data-act="paste">Load a save</button><button class="btn" data-act="restart">Start over</button></div>
-      <p class="credits">Clan crests from Wikimedia Commons, each under its own licence. Province names and history from the Sengoku map project. Fonts: Shippori Mincho B1, Zen Kaku Gothic New and Yuji Syuku (SIL OFL). The history is written for the game from standard accounts and simplified; yields are approximate.</p>`;
+      <p class="credits">Clan crests from Wikimedia Commons, each under its own licence. Province names and history from the Sengoku map project. Fonts: Shippori Mincho B1, Zen Kaku Gothic New and Yuji Syuku (SIL OFL). The history is written for the game from standard accounts and simplified; yields are approximate.</p>
+      <details class="credits"><summary>Portrait credits</summary>${Object.entries(PORTRAITS).map(([id, p]) => `${esc(GUESTS.find(g => g.id === id).en)}: ${esc(p.author)}, ${esc(p.licence)}, <a href="${esc(p.page)}" rel="noopener">Wikimedia Commons</a>`).join('<br>')}</details>`;
     return x;
   }
-  const VIEWS = { trades: renderTrades, upgrades: renderUpgrades, managers: renderManagers, chron: renderChron, house: renderHouse };
+  const SHOP = { trades: renderTrades, upgrades: renderUpgrades, managers: renderManagers };
+  const VIEWS = { shop: renderShop, guests: renderGuests, tea: renderTea, chron: renderChron, house: renderHouse };
 
   // ---------- keeping the screen current ----------
   // the trade rows' moving parts, found once after each rebuild
@@ -226,13 +286,31 @@
       set(r, 'price', r.price, fmt(o.price));
       if (r.last.ok !== o.ok) { r.last.ok = o.ok; r.buy.classList.toggle('ok', o.ok); r.buy.setAttribute('aria-disabled', !o.ok); }
     }
-    if (tab !== 'trades') panel.querySelectorAll('[data-cost]').forEach(b => { const ok = S.money >= +b.dataset.cost; if (b.classList.contains('go') !== ok) { b.disabled = !ok; b.classList.toggle('go', ok); } });
+    if (tab !== 'shop' || sub !== 'trades') panel.querySelectorAll('[data-cost]').forEach(b => { const ok = S.money >= +b.dataset.cost; if (b.classList.contains('go') !== ok) { b.disabled = !ok; b.classList.toggle('go', ok); } });
+    if (tab === 'tea') {
+      const c = $('#teaclock');
+      if (c) c.textContent = secs(G.teaOn(S) ? S.tea.until - S.t : G.teaReadyIn(S));
+      panel.querySelectorAll('[data-task]').forEach(p => { const t = TASKS.find(x => x.id === p.dataset.task); p.textContent = `${Math.min(t.n, S.day.c[t.id] || 0)} of ${t.n}`; });
+    }
+    const gain = G.renownGain(S), rn = `<b lang="ja">名声</b><span>Renown ${fmt(S.meta.renown)}${gain ? `<small>+${fmt(gain)} waiting</small>` : ''}</span>`;
+    if (renownWas !== rn) { renownWas = rn; $('#renown').innerHTML = rn; $('#renown').classList.toggle('go', gain >= Math.max(10, S.meta.renown)); }
   }
+  let renownWas = '';
   function dots() {
     const ups = G.upgrades(S).filter(u => u.open && !u.owned && u.cost <= S.money).length;
     const mgrs = WORKS.filter(w => G.isOpen(S, w.id) && !S.mgr[w.id] && G.managerCost(S, w.id) <= S.money).length;
-    dot('upgrades', ups); dot('managers', mgrs); dot('chron', S.unread.length); dot('house', G.renownGain(S) >= Math.max(10, S.meta.renown) ? '!' : 0);
+    G.daily(S, new Date().toDateString());
+    const tasks = S.day.tasks.filter(t => G.taskDone(S, t) && !S.day.got.includes(t)).length;
+    const vis = G.visitors(S);
+    // a dot only for something that can be done now: never on a shut room
+    dot('shop', ups + mgrs); dot('guests', vis.filter(g => G.welcomeCost(S, g) <= S.money).length);
+    dot('tea', G.roomOpen(S, 'tea') ? (!G.teaReadyIn(S) && !G.teaOn(S) ? 1 : 0) + tasks : 0); dot('chron', S.unread.length);
+    for (const [k, n] of [['upgrades', ups], ['managers', mgrs]]) { const d = panel.querySelector(`.subs [data-sub="${k}"] .dot`); if (d && d.textContent !== (n ? String(n) : '')) { d.textContent = n ? String(n) : ''; d.hidden = !n; } }
+    // a new visitor is news
+    for (const g of vis) if (!announced.has(g.id)) { announced.add(g.id); if (announced.ready) toast(`A visitor: ${g.en} ${g.ja}`); }
+    announced.ready = true;
   }
+  const announced = new Set();
   function dot(t, n) {
     const b = document.querySelector(`#tabs [data-tab="${t}"] .dot`), v = n ? String(n) : '';
     if (b.textContent !== v) { b.textContent = v; b.hidden = !v; }
@@ -242,8 +320,12 @@
   let structKey = '', topKey = '';
   function render(force) {
     if (!S) return;
-    const bits = { trades: () => [WORKS.filter(w => G.isOpen(S, w.id)).length, Object.keys(S.mgr).join(), WORKS.map(w => { const m = G.nextMilestone(S, w.id); return m && m.at; }).join(), S.done, !!report, mode],
-      upgrades: () => [S.upg.length, G.upgrades(S).filter(u => u.open).length], managers: () => [Object.keys(S.mgr).length, WORKS.filter(w => G.isOpen(S, w.id)).length], chron: () => [S.unread.join(), S.readIds.length, S.chron.length, older],
+    const shop = { trades: () => [WORKS.filter(w => G.isOpen(S, w.id)).length, Object.keys(S.mgr).join(), WORKS.map(w => { const m = G.nextMilestone(S, w.id); return m && m.at; }).join(), S.done, !!report, mode],
+      upgrades: () => [S.upg.length, G.upgrades(S).filter(u => u.open).length], managers: () => [Object.keys(S.mgr).length, WORKS.filter(w => G.isOpen(S, w.id)).length] };
+    const bits = { shop: () => [sub, ...shop[sub]()],
+      guests: () => [S.guests.join(), G.visitors(S).map(g => g.id).join(), (G.nextGuest(S) || {}).id, WORKS.filter(w => G.isOpen(S, w.id)).length],
+      tea: () => { G.daily(S, new Date().toDateString()); return [G.roomOpen(S, 'tea'), G.teaOn(S), G.teaReadyIn(S) > 0, S.day.key, S.day.got.join(), S.day.tasks.filter(t => G.taskDone(S, t)).join()]; },
+      chron: () => [S.unread.join(), S.readIds.length, S.chron.length, older],
       house: () => [S.heads.length, S.reach.length, S.readIds.length, G.renownGain(S), S.meta.treasures.length] };
     const tk = S.house + '|' + S.head.given + '|' + S.reach.length;
     if (tk !== topKey) { topKey = tk; topYear = null; renderTop(); }
@@ -269,10 +351,11 @@
     if (!reduced) { panel.classList.remove('fade'); void panel.offsetWidth; panel.classList.add('fade'); }
   }
   document.querySelectorAll('#tabs button').forEach(b => b.addEventListener('click', () => setTab(b.dataset.tab)));
+  // the curtain only sways to a touch; renown has its own plate
   $('#house').addEventListener('click', () => {
     if (!reduced) document.querySelectorAll('#house .pn').forEach((p, i) => p.animate([{ transform: 'none' }, { transform: 'rotate(1.4deg)' }, { transform: 'rotate(-.8deg)' }, { transform: 'rotate(.3deg)' }, { transform: 'none' }], { duration: 1100, delay: i * 70, easing: 'ease-out' }));
-    setTab('house');
   });
+  $('#renown').addEventListener('click', () => { setTab('house'); const r = panel.querySelector('.renown'); if (r) panel.scrollTop += r.getBoundingClientRect().top - panel.getBoundingClientRect().top - 12; });
 
   panel.addEventListener('click', async e => {
     const a = e.target.closest('[data-act]');
@@ -284,7 +367,19 @@
       if (n && was && (S.lv[id] || 0) >= was.at) toast(`${WORK[id].en}: ${was.what === 'speed' ? 'twice as fast' : 'profit ×3'}`);
       if (n && report) report = null;
     }
-    if (act === 'mode') { mode = a.dataset.mode === 'max' ? 'max' : +a.dataset.mode; panel.querySelectorAll('.modes button').forEach(b => b.setAttribute('aria-pressed', b === a)); }
+    if (act === 'mode') { mode = MODES[(MODES.findIndex(m => m[0] === mode) + 1) % MODES.length][0]; a.textContent = `Buy ${MODES.find(m => m[0] === mode)[1]}`; }
+    if (act === 'sub') { sub = a.dataset.sub; render(true); panel.scrollTop = 0; return; }
+    if (act === 'welcome' && G.welcome(S, id)) {
+      const g = GUESTS.find(x => x.id === id);
+      toast(`${g.en} joins the house`);
+      render(true); save();
+      // the guest's scroll unrolls as they join
+      const sc = panel.querySelector(`[data-g="${id}"] .scroll`);
+      if (sc && !reduced) { sc.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); sc.animate([{ clipPath: 'inset(0 0 100% 0)' }, { clipPath: 'inset(0 0 0 0)' }], { duration: 900, easing: 'cubic-bezier(.16,1,.3,1)' }); }
+      return;
+    }
+    if (act === 'tea' && G.serveTea(S)) toast(`Tea is served: profit ×${G.teaX(S)} for 30 minutes`);
+    if (act === 'claim') { const pay = G.claimTask(S, id); if (pay) toast(`+${fmt(pay)} ${unit()}`); }
     if (act === 'hire' && G.hire(S, id)) { toast(`${WORK[id].manager[0]} hired`); report = null; }
     if (act === 'upg' && G.buyUpgrade(S, id)) toast('Profit ×3');
     if (act === 'dismiss') report = null;
@@ -300,7 +395,7 @@
     if (act === 'paste') {
       const code = prompt('Paste a save:');
       if (!code) return;
-      try { const T = JSON.parse(decodeURIComponent(escape(atob(code.trim())))); if (T.v !== 3 || !T.house) throw 0; S = T; topKey = ''; toast('Save loaded'); } catch { alert('That is not a save from this game.'); }
+      try { const T = JSON.parse(decodeURIComponent(escape(atob(code.trim())))); if (T.v !== 3 || !T.house) throw 0; S = fresh(T); topKey = ''; toast('Save loaded'); } catch { alert('That is not a save from this game.'); }
     }
     if (act === 'restart' && confirm('Start over with a new house in 1467? This run is lost; renown and treasures stay.')) return showPick('restart');
     render(); save();
@@ -328,7 +423,7 @@
         S = why === 'again' ? G.prestige(S, pickClan) : G.newRun(meta || G.newMeta(), pickClan);
         box.hidden = true;
         report = null; older = 25; topKey = '';
-        setTab('trades'); save();
+        sub = 'trades'; setTab('shop'); save();
       }
     };
   }
@@ -371,9 +466,9 @@
   // ---------- start ----------
   const saved = load();
   if (saved && saved.v === 3) {
-    S = saved;
+    S = fresh(saved);
     if (S.savedAt) { last = S.savedAt; catchUp(Date.now()); }
-    setTab('trades');
+    setTab('shop');
   } else {
     for (const k of ['tenka-save-1', 'tenka-save-2']) try { localStorage.removeItem(k); } catch { /* nothing to clear */ }
     showPick(null);

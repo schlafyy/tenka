@@ -6,7 +6,7 @@ const G = (() => {
   const YEARMAP = [[1467, 0], [1603, 13], [1868, 25], [1926, 31], [1989, 39], [2026, 45]];
   const OPEN_AT = 30;                 // a trade's first level costs a thirtieth of what the house had earned when it opened
   const TIME0 = .6, TIMEK = 2.3;      // seconds a trade's cycle takes: the first trade's, and times this for each later one
-  const REV = .15, REVK = .75;         // a level's payout per cycle: its price times REV, times REVK for each later trade
+  const REV = .03, REVK = .75;         // a level's payout per cycle: its price times REV, times REVK for each later trade (low, since guests, tea and tasks lift it)
   const GROW0 = 1.08, GROWK = .004;   // each level costs this much more than the last (later trades grow a little steeper)
   const SPEED_AT = [25, 50, 100, 200, 300, 400];               // levels that halve the cycle
   const PROFIT_AT = [500, 600, 700, 800, 900, 1000, 1200, 1500]; // levels that triple the profit
@@ -17,6 +17,11 @@ const G = (() => {
   const RENOWN_K = .05, RENOWN_POW = .2; // renown in all: RENOWN_K * (lifetime earnings) ^ RENOWN_POW
   const AGE_PROVINCES = [20, 14, 12, 12, 10]; // provinces to reach in each age (68 in all, with home)
   const AWAY_HOURS = 24;              // time away counts up to this long
+  const GUEST_AT = .1, GUEST_MIN = 50; // welcoming a guest costs this share of what the house had earned by their year
+  const BOND_MAX = 5;                 // a guest's bond grows by one each run they are welcomed, up to this
+  const TEA_X = 2, TEA_LEN = 1800, TEA_EVERY = 4 * 3600; // tea: profit times this for TEA_LEN seconds, once every TEA_EVERY
+  const TASK_PAY = .05;               // a finished task pays this share of what the run has earned (a gift, never a skip of years)
+  const GUEST_WORK = 2, GUEST_ALL = .1, GUEST_BOND = .25; // a guest doubles their trade or adds a tenth to all; each bond adds a quarter of that
 
   const PIDS = Object.keys(GEO.provinces);
   const ALL_ERAS = [...ERAS, [1989, 'Heisei', '平成'], [2019, 'Reiwa', '令和']];
@@ -83,15 +88,17 @@ const G = (() => {
   // what multiplies every trade's profit
   function profitAll(S) {
     const m = hm(S);
-    return (1 + m.profit) * (1 + PROVINCE * (S.reach.length - 1) * (1 + m.reach)) * (1 + CHAPTER * S.readIds.length) *
-      (1 + TREASURE * S.meta.treasures.length) * (1 + RENOWN * S.meta.renown) * Math.pow(3, REALM_UPGRADES.filter(u => has(S, u.id)).length);
+    return (1 + m.profit) * (1 + PROVINCE * (S.reach.length - 1) * (1 + m.reach) * (doing(S, 'reach').length ? 2 : 1)) *
+      (1 + CHAPTER * S.readIds.length * (doing(S, 'chapter').length ? 2 : 1)) *
+      (1 + TREASURE * S.meta.treasures.length) * (1 + RENOWN * S.meta.renown) * Math.pow(3, REALM_UPGRADES.filter(u => has(S, u.id)).length) *
+      doing(S, 'all').reduce((x, g) => x * (1 + GUEST_ALL * lift(S, g)), 1) * (teaOn(S) ? teaX(S) : 1);
   }
   const cycle = (S, id) => T[id].time / Math.pow(2, count(SPEED_AT, S.lv[id] || 0)) / (1 + hm(S).speed);
   // one cycle's payout for the whole trade
   function payout(S, id, all = profitAll(S)) {
     const n = S.lv[id] || 0;
     const ups = [0, 1, 2].filter(k => has(S, id + ':' + k)).length;
-    return T[id].rev * n * Math.pow(3, count(PROFIT_AT, n) + ups) * (1 + hm(S)[id]) * all;
+    return T[id].rev * n * Math.pow(3, count(PROFIT_AT, n) + ups) * (1 + hm(S)[id]) * all * workBoost(S, id);
   }
   const rate = (S, id, all) => payout(S, id, all) / cycle(S, id);
   // per second, from the trades that run themselves (and all of them, if you keep tapping)
@@ -122,6 +129,7 @@ const G = (() => {
     const was = S.lv[id] || 0;
     S.lv[id] = was + o.n;
     if (!was) S.prog[id] = S.mgr[id] ? 0 : null;
+    bump(S, 'levels', o.n);
     return o.n;
   }
   // the levels until the next speed or profit milestone
@@ -135,6 +143,7 @@ const G = (() => {
   function run(S, id) {
     if (!(S.lv[id] > 0) || S.mgr[id] || S.prog[id] != null) return false;
     S.prog[id] = 0;
+    bump(S, 'taps');
     return true;
   }
 
@@ -146,6 +155,7 @@ const G = (() => {
     S.money -= c;
     S.mgr[id] = true;
     if (S.lv[id] && S.prog[id] == null) S.prog[id] = 0;
+    bump(S, 'improve');
     return true;
   }
 
@@ -161,7 +171,60 @@ const G = (() => {
     if (!u || u.owned || !u.open || S.money < u.cost) return false;
     S.money -= u.cost;
     S.upg.push(uid);
+    bump(S, 'improve');
     return true;
+  }
+
+  // ---------- guests: real people who visit in their own years; welcomed, they stay for the run ----------
+  const doing = (S, k) => GUESTS.filter(g => g.does[k] !== undefined && S.guests.includes(g.id));
+  const bond = (S, id) => (S.meta.bond || {})[id] || 0;
+  // a guest's help grows with the bond: a backed trade x2 at first (x3 at full bond), all profit +10% (+20%)
+  const lift = (S, g) => 1 + GUEST_BOND * (bond(S, g.id) - 1);
+  const workBoost = (S, id) => doing(S, 'work').reduce((x, g) => g.does.work === id ? x * (1 + (GUEST_WORK - 1) * lift(S, g)) : x, 1);
+  const visitors = S => GUESTS.filter(g => S.year >= g.from && !S.guests.includes(g.id));
+  const nextGuest = S => GUESTS.find(g => S.year < g.from);
+  const welcomeCost = (S, g) => Math.max(GUEST_MIN, earnedFor(g.from) * GUEST_AT) * (1 + hm(S).cost);
+  function welcome(S, id) {
+    const g = GUESTS.find(x => x.id === id);
+    if (!g || S.year < g.from || S.guests.includes(id) || S.money < welcomeCost(S, g)) return false;
+    S.money -= welcomeCost(S, g);
+    S.guests.push(id);
+    S.meta.bond = S.meta.bond || {};
+    S.meta.bond[id] = Math.min(BOND_MAX, bond(S, id) + 1);
+    note(S, { en: `${g.en} ${g.ja} joins the house.`, guest: id });
+    bump(S, 'welcome');
+    return true;
+  }
+  const roomOpen = (S, room) => doing(S, 'room').some(g => g.does.room === room);
+
+  // ---------- the tea room: tea doubles profit for a while; three tasks a day ----------
+  const teaX = S => doing(S, 'tea').length ? 3 : TEA_X;
+  const teaOn = S => !!S.tea && S.t < S.tea.until;
+  const teaReadyIn = S => Math.max(0, (S.tea ? S.tea.next : 0) - S.t);
+  function serveTea(S) {
+    if (!roomOpen(S, 'tea') || teaReadyIn(S) > 0) return false;
+    S.tea = { until: S.t + TEA_LEN, next: S.t + TEA_EVERY };
+    bump(S, 'tea');
+    return true;
+  }
+  function bump(S, k, n = 1) { if (S.day) S.day.c[k] = (S.day.c[k] || 0) + n; }
+  // today's three tasks, drawn when the day (a date the page passes in) changes
+  function daily(S, key) {
+    if (S.day && S.day.key === key) return S.day;
+    const pool = TASKS.filter(t => !t.need || (t.need === 'tea' ? roomOpen(S, 'tea') : visitors(S).length > 0));
+    const tasks = [];
+    while (tasks.length < 3 && pool.length) tasks.push(pool.splice(Math.floor(rand(S) * pool.length), 1)[0].id);
+    S.day = { key, tasks, c: {}, got: [] };
+    return S.day;
+  }
+  const taskPay = S => Math.max(50, S.earned * TASK_PAY);
+  const taskDone = (S, id) => !!S.day && (S.day.c[id] || 0) >= TASKS.find(t => t.id === id).n;
+  function claimTask(S, id) {
+    if (!S.day || !S.day.tasks.includes(id) || S.day.got.includes(id) || !taskDone(S, id)) return 0;
+    const pay = taskPay(S);
+    S.day.got.push(id);
+    earn(S, pay);
+    return pay;
   }
 
   // ---------- provinces ----------
@@ -205,6 +268,7 @@ const G = (() => {
     S.unread.splice(i, 1);
     S.readIds.push(id);
     if (!S.meta.seen.includes(id)) S.meta.seen.push(id);
+    bump(S, 'read');
     return true;
   }
 
@@ -222,11 +286,11 @@ const G = (() => {
   const renownGain = S => Math.max(0, renownTotal(S) - S.meta.renown - S.meta.spent);
 
   // ---------- a run ----------
-  function newMeta() { return { runs: 0, renown: 0, spent: 0, lifetime: 0, treasures: [], seen: [], best: 1467 }; }
+  function newMeta() { return { runs: 0, renown: 0, spent: 0, lifetime: 0, treasures: [], seen: [], best: 1467, bond: {} }; }
   function newRun(meta, clan, seed = Date.now() | 0) {
     const h = HOUSES.find(x => x.clan === clan);
     const S = { v: 3, seed, house: clan, t: 0, year: 1467, money: 0, earned: 0, lv: { paddies: 1 }, prog: { paddies: null }, mgr: {}, upg: [],
-      reach: [h.home], pts: 1, unread: [], readIds: [], next: 0, chron: [], heads: [], head: null, done: false, meta };
+      reach: [h.home], pts: 1, unread: [], readIds: [], next: 0, chron: [], heads: [], head: null, done: false, guests: [], tea: null, day: null, meta };
     S.head = { given: NAMES.lord[clan][0], from: 1467, until: 1467 + 25 };
     note(S, { en: `${headName(S)} leads the house from ${GEO.provinces[h.home].en} ${GEO.provinces[h.home].ja}.`, head: true });
     if (h.mods.startTreasure && !meta.treasures.length) findTreasure(S);
@@ -240,7 +304,9 @@ const G = (() => {
     meta.lifetime += S.earned;
     meta.runs++;
     meta.best = Math.max(meta.best, S.year);
-    return newRun(meta, clan);
+    const R = newRun(meta, clan);
+    R.day = S.day;
+    return R;
   }
 
   // whatever the new year brings: chapters, a new head, the present
@@ -305,7 +371,9 @@ const G = (() => {
     return (v < 10 ? v.toFixed(2) : v < 100 ? v.toFixed(1) : v.toFixed(0)) + '\u00a0' + UNITS[k]; // a number never wraps away from its scale word
   }
 
-  return { T, SPEED_AT, PROFIT_AT, PROVINCE, CHAPTER, TREASURE, RENOWN, AWAY_HOURS, PIDS, rand, yearFor, earnedFor, ageOf, eraOf, kanjiYear, money,
+  return { TEA_LEN, TEA_EVERY, BOND_MAX, doing, bond, workBoost, visitors, nextGuest, welcomeCost, welcome, roomOpen, teaX, teaOn, teaReadyIn, serveTea,
+    daily, taskPay, taskDone, claimTask,
+    T, SPEED_AT, PROFIT_AT, PROVINCE, CHAPTER, TREASURE, RENOWN, AWAY_HOURS, PIDS, rand, yearFor, earnedFor, ageOf, eraOf, kanjiYear, money,
     holdersAt, house, isOpen, profitAll, cycle, payout, rate, income, priceOf, maxBuy, offer, buy, nextMilestone, run, managerCost, hire, upgrades,
     buyUpgrade, provincesPerYear, reachPoints, reachable, provinceBonus, reach, bestReach, findTreasure, chaptersFor, read, headName,
     renownTotal, renownGain, newMeta, newRun, prestige, arrive, earn, tick, away, fmt };

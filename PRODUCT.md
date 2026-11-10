@@ -26,6 +26,7 @@ History is the progression. The year moves forward only as the house prospers, s
 
 ## Capabilities and Constraints
 
+- 2026-11-10: the user asked to go the way of Blade Idle, with more rooms and more things to do, and historical characters. They chose: rooms of the house (Shop, Guests, Tea room, Chronicle, House), real historical figures as collectible guests who visit in their own years and boost trades, and no fighting. Living people are left out; portraits only when public domain or Creative Commons, credited in the game.
 - Answers confirmed with the user on 2026-11-09: one house through the ages; time grows with the house; war appears only in the story and on the map, never as a mechanic; a run lasts about two weeks.
 - The map is the 68 old provinces (令制国), reused from the Sengoku map project, with the real clans holding them year by year (data to 1945, then the modern state).
 - The history text comes from the Sengoku map's events (1467–1945, written for that project from standard accounts). Post-war chapters are written for this game.

@@ -90,6 +90,9 @@ function options(S) {
   }
   const inc = G.income(S, false);
   for (const u of G.upgrades(S)) if (u.open && !u.owned) out.push({ kind: 'upg', id: u.id, cost: u.cost, gain: u.realm ? inc * 2 : (S.lv[u.work] ? G.rate(S, u.work, all) * 2 : 0) });
+  // a guest: what their help is worth now (the tea room and the like are worth a little of everything)
+  for (const g of G.visitors(S)) out.push({ kind: 'guest', id: g.id, cost: G.welcomeCost(S, g),
+    gain: g.does.work ? (S.lv[g.does.work] ? G.rate(S, g.does.work, all) * 2 : 1e-9) : g.does.all ? inc * .1 : Math.max(inc * .2, 1) });
   return out.filter(o => o.gain > 0);
 }
 function act(S) {
@@ -99,7 +102,11 @@ function act(S) {
     if (best.kind === 'lv') G.buy(S, best.id, best.n);
     if (best.kind === 'mgr') G.hire(S, best.id);
     if (best.kind === 'upg') G.buyUpgrade(S, best.id);
+    if (best.kind === 'guest') G.welcome(S, best.id);
   }
+  G.serveTea(S);
+  G.daily(S, 'day' + Math.floor(S.t / 86400));
+  for (const t of S.day.tasks) G.claimTask(S, t);
   while (S.unread.length) G.read(S, S.unread[0]);
   while (G.reachPoints(S) > 0 && G.reachable(S).length) G.reach(S, G.bestReach(S));
 }
