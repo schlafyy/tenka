@@ -129,13 +129,13 @@ h2.head { font-size: 1.5rem; display: flex; align-items: baseline; gap: 8px; lin
 h2.head span { color: var(--soft); font-size: 1rem; }
 .bar-row { position: sticky; top: -14px; z-index: 4; display: flex; align-items: center; justify-content: flex-end; margin: 0 -18px 2px; padding: 8px 18px 10px; background: linear-gradient(var(--plaster) 78%, rgba(244, 243, 240, 0)); }
 /* the shop's three counters, and how many to buy at once (one plate that cycles x1, x10, x100, Max) */
-.bar-row { gap: 10px; justify-content: space-between !important; }
+.bar-row { flex-wrap: wrap; gap: 6px 10px; justify-content: space-between !important; }
 .subs { display: inline-flex; padding: 3px; border-radius: 8px; background: #e8e4dd; }
 .subs button { position: relative; min-height: 34px; padding: 4px 11px; border-radius: 6px; color: var(--soft); font-weight: 500; font-size: .9rem; transition: background .2s var(--ease), color .2s; }
-.subs button[aria-selected="true"] { background: var(--wood); color: var(--on-wood); box-shadow: 0 1px 2px rgba(44, 32, 25, .25); }
+.subs button[aria-pressed="true"] { background: var(--wood); color: var(--on-wood); box-shadow: 0 1px 2px rgba(44, 32, 25, .25); }
 .subs .dot { font-style: normal; position: absolute; top: -5px; right: -3px; min-width: 16px; height: 16px; padding: 0 4px; border-radius: 50px; background: var(--gold); color: var(--wood); font-size: .72rem; line-height: 16px; text-align: center; }
 .subs .dot[hidden] { display: none; }
-.mode { flex: none; min-height: 34px; min-width: 76px; padding: 4px 12px; border-radius: 6px; background: #e8e4dd; color: var(--ink); font-weight: 500; font-size: .9rem; font-variant-numeric: tabular-nums; }
+.mode { flex: none; margin-left: auto; min-height: 34px; min-width: 76px; padding: 4px 12px; border-radius: 6px; background: #e8e4dd; color: var(--ink); font-weight: 500; font-size: .9rem; font-variant-numeric: tabular-nums; }
 .mode:active { transform: scale(.96); }
 
 /* a room's name board (hengaku): brushed gilt on dark wood */
@@ -147,7 +147,7 @@ h2.head span { color: var(--soft); font-size: 1rem; }
 .plaque b { font: 400 1.6rem/1 var(--brush); color: var(--gilt); letter-spacing: .06em; }
 
 /* guests: each one a hanging scroll with their portrait (or their name, brushed) */
-.guest { display: grid; grid-template-columns: 78px 1fr; gap: 0 16px; padding: 18px 0 16px; border-bottom: 1px solid var(--hair); }
+.guest { display: grid; grid-template-columns: 78px minmax(0, 1fr); gap: 0 16px; padding: 18px 0 16px; border-bottom: 1px solid var(--hair); }
 .scroll { position: relative; width: 78px; height: 120px; margin-top: 4px; padding: 8px 7px 10px; background: var(--cloth), var(--dye); box-shadow: var(--hang); }
 .scroll::before, .scroll::after { content: ''; position: absolute; left: -4px; right: -4px; height: 5px; border-radius: 3px; background: var(--wood); }
 .scroll::before { top: -3px; }
@@ -168,7 +168,7 @@ h2.head span { color: var(--soft); font-size: 1rem; }
 .guest.soon .scroll::before, .guest.soon .scroll::after { display: none; }
 
 /* the tea room: the ceremony on a tatami mat, and today's tasks */
-.tatami { display: grid; grid-template-columns: 80px 1fr; gap: 16px; align-items: center; padding: 18px 16px; border-radius: 3px;
+.tatami { display: grid; grid-template-columns: 80px minmax(0, 1fr); gap: 16px; align-items: center; padding: 18px 16px; border-radius: 3px;
   background: repeating-linear-gradient(0deg, rgba(60, 50, 10, .08) 0 1px, transparent 1px 3px), linear-gradient(90deg, #cec38b, #c5b97f 50%, #cec38b);
   border-top: 7px solid #2b2a26; border-bottom: 7px solid #2b2a26; color: var(--ink); box-shadow: var(--hang); }
 .tatami h3 { font-size: 1.15rem; }
@@ -197,7 +197,7 @@ h2.head span { color: var(--soft); font-size: 1rem; }
 .present p { margin: 4px 0 10px; }
 
 /* a trade: a signboard with its gilt character (tap to run), the bar in the house dye, the buy plate */
-.trade { position: relative; display: grid; grid-template-columns: 64px 1fr; gap: 6px 14px; margin: 10px 0 0; padding: 14px 14px 14px 12px; border-radius: 6px; background: linear-gradient(180deg, var(--wood-2), var(--wood) 60%); color: var(--on-wood); box-shadow: var(--hang); align-items: center; }
+.trade { position: relative; display: grid; grid-template-columns: 64px minmax(0, 1fr); gap: 6px 14px; margin: 10px 0 0; padding: 14px 14px 14px 12px; border-radius: 6px; background: linear-gradient(180deg, var(--wood-2), var(--wood) 60%); color: var(--on-wood); box-shadow: var(--hang); align-items: center; }
 .tile { grid-row: 1 / 5; align-self: start; width: 64px; height: 64px; border-radius: 4px; background: var(--wood-deep); box-shadow: inset 0 0 0 1px rgba(226, 194, 127, .3); display: grid; place-items: center; position: relative; color: var(--gilt); transition: transform .12s var(--ease), background .25s, color .25s; }
 .tile:active { transform: scale(.94); }
 .tile .g { font: 700 2.1rem/1 var(--mincho); }
@@ -217,17 +217,18 @@ h2.head span { color: var(--soft); font-size: 1rem; }
 .prog.fast i { transform: none; }
 .meta { display: flex; justify-content: space-between; gap: 10px; font-size: .72rem; color: var(--on-wood-soft); line-height: 1.3; }
 .meta > span { display: inline-flex; align-items: center; gap: 4px; white-space: nowrap; }
-.meta > span:first-child { overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+.meta > span:first-child { display: block; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+.meta > span:first-child svg { vertical-align: -1px; margin-right: 4px; }
 .meta svg, .hired svg { width: 11px; height: 11px; }
-.buyrow { display: flex; align-items: center; gap: 10px; margin-top: 2px; }
-.buy { flex: 1; display: flex; align-items: center; justify-content: space-between; gap: 10px; min-height: 40px; padding: 6px 14px; border-radius: 4px; background: rgba(0, 0, 0, .26); font-size: .9rem; color: var(--on-wood-soft); transition: background .15s, color .15s, box-shadow .15s, transform .1s; }
+.buyrow { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 10px; margin-top: 2px; }
+.buy { flex: 1 0 auto; display: flex; align-items: center; justify-content: space-between; gap: 10px; min-height: 40px; padding: 6px 14px; border-radius: 4px; background: rgba(0, 0, 0, .26); font-size: .9rem; color: var(--on-wood-soft); transition: background .15s, color .15s, box-shadow .15s, transform .1s; }
 .buy b { font-weight: 500; }
 .buy span, .buy b { white-space: nowrap; }
 .buy.ok { background: var(--gold); color: var(--wood); box-shadow: 0 1px 2px rgba(44, 32, 25, .25); }
 .buy.ok:hover { background: var(--gold-hover); }
 .buy.ok:active { transform: scale(.98); }
 .buy:not(.ok) { cursor: default; }
-.ms { font-size: .72rem; color: var(--on-wood-soft); text-align: right; line-height: 1.25; max-width: 92px; }
+.ms { margin-left: auto; font-size: .72rem; color: var(--on-wood-soft); text-align: right; line-height: 1.25; max-width: 92px; }
 .trade.shut { background: #e9e6e1; box-shadow: none; color: var(--soft); }
 .trade.shut .tile { background: #dedad3; box-shadow: none; color: var(--soft); grid-row: 1 / 3; }
 .trade.shut h3 > span[lang] { color: var(--soft); }
@@ -235,7 +236,7 @@ h2.head span { color: var(--soft); font-size: 1rem; }
 .opens { font-size: .84rem; color: var(--soft); }
 
 /* upgrades and managers: a list on the wall */
-.item { display: grid; grid-template-columns: 44px 1fr auto; gap: 2px 12px; align-items: center; margin-top: 8px; padding: 12px 12px 12px 10px; border-radius: 6px; background: linear-gradient(180deg, var(--wood-2), var(--wood) 60%); color: var(--on-wood); box-shadow: var(--hang); }
+.item { display: grid; grid-template-columns: 44px minmax(0, 1fr) auto; gap: 2px 12px; align-items: center; margin-top: 8px; padding: 12px 12px 12px 10px; border-radius: 6px; background: linear-gradient(180deg, var(--wood-2), var(--wood) 60%); color: var(--on-wood); box-shadow: var(--hang); }
 .item .tag { grid-row: 1 / 3; width: 44px; height: 44px; border-radius: 4px; background: var(--wood-deep); box-shadow: inset 0 0 0 1px rgba(226, 194, 127, .3); display: grid; place-items: center; font: 700 1.25rem/1 var(--mincho); color: var(--gilt); }
 .item h3 { font-size: 1.05rem; line-height: 1.25; word-break: keep-all; }
 .item h3 span[lang] { color: var(--on-wood-soft); font-size: .9rem; }
@@ -261,7 +262,7 @@ h2.head span { color: var(--soft); font-size: 1rem; }
 
 /* ---------- the chronicle ---------- */
 .entries { list-style: none; margin: 10px 0 0; padding: 0; }
-.entry { display: grid; grid-template-columns: 46px 1fr; gap: 0 12px; padding: 14px 0; border-bottom: 1px solid var(--hair); }
+.entry { display: grid; grid-template-columns: 46px minmax(0, 1fr); gap: 0 12px; padding: 14px 0; border-bottom: 1px solid var(--hair); }
 .entry .y { font: 400 1rem/1.4 var(--mincho); color: var(--soft); text-align: right; padding-top: 2px; }
 .entry .disc { width: 38px; height: 38px; margin: 8px 0 0 auto; }
 .entry h3 { font-size: 1.15rem; line-height: 1.3; word-break: keep-all; text-wrap: balance; }
@@ -339,7 +340,10 @@ details.credits { margin-top: 10px; } details.credits summary { cursor: pointer;
   html, body { background: #e4e2de; }
   #app { box-shadow: 0 0 0 1px var(--hair), 0 20px 60px -30px rgba(44, 32, 25, .35); }
 }
-@media (prefers-reduced-motion: reduce) { .drift { display: none; } *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; } }
+@media (prefers-reduced-motion: reduce) { .drift { display: none; } *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
+  #toast span { animation: toast-still 2.6s linear forwards !important; }
+  .bowl.on .steam path { opacity: .6; } }
+@keyframes toast-still { 0%, 85% { opacity: 1; } 100% { opacity: 0; } }
 </style>
 </head>
 <body>
@@ -351,7 +355,7 @@ details.credits { margin-top: 10px; } details.credits summary { cursor: pointer;
   <filter id="resist-holes" x=".025" y=".025" width=".95" height=".95" color-interpolation-filters="sRGB"><feColorMatrix type="matrix" values="0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 -1 1"/></filter>
 </defs></svg>
 <div id="app">
-  <header id="top">
+  <header id="top"><h1 class="sr">Tenka 天下</h1>
     <div class="eave" aria-hidden="true"></div><div class="beam" aria-hidden="true"></div>
     <div id="house" role="img"></div>
     <div class="sign">
@@ -370,7 +374,7 @@ details.credits { margin-top: 10px; } details.credits summary { cursor: pointer;
     <button data-tab="house"><span lang="ja">家</span><span class="l">House</span><i class="dot" hidden></i></button>
   </nav>
 </div>
-<div id="pick" hidden></div>
+<div id="pick" role="dialog" aria-modal="true" aria-label="Choose a house" hidden></div>
 <div id="toast" aria-live="polite"></div>
 <script src="data/map.js"></script>
 <script src="data/game-data.js"></script>

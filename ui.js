@@ -123,8 +123,8 @@
   const priceButton = (act, id, cost, label = '') => `<button class="btn${S.money >= cost ? ' go' : ''}" data-act="${act}" data-id="${id}" data-k="${act}-${id}" data-cost="${cost}"${S.money >= cost ? '' : ' disabled'}>${label}${fmt(cost)}</button>`;
   const SUBS = [['trades', 'Trades'], ['upgrades', 'Upgrades'], ['managers', 'Managers']];
   function renderShop() {
-    return `<div class="bar-row"><div class="subs" role="tablist" aria-label="The shop">${SUBS.map(([k, l]) => `<button role="tab" data-act="sub" data-sub="${k}" aria-selected="${sub === k}">${l}<i class="dot" hidden></i></button>`).join('')}</div>
-      ${sub === 'trades' ? `<button class="mode" data-act="mode" aria-label="How many to buy at once; tap to change">Buy ${MODES.find(m => m[0] === mode)[1]}</button>` : ''}</div>` + SHOP[sub]();
+    return `<h2 class="sr">The shop</h2><div class="bar-row"><div class="subs" role="group" aria-label="The shop">${SUBS.map(([k, l]) => `<button data-act="sub" data-sub="${k}" aria-pressed="${sub === k}">${l}<i class="dot" hidden></i></button>`).join('')}</div>
+      ${sub === 'trades' ? `<button class="mode" data-act="mode">Buy ${MODES.find(m => m[0] === mode)[1]}</button>` : ''}</div>` + SHOP[sub]();
   }
   const plaque = (ja, en) => `<h2 class="plaque"><b lang="ja">${ja}</b><span>${en}</span></h2>`;
 
@@ -313,7 +313,7 @@
   const announced = new Set();
   function dot(t, n) {
     const b = document.querySelector(`#tabs [data-tab="${t}"] .dot`), v = n ? String(n) : '';
-    if (b.textContent !== v) { b.textContent = v; b.hidden = !v; }
+    if (b.textContent !== v) { b.textContent = v; b.hidden = !v; b.parentNode.setAttribute('aria-label', b.parentNode.querySelector('.l').textContent + (v ? `, ${v} to do` : '')); }
   }
 
   // the panel's markup, rebuilt only when what it shows has changed
@@ -395,7 +395,7 @@
     if (act === 'paste') {
       const code = prompt('Paste a save:');
       if (!code) return;
-      try { const T = JSON.parse(decodeURIComponent(escape(atob(code.trim())))); if (T.v !== 3 || !T.house) throw 0; S = fresh(T); topKey = ''; toast('Save loaded'); } catch { alert('That is not a save from this game.'); }
+      try { const T = JSON.parse(decodeURIComponent(escape(atob(code.trim())))); if (T.v !== 3 || !HOUSES.some(h => h.clan === T.house) || !T.meta || !T.lv || !Array.isArray(T.reach) || !(T.money >= 0)) throw 0; S = fresh(T); topKey = ''; toast('Save loaded'); } catch { alert('That is not a save from this game.'); }
     }
     if (act === 'restart' && confirm('Start over with a new house in 1467? This run is lost; renown and treasures stay.')) return showPick('restart');
     render(); save();
@@ -414,14 +414,14 @@
         <div class="row"><button class="btn go" data-act="begin">Begin in 1467</button>${why ? '<button class="btn" data-act="cancel">Not yet</button>' : ''}</div></div></div>`;
     };
     draw();
-    box.hidden = false;
+    box.hidden = false; $('#app').inert = true;
     box.onclick = e => {
       const c = e.target.closest('[data-clan]');
       if (c) { pickClan = c.dataset.clan; draw(); box.querySelector(`[data-clan="${pickClan}"]`).focus(); return; }
-      if (e.target.closest('[data-act="cancel"]')) { box.hidden = true; return; }
+      if (e.target.closest('[data-act="cancel"]')) { box.hidden = true; $('#app').inert = false; return; }
       if (e.target.closest('[data-act="begin"]')) {
         S = why === 'again' ? G.prestige(S, pickClan) : G.newRun(meta || G.newMeta(), pickClan);
-        box.hidden = true;
+        box.hidden = true; $('#app').inert = false;
         report = null; older = 25; topKey = '';
         sub = 'trades'; setTab('shop'); save();
       }
@@ -448,6 +448,10 @@
   }
   document.addEventListener('visibilitychange', () => { if (document.hidden) save(); });
   addEventListener('pagehide', save);
+  addEventListener('storage', e => {
+    if (e.key !== KEY || !e.newValue) return;
+    try { const T = JSON.parse(e.newValue); if (T.v === 3 && T.house) { S = fresh(T); last = T.savedAt || Date.now(); topKey = ''; render(true); } } catch { /* not a save */ }
+  });
 
   // ---------- the season over the shop front, by the real month ----------
   (() => {
