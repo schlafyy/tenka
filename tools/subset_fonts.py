@@ -31,6 +31,37 @@ def brush_chars():
     return subprocess.run(["node", "-e", js], cwd=ROOT, capture_output=True, text=True, encoding="utf8", check=True).stdout
 
 
+# Neither Japanese font has the Latin vowels with a macron (Ryōma, Ōmi), so phones drew them from a heavier system font.
+# They are built here from each font's own letter and macron, as composite glyphs.
+MACRONS = {"ā": "a", "ē": "e", "ī": "ı", "ō": "o", "ū": "u", "Ā": "A", "Ē": "E", "Ī": "I", "Ō": "O", "Ū": "U"}
+
+
+def add_macrons(font):
+    from fontTools.pens.boundsPen import BoundsPen
+    from fontTools.pens.ttGlyphPen import TTGlyphPen
+    cmap, gs = font.getBestCmap(), font.getGlyphSet()
+    def box(g):
+        pen = BoundsPen(gs); gs[g].draw(pen); return pen.bounds
+    mac = cmap[0xAF]
+    mx0, my0, mx1, _ = box(mac)
+    for ch, base in MACRONS.items():
+        if ord(ch) in cmap or ord(base) not in cmap:
+            continue
+        b = cmap[ord(base)]
+        x0, _, x1, y1 = box(b)
+        # centred over the letter, a small gap above it (a little less above a capital)
+        dx, dy = round((x0 + x1) / 2 - (mx0 + mx1) / 2), round(y1 + (70 if base.isupper() else 100) - my0)
+        pen = TTGlyphPen(gs)
+        pen.addComponent(b, (1, 0, 0, 1, 0, 0)); pen.addComponent(mac, (1, 0, 0, 1, dx, dy))
+        name = "uni%04X" % ord(ch)
+        font["glyf"][name] = pen.glyph()
+        font["glyf"][name].recalcBounds(font["glyf"])
+        font["hmtx"][name] = font["hmtx"][b]
+        if "vmtx" in font: font["vmtx"][name] = font["vmtx"][b]
+        for t in font["cmap"].tables:
+            if t.isUnicode(): t.cmap[ord(ch)] = name
+
+
 def main(src):
     text = used_chars()
     out = os.path.join(ROOT, "fonts")
@@ -40,6 +71,7 @@ def main(src):
         opts.flavor = "woff2"
         opts.layout_features = ["*"]
         font = subset.load_font(os.path.join(src, file), opts)
+        if name != "brush-400": add_macrons(font)
         sub = subset.Subsetter(opts)
         sub.populate(text=brush_chars() if name == "brush-400" else text)
         sub.subset(font)
