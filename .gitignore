@@ -4,3 +4,7 @@ __pycache__/
 
 # the full font sources for tools/subset_fonts.py (43 MB, not served)
 fonts-src/
+
+# the iOS app build: packages, the copied game files, and what Capacitor generates
+node_modules/
+www/

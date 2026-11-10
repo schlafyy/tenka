@@ -1,0 +1,18 @@
+{
+  "name": "tenka",
+  "private": true,
+  "description": "Tenka 天下: the idle game, wrapped as an iOS app with Capacitor. The game itself needs no build: these scripts only package it.",
+  "scripts": {
+    "test": "node test.js",
+    "www": "node tools/www.js",
+    "ios": "node tools/www.js && cap sync ios"
+  },
+  "dependencies": {
+    "@capacitor/core": "8.6.0",
+    "@capacitor/ios": "8.6.0",
+    "@capacitor/preferences": "8.0.1"
+  },
+  "devDependencies": {
+    "@capacitor/cli": "8.6.0"
+  }
+}

@@ -1,0 +1,11 @@
+{
+  "appId": "io.github.schlafyy.tenka",
+  "appName": "Tenka",
+  "webDir": "www",
+  "backgroundColor": "#34363a",
+  "ios": {
+    "contentInset": "never",
+    "scrollEnabled": false,
+    "allowsLinkPreview": false
+  }
+}

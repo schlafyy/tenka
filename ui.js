@@ -19,14 +19,23 @@
   let tab = 'shop', sub = 'trades', mode = 1;
   let choosing = false;        // a seal is coming down on a crossroads
   const panel = $('#panel'), view = $('#view');
-  const standalone = matchMedia('(display-mode: standalone)').matches || navigator.standalone === true; // opened from the Home Screen
+  // the iOS app (Capacitor): the save is also kept in the app's own settings store, which iOS never clears to free space
+  const native = !!(window.Capacitor && Capacitor.isNativePlatform && Capacitor.isNativePlatform());
+  const prefs = native ? (Capacitor.Plugins && Capacitor.Plugins.Preferences) || (Capacitor.registerPlugin && Capacitor.registerPlugin('Preferences')) : null;
+  const standalone = native || matchMedia('(display-mode: standalone)').matches || navigator.standalone === true; // opened as an app
   // ask the browser to keep the save through storage clean-ups (granted to Home Screen apps; harmless where refused)
   if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => {});
 
   // ---------- saving ----------
   // a save from before the guests and the tea room gets their empty places
   function fresh(T) { T.trips = T.trips || []; T.meta.goods = T.meta.goods || []; T.choices = T.choices || {}; T.meta.paths = T.meta.paths || []; T.guests = T.guests || []; if (!('tea' in T)) T.tea = null; if (!('day' in T)) T.day = null; T.meta.bond = T.meta.bond || {}; return T; }
-  function save() { if (!S) return; S.savedAt = Date.now(); try { localStorage.setItem(KEY, JSON.stringify(S)); } catch { /* private mode: the game still runs */ } }
+  function save() {
+    if (!S) return;
+    S.savedAt = Date.now();
+    const s = JSON.stringify(S);
+    try { localStorage.setItem(KEY, s); } catch { /* private mode: the game still runs */ }
+    if (prefs) prefs.set({ key: KEY, value: s }).catch(() => { /* localStorage still has it */ });
+  }
   function load() { try { const s = localStorage.getItem(KEY); return s ? JSON.parse(s) : null; } catch { return null; } }
 
   // ---------- dyes and crests (from the Sengoku map) ----------
@@ -544,15 +553,20 @@
   })();
 
   // ---------- start ----------
-  const saved = load();
-  if (saved && saved.v === 3) {
-    S = fresh(saved);
-    if (S.savedAt) { last = S.savedAt; catchUp(Date.now()); }
-    setTab('shop');
-  } else {
-    for (const k of ['tenka-save-1', 'tenka-save-2']) try { localStorage.removeItem(k); } catch { /* nothing to clear */ }
-    showPick(null);
+  function start(saved) {
+    if (saved && saved.v === 3) {
+      S = fresh(saved);
+      if (S.savedAt) { last = S.savedAt; catchUp(Date.now()); }
+      setTab('shop');
+    } else {
+      for (const k of ['tenka-save-1', 'tenka-save-2']) try { localStorage.removeItem(k); } catch { /* nothing to clear */ }
+      showPick(null);
+    }
   }
+  // in the app, a save iOS cleared from the web view comes back from the settings store
+  const saved = load();
+  if (!saved && prefs) prefs.get({ key: KEY }).then(r => { try { start(r && r.value ? JSON.parse(r.value) : null); } catch { start(null); } }, () => start(null));
+  else start(saved);
   requestAnimationFrame(frame);
   window.tenka = { get S() { return S; }, set S(v) { S = v; topKey = ''; report = null; render(true); }, G, render };
 })();

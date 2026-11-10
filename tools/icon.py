@@ -1,9 +1,9 @@
-"""Renders icon.png (256 px), icon-512.png and icon-180.png: the shop front in small, as in the game's banner:
+"""Renders icon.png (256 px), icon-512.png, icon-180.png, and for the iOS app the 1024 px icon and the launch screen: the shop front in small, as in the game's banner:
 a tiled eave with tomoe tile ends, a wooden lintel, and a madder-red curtain of three panels with 天 brushed across its slits.
 Built from the game's own drawings (art/roof.svg, art/eave.svg) and brush font. Run: python tools/icon.py"""
 import os, pathlib
 from playwright.sync_api import sync_playwright
-from PIL import Image
+from PIL import Image, ImageDraw
 
 ROOT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..")
 PAGE = """<!doctype html><meta charset="utf-8"><style>
@@ -29,7 +29,7 @@ try:
     with sync_playwright() as p:
         b = p.chromium.launch(channel="chrome")
         # the favicon rounds its own corners; the home-screen icons are full-bleed (the phone rounds them)
-        for scale, out, rnd in [(1, "icon.png", True), (2, "icon-512.png", False)]:
+        for scale, out, rnd in [(1, "icon.png", True), (2, "icon-512.png", False), (4, "_icon-1024.png", False)]:
             pg = b.new_page(viewport={"width": 256, "height": 256}, device_scale_factor=scale)
             pg.goto(tmp.as_uri()); pg.wait_for_timeout(400)
             if rnd: pg.evaluate("document.getElementById('i').classList.add('round')")
@@ -38,4 +38,16 @@ try:
 finally:
     tmp.unlink()
 Image.open(os.path.join(ROOT, "icon-512.png")).convert("RGB").resize((180, 180), Image.LANCZOS).save(os.path.join(ROOT, "icon-180.png"))
-print("icon.png, icon-512.png, icon-180.png")
+# the iOS app: the App Store icon (1024, no transparency) and the launch screen (the roof's grey, the icon in the middle)
+big, ios = os.path.join(ROOT, "_icon-1024.png"), os.path.join(ROOT, "ios", "App", "App", "Assets.xcassets")
+if os.path.isdir(ios):
+    icon = Image.open(big).convert("RGB")
+    icon.save(os.path.join(ios, "AppIcon.appiconset", "AppIcon-512@2x.png"))
+    splash, mark = Image.new("RGB", (2732, 2732), "#34363a"), icon.resize((420, 420), Image.LANCZOS)
+    mask = Image.new("L", mark.size, 0)
+    ImageDraw.Draw(mask).rounded_rectangle((0, 0, 419, 419), radius=94, fill=255)
+    splash.paste(mark, ((2732 - 420) // 2, (2732 - 420) // 2), mask)
+    for f in ("splash-2732x2732.png", "splash-2732x2732-1.png", "splash-2732x2732-2.png"):
+        splash.save(os.path.join(ios, "Splash.imageset", f))
+os.remove(big)
+print("icon.png, icon-512.png, icon-180.png" + (", the iOS icon and launch screen" if os.path.isdir(ios) else ""))
