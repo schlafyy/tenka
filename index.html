@@ -128,7 +128,7 @@ h1, h2, h3 { font-family: var(--mincho); font-weight: 400; }
 #panel { display: flex; flex-direction: column; }
 #view { flex: none; }
 #street { position: relative; flex: 1 0 172px; margin: 24px -18px -24px; overflow: hidden; pointer-events: none; background: linear-gradient(var(--plaster), #eeeae3); }
-#street .town { position: absolute; left: 0; right: 0; bottom: 64px; height: 78px; }
+#street .town { position: absolute; left: 0; right: 0; bottom: 64px; height: 100px; }
 #street .town svg { display: block; }
 #street .ground { position: absolute; left: 0; right: 0; bottom: 0; height: 64px; background: linear-gradient(#e3dacb, #d8cdba); box-shadow: inset 0 2px 0 #cdbfa8; }
 #street .ground::before { content: ''; position: absolute; left: 0; right: 0; top: 34px; height: 1px; background: repeating-linear-gradient(90deg, rgba(110, 90, 60, .14) 0 22px, transparent 22px 40px); }
@@ -138,12 +138,23 @@ h1, h2, h3 { font-family: var(--mincho); font-weight: 400; }
 .walker { position: absolute; left: 0; bottom: 0; will-change: transform; }
 .walker > span { display: block; position: relative; transform-origin: 50% 100%; }
 .lane.back .walker > span { transform: scale(.66); }
-.walker em { display: block; animation: bob .55s steps(2, jump-none) infinite; }
+.walker { --step: .5s; }
+.walker em { display: block; animation: bob var(--step) ease-in-out infinite; }
 .walker.ride em { animation: none; }
 .walker svg { display: block; overflow: visible; }
 .walker.left svg { transform: scaleX(-1); }
+/* legs and sleeves swing from the hip and shoulder in step with the walker's pace (--step, set by street.js); wheels turn */
+.walker .la, .walker .lb, .walker .aa, .walker .spin { transform-box: view-box; }
+.walker .la, .walker .lb { animation: stride var(--step) ease-in-out infinite alternate; }
+.walker .lb { animation-direction: alternate-reverse; }
+.walker .aa { animation: swing var(--step) ease-in-out infinite alternate-reverse; }
+.walker .spin { animation: spin .8s linear infinite; }
+.walker s { position: absolute; left: 22%; right: 22%; bottom: -2px; height: 4px; border-radius: 50%; background: currentColor; opacity: .14; }
+@keyframes stride { from { transform: rotate(-21deg); } to { transform: rotate(21deg); } }
+@keyframes swing { from { transform: rotate(-18deg); } to { transform: rotate(18deg); } }
+@keyframes spin { to { transform: rotate(360deg); } }
 .walker .tag { position: absolute; bottom: 56px; left: 50%; transform: translateX(-50%); white-space: nowrap; padding: 1px 8px; border-radius: 4px; background: var(--slip); color: var(--ink); font: 500 .72rem/1.6 var(--gothic); box-shadow: 0 1px 2px rgba(44, 32, 25, .2); }
-@keyframes bob { 50% { transform: translateY(-1.4px); } }
+@keyframes bob { 50% { transform: translateY(-1.2px); } }
 #panel { flex: 1; min-height: 0; overflow-y: auto; overscroll-behavior: contain; -webkit-overflow-scrolling: touch; padding: 14px 18px 24px; }
 #panel.fade { animation: fade .2s var(--ease); }
 @keyframes fade { from { opacity: .4; transform: translateY(4px); } to { opacity: 1; transform: none; } }
