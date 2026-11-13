@@ -1,12 +1,11 @@
-// The street in front of the house, at the foot of every room: the town across the road painted in pale ink, with mist
-// bands as on a folding screen, and people of the age walking past in shadow-puppet silhouette (kage-e). The house's own
-// people walk out too: a clerk setting off on a journey, a guest arriving. Walkers move by transform; their legs and
-// sleeves swing in step with their pace, and wheels turn. Nothing moves with Reduce Motion.
+// The street in front of the shop, under its curtain: people of the age walk past in shadow-puppet silhouette (kage-e).
+// The house's own people walk out too: a clerk setting off on a journey, a guest arriving. Walkers move by transform;
+// their legs and sleeves swing in step with their pace, and wheels turn. Nothing moves with Reduce Motion.
 (() => {
   const el = document.getElementById('street');
   if (!el) return;
   const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
-  const town = el.querySelector('.town'), lanes = el.querySelectorAll('.lane');
+  const lanes = el.querySelectorAll('.lane');
   const rnd = (a, b) => a + Math.random() * (b - a), pickOne = a => a[Math.floor(Math.random() * a.length)];
 
   // ---------- the people: 50 high, feet on y=50, facing right; the body's front is +x ----------
@@ -66,101 +65,6 @@
   const RIDES = new Set(['bicycle', 'soba', 'car', 'kei']);
   const own = (age, who) => who === 'clerk' ? (age < 2 ? 'merchant' : age < 4 ? 'salaryman' : 'phone') : (age < 2 ? 'traveler' : 'gentleman');
 
-  // ---------- the town across the road, by age, in pale ink ----------
-  const TONE = { far: '#e9e4dc', hill: '#e0d9cd', wall: '#e8e2d8', roof: '#cdc2b1', line: '#d6cdbf', dark: '#c2b6a3', mist: '#f2efea' };
-  function townSvg(age, W) {
-    const H = 100, base = H, { far, hill, wall, roof, line, dark, mist } = TONE;
-    let r = 7;
-    const rand = () => (r = (r * 9301 + 49297) % 233280) / 233280; // a fixed town for each width, not a new one each time
-    // a smooth ridge through random peaks
-    const ridge = (y, amp, step, fill) => {
-      const pts = Array.from({ length: Math.ceil(W / step) + 2 }, (_, i) => [i * step - step / 2, y - rand() * amp]);
-      let d = `M${pts[0][0]} ${base}L${pts[0][0]} ${pts[0][1]}`;
-      for (let i = 1; i < pts.length - 1; i++) d += `Q${pts[i][0]} ${pts[i][1]} ${(pts[i][0] + pts[i + 1][0]) / 2} ${(pts[i][1] + pts[i + 1][1]) / 2}`;
-      return `<path d="${d}L${W + step} ${base}Z" fill="${fill}"/>`;
-    };
-    // a tiled roof whose eaves sweep up at the ends: over a wall from x to x+w, eaves at y, ridge rh above
-    const jroof = (x, w, y, rh, o = 3, fill = roof) => `<path d="M${x - o} ${y - 1}Q${x + w * .16} ${y - rh * .22} ${x + w * .24} ${y - rh}H${x + w * .76}Q${x + w * .84} ${y - rh * .22} ${x + w + o} ${y - 1}L${x + w + o - 1.4} ${y + 1.2}Q${x + w / 2} ${y + 2} ${x - o + 1.4} ${y + 1.2}Z" fill="${fill}"/>`;
-    const rect = (x, y, w, h, fill) => `<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="${fill}"/>`;
-    const slats = (x, y, w, h, gap = 2.4) => { let s = ''; for (let i = x + 1.4; i < x + w - 1; i += gap) s += rect(i, y, .7, h, line); return s; };
-    const pine = (x, y, s = 1) => `<path d="M${x} ${y}Q${x + 2 * s} ${y - 10 * s} ${x - 2 * s} ${y - 20 * s}" fill="none" stroke="${dark}" stroke-width="${1.6 * s}"/>` +
-      [[-1, -21, 9], [5, -14, 7], [-6, -10, 6]].map(([dx, dy, rx]) => `<ellipse cx="${x + dx * s}" cy="${y + dy * s}" rx="${rx * s}" ry="${2.8 * s}" fill="${dark}"/>`).join('');
-    const willow = (x, y) => `<path d="M${x} ${y}V${y - 22}" stroke="${dark}" stroke-width="2"/>` + [-8, -4, 0, 4, 8].map(dx => `<path d="M${x} ${y - 22}Q${x + dx} ${y - 24} ${x + dx * 1.3} ${y - 6}" fill="none" stroke="${dark}" stroke-width=".8"/>`).join('');
-    const mistBand = (x, y, w, h = 6) => `<g fill="${mist}" opacity=".85"><rect x="${x}" y="${y}" width="${w}" height="${h}" rx="${h / 2}"/><rect x="${x + w * .18}" y="${y - h * .6}" width="${w * .5}" height="${h}" rx="${h / 2}"/></g>`;
-    let s = ridge(56, 18, 90, far) + ridge(70, 12, 64, hill);
-    // the landmark of the age, on the hills
-    const lx = Math.round(W * .76);
-    if (age === 0) { // a five-storey pagoda
-      let y = 72; s += rect(lx - 6, y - 3, 12, 3, dark);
-      for (let i = 0; i < 5; i++) { const w = 15 - i * 1.7; s += rect(lx - w / 2 + 2, y - 7, w - 4, 7, wall) + jroof(lx - w / 2, w, y - 6.4, 3, 3.4, dark); y -= 8; }
-      s += `<path d="M${lx} ${y - 1}V${y - 15}" stroke="${dark}" stroke-width="1"/>` + [3, 6, 9].map(d => rect(lx - 1.6, y - 1 - d, 3.2, .8, dark)).join('');
-    } else if (age === 1) { // a castle keep on its stone base
-      s += `<path d="M${lx - 17} 74Q${lx - 13} 68 ${lx - 13} 62H${lx + 13}Q${lx + 13} 68 ${lx + 17} 74Z" fill="${dark}"/>`;
-      let y = 62;
-      [[22, 9], [17, 8], [12, 8]].forEach(([w, h]) => { s += rect(lx - w / 2, y - h, w, h, wall) + jroof(lx - w / 2, w, y - h + .6, 3.2, 3.6, dark); y -= h; });
-      s += `<path d="M${lx - 5} ${y + 9}L${lx} ${y + 3.6}L${lx + 5} ${y + 9}Z" fill="${dark}"/>` + jroof(lx - 4, 8, y + 1, 4, 3, dark);
-    } else if (age === 2) { // a brick clock tower
-      s += rect(lx - 16, 54, 32, 20, line) + `<path d="M${lx - 18} 54H${lx + 18}L${lx} 47Z" fill="${dark}"/>` + rect(lx - 5, 30, 10, 24, line) + `<path d="M${lx - 7} 30H${lx + 7}L${lx} 18Z" fill="${dark}"/><circle cx="${lx}" cy="37" r="3.2" fill="${wall}"/>`;
-      for (let i = 0; i < 4; i++) s += `<path d="M${lx - 13 + i * 7.4} 72v-8a2 2 0 0 1 4 0v8z" fill="${wall}"/>`;
-    } else if (age === 3) { // a lattice broadcast tower
-      s += `<path d="M${lx - 14} 76Q${lx - 4} 52 ${lx - 1.4} 14H${lx + 1.4}Q${lx + 4} 52 ${lx + 14} 76H${lx + 9}Q${lx + 3} 62 ${lx} 60Q${lx - 3} 62 ${lx - 9} 76Z" fill="${dark}"/>` + rect(lx - 6, 46, 12, 3, dark) + rect(lx - 3.6, 32, 7.2, 2.4, dark) + `<path d="M${lx} 14V4" stroke="${dark}" stroke-width=".8"/>`;
-      for (let y = 20; y < 70; y += 6) s += `<path d="M${lx - 1.2 - (y - 14) * .16} ${y}L${lx + 1.2 + (y + 6 - 14) * .16} ${y + 6}M${lx + 1.2 + (y - 14) * .16} ${y}L${lx - 1.2 - (y + 6 - 14) * .16} ${y + 6}" stroke="${mist}" stroke-width=".5" opacity=".7"/>`;
-    } else { // towers of glass, the tallest a slim spire
-      [[-30, 26, 44], [-12, 14, 58], [6, 20, 48], [24, 16, 36]].forEach(([dx, w, h]) => { s += rect(lx + dx, 76 - h, w, h, '#ddd5c8'); for (let y = 76 - h + 4; y < 74; y += 4) s += rect(lx + dx + 2, y, w - 4, 1, mist); });
-      s += `<path d="M${lx + 46} 76L${lx + 48.6} 6L${lx + 51.2} 76Z" fill="${dark}"/>` + rect(lx + 46.4, 30, 4.4, 2.6, dark) + rect(lx + 46.9, 20, 3.4, 2, dark);
-    }
-    s += mistBand(-20, 49, W * .5, 5) + mistBand(W * .46, 55, W * .62, 5); // across the hills, above the roofs
-    // the row of houses across the road
-    let x = -8;
-    const poles = [];
-    while (x < W + 10) {
-      const w = 26 + rand() * 26;
-      if (age === 0) { // thatched farmhouses among pines and paddies
-        const h = 9 + rand() * 4, rh = 16 + rand() * 6, y = base - h;
-        s += rect(x, y, w, h, wall) + rect(x + w * .4, y + 3, w * .2, h - 3, line);
-        s += `<path d="M${x - 3} ${y + 1}Q${x + w * .08} ${y - rh * .5} ${x + w * .28} ${y - rh}Q${x + w * .5} ${y - rh - 2.4} ${x + w * .72} ${y - rh}Q${x + w * .92} ${y - rh * .5} ${x + w + 3} ${y + 1}Z" fill="${roof}"/>` + rect(x + w * .26, y - rh + 1.4, w * .48, 2, dark);
-        x += w + 4;
-        if (rand() < .5) { s += pine(x + 8, base, .8 + rand() * .3); x += 18; }
-        x += rand() * 26; continue;
-      }
-      if (age === 1 || (age === 2 && rand() < .55)) { // Edo townhouses: lattice below, slatted windows above, a pent roof between
-        if (rand() < .16) { // a white storehouse
-          const h = 24 + rand() * 4, y = base - h;
-          s += rect(x, y, w * .7, h, '#eee9e1') + rect(x, base - 6, w * .7, 6, line) + rect(x + w * .3, y + 5, 4, 4, dark) + jroof(x, w * .7, y, 5, 2.6, dark);
-          x += w * .7 + 3; continue;
-        }
-        const h = 20 + rand() * 7, y = base - h;
-        s += rect(x, y, w, h, wall) + slats(x, base - h * .5 + 2, w, h * .5 - 2) + rect(x + 3, y + 3, w - 6, 3.4, line) + jroof(x, w, base - h * .5, 2.4, 1.8) + jroof(x, w, y, 6.4);
-        if (age === 1 && rand() < .3) s += `<rect x="${x + w * .5 - 3}" y="${base - h * .5 + 2}" width="6" height="7" fill="${dark}" opacity=".7"/>`; // a shop curtain
-        x += w + 1.4;
-        if (age === 1 && rand() < .12) { s += willow(x + 9, base); x += 20; }
-        else if (age === 1 && rand() < .1) { s += `<path d="M${x + 4} ${base}V${base - 52}M${x + 14} ${base}V${base - 52}M${x + 4} ${base - 24}H${x + 14}M${x + 4} ${base - 38}H${x + 14}" stroke="${dark}" stroke-width="1.4"/><path d="M${x} ${base - 50}L${x + 9} ${base - 58}L${x + 18} ${base - 50}Z" fill="${dark}"/>`; x += 22; } // a fire watchtower
-        continue;
-      }
-      if (age === 2) { // Meiji brick and stucco: a cornice, arched windows
-        const h = 26 + rand() * 10, y = base - h;
-        s += rect(x, y, w, h, wall) + rect(x - 1.4, y, w + 2.8, 2.4, dark);
-        for (let i = x + 4; i < x + w - 6; i += 8) s += `<path d="M${i} ${y + 15}v-6a2.2 2.2 0 0 1 4.4 0v6z M${i} ${base - 4}v-6a2.2 2.2 0 0 1 4.4 0v6z" fill="${line}"/>`;
-        x += w + 3;
-        if (rand() < .4) { s += `<path d="M${x + 2} ${base}V${base - 30}" stroke="${dark}" stroke-width="1"/>` + rect(x, base - 34, 4, 4, dark); x += 8; } // a gas lamp
-        if (rand() < .5) poles.push(x + 1);
-        continue;
-      }
-      // Shōwa and after: concrete and glass with a few wooden houses left, and utility poles on the corners
-      if (age === 3 && rand() < .35) { const h = 18 + rand() * 4, y = base - h; s += rect(x, y, w, h, wall) + rect(x + 3, y + 5, w - 6, 3, line) + jroof(x, w, y, 6); x += w + 3; poles.push(x + 1); continue; }
-      const h = (age === 3 ? 28 : 34) + rand() * (age === 3 ? 18 : 34), y = base - h;
-      s += rect(x, y, w, h, wall);
-      if (age === 3) for (let f = y + 5; f < base - 4; f += 7) s += rect(x + 3, f, w - 6, 2.4, line);
-      else for (let f = y + 4; f < base - 4; f += 5) for (let c = x + 3; c < x + w - 4; c += 5) s += rect(c, f, 3, 2.6, line);
-      if (rand() < .3) s += rect(x + w - 6, y + 4, 4, Math.min(22, h - 8), dark); // a hanging sign
-      x += w + 3;
-      if (rand() < .55) { poles.push(x + 1); x += 6; }
-    }
-    s += poles.map(p => `<path d="M${p} ${base}V${base - 48}M${p - 5} ${base - 45}H${p + 5}" stroke="${dark}" stroke-width="1.3"/>`).join('');
-    for (let i = 1; i < poles.length; i++) s += `<path d="M${poles[i - 1]} ${base - 45}Q${(poles[i - 1] + poles[i]) / 2} ${base - 39} ${poles[i]} ${base - 45}" fill="none" stroke="${dark}" stroke-width=".6"/>`; // the wires sag between poles
-    return `<svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" aria-hidden="true">${s}</svg>`;
-  }
-
   // ---------- walking ----------
   let age = -1, width = 0;
   function figure(name, tag) {
@@ -180,14 +84,13 @@
     const from = dir > 0 ? -90 : W + 10, to = dir > 0 ? W + 10 : -90;
     w.animate([{ transform: `translateX(${from}px)` }, { transform: `translateX(${to}px)` }], { duration: (W + 100) / speed * 1000, easing: 'linear' }).onfinish = () => w.remove();
   }
-  // the street is drawn for the age and the width it has, and redrawn only when either changes
+  // the crowd follows the age; with Reduce Motion a few people of the age stand still, placed for the street's width
   function draw() {
     const S = window.tenka && window.tenka.S;
     if (!S) return;
     const a = G.ageOf(S.year), W = el.clientWidth;
     if (a === age && W === width) return;
     age = a; width = W;
-    town.innerHTML = townSvg(a, W);
     if (reduced) { // standing still: a few people of the age
       lanes.forEach(l => (l.innerHTML = ''));
       CROWD[a].slice(0, 3).forEach((n, i) => { const w = document.createElement('i'); w.className = 'walker' + (RIDES.has(n) ? ' ride' : ''); w.style.transform = `translateX(${W * (.15 + i * .3)}px)`; w.innerHTML = `<span>${figure(n)}</span>`; lanes[i % 2].append(w); });
@@ -204,6 +107,6 @@
   // the house's own people: ui.js calls these
   window.street = {
     event(who, tag) { if (reduced || age < 0) return; walk(own(age, who), { tag, lane: 1, dir: who === 'clerk' ? 1 : -1 }); },
-    draw, walk, figure, townSvg, FIG, CROWD, // for tools/shots and the checks
+    draw, walk, figure, FIG, CROWD, // for tools/shots and the checks
   };
 })();

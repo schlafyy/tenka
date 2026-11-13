@@ -19,7 +19,8 @@ A business-tycoon idle game (in the manner of AdVenture Capitalist) on top of 55
 - **Rooms of the house.** Six rooms along the bottom: the Shop (trades, upgrades and managers under one switch), Guests, Journeys, the Tea room, the Chronicle and the House.
 - **Guests.** 25 real people visit the house in their own years, from the tea master Murata Jukō and Oda Nobunaga to Shibusawa Eiichi, Matsushita Kōnosuke and Iwata Satoru (living people are left out). Welcome one and they stay for the run: most double the trade they are known for or add 10% to all profit; Jukō opens the tea room, Sen no Rikyū makes tea stronger, Hokusai and Inō Tadataka make chapters and provinces count double. Each run you welcome a guest the bond grows (up to five), and so does their help. Portraits are period paintings and old photographs from Wikimedia Commons (credits in the House room); guests without one show their name, brushed.
 - **Crossroads.** Thirteen real turning points, from the Nanban ships at Hirado (1550) and the free market at Azuchi to the closed country, the Tenmei famine, the open ports, the great Kantō earthquake, the bubble and phones on the internet (1999). Each one offers the house two ways for the run, such as opening a branch in the new city of Edo or staying in Osaka. Each way changes one thing (a trade earns double, prices fall, trades run faster…), and the bubble's land deal pays only until 1991. A new beginning brings the choice again, and every way ever taken adds 1% profit for good (26 ways). The notice waits at the top of the trades; the House lists the ways taken.
-- **The street.** Every room ends in the street outside the house, which fills whatever space the room leaves. The town across the road changes with the age: thatched farmhouses, then Edo row houses with a fire tower and willows, then a Meiji clock tower and telegraph poles, then concrete and glass. People of the age walk past in shadow-puppet silhouette: farmers with carrying poles, palanquins, rickshaws, soba delivery bikes, little cars, people on their phones. A clerk sent on a journey walks out with a name tag, and a welcomed guest walks in.
+- **The rooms.** One top bar on every room: money and its rate, the year, and three chips for renown, tea and the clerks (gold when there is something to do; each opens its room). The shop front stands only on the Shop; every other room opens with its own picture: the guest alcove, the road scroll, the tea mat, the chronicle's head, the house register. How each room works is folded behind a small "?". The tabs float at the bottom.
+- **The street.** The street runs before the shop, under its curtain. People of the age walk past in shadow-puppet silhouette: farmers with carrying poles, palanquins, rickshaws, soba delivery bikes, little cars, people on their phones. A clerk sent on a journey walks out with a name tag, and a welcomed guest walks in. A guest at the door or a clerk home shows as a paper tag on the street.
 - **Journeys.** A sixth room, 旅. Send the house's clerks along real trade roads:
   - up to Kyoto, the free port of Sakai, the Nanban ships at Hirado
   - the Tōkaidō to Edo, Dejima, the Kitamae ships to Ezo
@@ -29,7 +30,7 @@ A business-tycoon idle game (in the manner of AdVenture Capitalist) on top of 55
 - **The tea room.** Serve tea for profit ×2 over 30 minutes, once every four hours. Three tasks a day (buy levels, read a chapter, welcome a guest…), each paying a twentieth of what the run has earned.
 - **The house curtain. The crest dyed across the curtain with the clan name and the era, then the year, the head of the house, the money, and a band of the five ages filling in the house's dye.
 - **Provinces and chronicle.** The house reaches a new province by itself every few years, always the richest next to its land (+4% profit each; listed in the House tab). The real history arrives as chapters with the clans' crests; reading one gives +2% profit.
-- **Renown.** The Renown plate in the banner shows it and opens the House. Begin again in 1467, with any house, to turn this run's fame into renown: +1% profit each, for good. Treasures stay too. After the first new beginning, chapters already read count as read.
+- **Renown.** The Renown chip in the top bar shows it and opens its card in the House. Begin again in 1467, with any house, to turn this run's fame into renown: +1% profit each, for good. Treasures stay too. After the first new beginning, chapters already read count as read.
 
 ## Pacing (from the bot in `test.js`)
 
@@ -39,10 +40,10 @@ A bot that plays half an hour, then checks in five times a day, reaches about 15
 
 | File | What it does |
 |---|---|
-| `index.html` | Layout and all styles: one column the height of the screen (the house banner, the panel that scrolls, the tabs) |
-| `street.js` | The street at the foot of every room: the town by age, the people walking past |
+| `index.html` | Layout and all styles: one column the height of the screen (the top bar, the panel that scrolls with the shop front or a room's hero at its head, the floating tabs) |
+| `street.js` | The street before the shop: the people of the age walking past |
 | `ios/`, `capacitor.config.json`, `package.json`, `tools/www.js` | The iOS app: the same game wrapped with Capacitor (status bar hidden, the save mirrored into the app's settings store). `.github/workflows/ios.yml` builds an unsigned `Tenka.ipa` on GitHub's macOS runners for each game change; install it with Sideloadly and an Apple ID |
-| `ui.js` | The house banner, the trades, upgrades, managers, chronicle and house tabs, choosing a house, saving and the clock. Bars move on the compositor every frame; numbers update a few times a second; markup is rebuilt only when it changes |
+| `ui.js` | The top bar, the shop front, each room's hero, the trades, upgrades, managers, chronicle and house tabs, choosing a house, saving and the clock. Bars move on the compositor every frame; numbers update a few times a second; markup is rebuilt only when it changes |
 | `game.js` | All the rules, as pure functions over one JSON state; no page code, so `test.js` plays it in Node. The dials are at the top |
 | `data/game-data.js` | Province yields, mines and ports, the ages and their trades (with managers and upgrades), the great works, houses, names, treasures, the chapters after 1945, the guests and the tea room's tasks |
 | `data/portraits.js`, `portraits/` | Generated by `tools/portraits.py`: the guests' portraits from Wikimedia Commons with their licences |

@@ -49,8 +49,7 @@ with sync_playwright() as p:
             if b.count():
                 b.click()
         shot(pg, f"{name}-3-tapping")
-        for _ in range(3):
-            pg.click(".mode")  # x1 -> x10 -> x100 -> Max
+        pg.click(".modes [data-m='max']")
         pg.evaluate(FORWARD, 1)
         pg.wait_for_timeout(600)
         shot(pg, f"{name}-4-hour")
@@ -62,7 +61,7 @@ with sync_playwright() as p:
         pg.click("#tabs [data-tab='guests']")
         shot(pg, f"{name}-5-guests")
         for _ in range(3):
-            b = pg.locator(".guest.waiting .btn.go")
+            b = pg.locator("[data-act='welcome'].go")
             if b.count(): b.first.click(); pg.wait_for_timeout(300)
         shot(pg, f"{name}-5-guests-after")
         # journeys: send a clerk on the first free road

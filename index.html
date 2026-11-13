@@ -7,7 +7,7 @@
 <link rel="icon" href="icon.png">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="icon-180.png">
-<meta name="theme-color" content="#34363a">
+<meta name="theme-color" content="#2c2019">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Tenka">
@@ -40,12 +40,12 @@
 }
 * { box-sizing: border-box; }
 html, body { height: 100%; }
-/* the page behind the column is the roof: Safari tints the bar behind the clock from it */
-html { background: var(--roof); scrollbar-color: var(--hair-2) transparent; scrollbar-width: thin; }
-body { margin: 0; color: var(--ink); background: var(--roof); font: 400 15px/1.55 var(--gothic); -webkit-font-smoothing: antialiased; -webkit-tap-highlight-color: transparent; overflow: hidden; }
+/* the page behind the column is the top bar's wood: Safari tints the bar behind the clock from it */
+html { background: var(--wood-deep); scrollbar-color: var(--hair-2) transparent; scrollbar-width: thin; }
+body { margin: 0; color: var(--ink); background: var(--wood-deep); font: 400 15px/1.55 var(--gothic); -webkit-font-smoothing: antialiased; -webkit-tap-highlight-color: transparent; overflow: hidden; }
 ::selection { background: #ecd9a8; color: var(--ink); }
 :focus-visible { outline: 2px solid var(--wood); outline-offset: 2px; }
-.trade :focus-visible, .renown :focus-visible, #tabs :focus-visible, #house:focus-visible, .chosen :focus-visible { outline-color: var(--gilt); }
+.trade :focus-visible, .renown :focus-visible, #tabs :focus-visible, #house:focus-visible, .chosen :focus-visible, #hud :focus-visible, .register :focus-visible { outline-color: var(--gilt); }
 button { font: inherit; color: inherit; background: none; border: 0; padding: 0; cursor: pointer; touch-action: manipulation; }
 /* quick taps on the controls never select text, zoom, or open the long-press menu */
 button, .prog, #house { -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; touch-action: manipulation; }
@@ -57,13 +57,36 @@ h1, h2, h3 { font-family: var(--mincho); font-weight: 400; }
 .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 .fig { font-family: var(--gothic); font-weight: 500; }
 
-#app { height: 100dvh; display: flex; flex-direction: column; max-width: var(--col); margin: 0 auto; background: var(--plaster); }
+#app { position: relative; height: 100dvh; display: flex; flex-direction: column; max-width: var(--col); margin: 0 auto; background: var(--plaster); }
 
-/* ---------- the shop front: the curtain, the sign, the five ages ---------- */
-#top { position: relative; flex: none; }
-/* the eave: a row of round tile ends over a wooden lintel */
-/* the roof runs right up to the top edge, behind the clock, in courses of tiles with no shading; the tile ends sit below it */
-.eave { position: relative; z-index: 2; height: calc(58px + env(safe-area-inset-top)); background: url(art/eave.svg) 13px 100% / 26px 30px repeat-x, url(art/roof.svg) 13px calc(4px + env(safe-area-inset-top)) / 26px 14px repeat, var(--roof); }
+/* ---------- the top bar, the same in every room: money, year, renown, tea, clerks ---------- */
+#hud { position: relative; z-index: 4; flex: none; display: flex; flex-direction: column; gap: 10px; padding: calc(10px + env(safe-area-inset-top)) 16px 12px; color: var(--on-wood);
+  background: repeating-linear-gradient(90deg, rgba(255, 255, 255, .018) 0 2px, transparent 2px 7px), var(--wood-deep); box-shadow: 0 2px 0 #1d150f; }
+#hud .row { display: flex; align-items: center; gap: 10px; }
+.coin { flex: none; width: 40px; height: 40px; border-radius: 50%; display: grid; place-items: center; background: var(--gold); box-shadow: inset 0 0 0 3px var(--gold-line); font: 700 1.15rem/1 var(--mincho); color: var(--wood); }
+.purse { flex: 1; min-width: 0; }
+#money { display: block; font: 700 1.7rem/1.05 var(--mincho); color: var(--gilt); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.purse small { display: block; margin-top: 2px; font-size: .84rem; font-weight: 500; color: var(--on-wood-soft); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.when { flex: none; text-align: right; }
+#year { font: 400 1.6rem/1.05 var(--mincho); color: var(--on-wood); }
+#era { margin-top: 2px; font-size: .78rem; color: var(--on-wood-soft); white-space: nowrap; }
+.chips { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+.chip { min-width: 0; min-height: 44px; display: flex; align-items: center; gap: 7px; padding: 5px 9px; border-radius: 10px; text-align: left; background: var(--wood); box-shadow: inset 0 0 0 1px rgba(226, 194, 127, .2); transition: background .2s, box-shadow .2s; }
+.chip > b { flex: none; font: 700 1.05rem/1 var(--mincho); color: var(--gilt); }
+.chip > span { min-width: 0; display: flex; flex-direction: column; gap: 3px; line-height: 1; }
+.chip strong, .chip small { display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.chip strong { font-size: .8rem; font-weight: 500; color: var(--on-wood); }
+.chip small { font-size: .7rem; color: var(--on-wood-soft); }
+.chip.go { background: var(--gold); box-shadow: none; }
+.chip.go > b, .chip.go strong, .chip.go small { color: var(--wood); }
+.chip.off { opacity: .6; }
+
+/* ---------- the shop front, only on the shop: roof, curtain, the street before it, the five ages ---------- */
+#front { position: relative; margin: -14px -18px 0; }
+#front[hidden] { display: none; }
+.scene { position: relative; overflow: hidden; }
+/* the eave: courses of roof tiles over a row of round tile ends, then a wooden lintel */
+.eave { position: relative; z-index: 2; height: 56px; background: url(art/eave.svg) 13px 100% / 26px 30px repeat-x, url(art/roof.svg) 13px 0 / 26px 14px repeat, var(--roof); }
 .beam { position: relative; z-index: 1; height: 12px; background: repeating-linear-gradient(90deg, rgba(255, 255, 255, .035) 0 1px, transparent 1px 7px, rgba(0, 0, 0, .06) 7px 8px, transparent 8px 19px), linear-gradient(var(--wood-2), var(--wood)); box-shadow: 0 3px 4px rgba(0, 0, 0, .35); }
 /* the noren: a rod, a hem, two slits, the crest dyed across all three panels */
 /* the noren: three cotton panels hung through a sleeve on the lintel; the dim shop shows between them */
@@ -76,7 +99,7 @@ h1, h2, h3 { font-family: var(--mincho); font-weight: 400; }
 #house .pn.r { animation-delay: .3s; }
 @keyframes breeze { 0%, 76%, 100% { transform: none; } 82% { transform: rotate(.8deg); } 88% { transform: rotate(-.45deg); } 94% { transform: rotate(.15deg); } }
 /* the season drifts across the shop front: petals, green leaves, maple leaves or snow, by the real month */
-.drift { position: absolute; left: 0; right: 0; top: 0; height: calc(env(safe-area-inset-top) + 196px); overflow: hidden; pointer-events: none; z-index: 3; }
+.drift { position: absolute; left: 0; right: 0; top: 0; height: 196px; overflow: hidden; pointer-events: none; z-index: 3; }
 .drift i { position: absolute; top: -14px; left: var(--x); width: var(--s); height: var(--s); opacity: 0; animation: fall var(--d) linear var(--w) infinite; will-change: transform; }
 .drift svg { display: block; width: 100%; height: 100%; }
 .drift.spring i { background: #f4c4cf; border-radius: 0 100% 0 100%; }
@@ -92,16 +115,14 @@ h1, h2, h3 { font-family: var(--mincho); font-weight: 400; }
 /* the house's name and the era year, brushed down the outer panels */
 #house .v { --fs: 1.75rem; position: absolute; left: 50%; top: 26px; transform: translateX(-50%); writing-mode: vertical-rl; font: 400 min(var(--fs), calc(88px / var(--n, 2) / 1.1))/1 var(--brush); letter-spacing: .04em; white-space: nowrap; text-shadow: 0 0 1px rgba(255, 255, 255, .4); }
 #house .pn.r .v { --fs: 1.05rem; top: 28px; letter-spacing: .1em; opacity: .95; }
-.sign { display: flex; align-items: flex-end; justify-content: space-between; gap: 12px; padding: 16px 18px 0; background: linear-gradient(rgba(44, 32, 25, .13), transparent 12px); }
-#year { font: 400 2.6rem/1 var(--mincho); letter-spacing: -.02em; }
-#era { font-size: .84rem; color: var(--soft); margin-top: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.when { min-width: 0; }
-.wealth { text-align: right; flex: none; }
-#money { display: block; font: 500 1.5rem/1.1 var(--gothic); }
-.wealth small { display: block; font-size: .84rem; color: var(--soft); margin-top: 4px; white-space: nowrap; }
+/* a guest at the door or a clerk home: a paper tag on the street, a tap away from their room */
+#door { position: absolute; z-index: 4; left: 10px; right: 10px; bottom: 9px; display: flex; flex-wrap: wrap-reverse; justify-content: flex-end; gap: 6px; pointer-events: none; }
+#door button { pointer-events: auto; }
+#door button { display: flex; align-items: center; gap: 5px; min-height: 30px; padding: 3px 10px; border-radius: 6px; background: var(--slip); color: var(--ink); font-size: .78rem; font-weight: 500; box-shadow: 0 1px 3px rgba(44, 32, 25, .3); white-space: nowrap; }
+#door button::after { content: ''; width: 6px; height: 6px; border: solid var(--dye); border-width: 1.6px 1.6px 0 0; transform: rotate(45deg); margin-left: 1px; }
 
 /* the five ages, filling with the house's dye as history moves on */
-.ages { display: grid; grid-template-columns: repeat(5, 1fr); gap: 4px; margin: 14px 18px 0; }
+.ages { display: grid; grid-template-columns: repeat(5, 1fr); gap: 4px; margin: 12px 18px 0; }
 .age { position: relative; }
 .age .band { height: 6px; border-radius: 4px; background: var(--hair); overflow: hidden; }
 .age .band i { display: block; height: 100%; background: var(--dye); transform-origin: left; transform: scaleX(0); transition: transform .6s var(--ease); }
@@ -109,32 +130,20 @@ h1, h2, h3 { font-family: var(--mincho); font-weight: 400; }
 .age .k { display: block; margin-top: 5px; font: 400 .84rem/1 var(--mincho); color: var(--soft); text-align: center; }
 .age.now .k { color: var(--ink); }
 .age.past .k { color: var(--ink-2); }
-/* the age and next trade, and the renown plate: renown is always one tap away */
-.nextrow { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin: 8px 18px 0; padding-bottom: 10px; border-bottom: 1px solid var(--hair); }
-#next { font-size: .84rem; color: var(--soft); min-width: 0; }
-#renown { flex: none; display: inline-flex; align-items: baseline; gap: 6px; min-height: 32px; padding: 5px 10px; border-radius: 6px; background: #e6e2dc; font-size: .84rem; font-weight: 500; color: var(--ink); white-space: nowrap; transition: background .2s, color .2s; }
-#renown b { font: 400 .95rem/1 var(--mincho); }
-#renown { align-items: center; }
-#renown span { display: flex; flex-direction: column; line-height: 1.2; text-align: left; }
-#renown small { font-size: .72rem; }
-#renown.go { background: var(--gold); color: var(--wood); box-shadow: 0 1px 2px rgba(44, 32, 25, .25); }
+/* the age, and the next trade to open */
+#next { display: flex; justify-content: space-between; gap: 10px; margin: 8px 18px 0; font-size: .84rem; color: var(--ink-2); }
+#next b { font-weight: 500; color: var(--ink); }
 
 /* crest discs: the crest in white on its clan's deep dye */
 .disc { width: 34px; height: 34px; flex: none; border-radius: 50%; display: block; }
 .disc.kanji { background: var(--hair); color: var(--ink); font: 400 1rem/1 var(--mincho); display: grid; place-items: center; }
 
-/* ---------- the panel ---------- */
-/* the street in front of the house closes every room, and fills whatever space the room leaves */
-#panel { display: flex; flex-direction: column; }
-#view { flex: none; }
-#street { position: relative; flex: 1 0 172px; margin: 24px -18px -24px; overflow: hidden; pointer-events: none; background: linear-gradient(var(--plaster), #eeeae3); }
-#street .town { position: absolute; left: 0; right: 0; bottom: 64px; height: 100px; }
-#street .town svg { display: block; }
-#street .ground { position: absolute; left: 0; right: 0; bottom: 0; height: 64px; background: linear-gradient(#e3dacb, #d8cdba); box-shadow: inset 0 2px 0 #cdbfa8; }
-#street .ground::before { content: ''; position: absolute; left: 0; right: 0; top: 34px; height: 1px; background: repeating-linear-gradient(90deg, rgba(110, 90, 60, .14) 0 22px, transparent 22px 40px); }
+/* ---------- the street in front of the shop: people of the age pass before the curtain ---------- */
+.road-strip { height: 50px; background: linear-gradient(#e3dacb, #d8cdba); box-shadow: inset 0 2px 0 #cdbfa8; }
+#street { position: absolute; z-index: 3; left: 0; right: 0; bottom: 0; height: 120px; overflow: hidden; pointer-events: none; }
 .lane { position: absolute; left: 0; right: 0; height: 0; }
-.lane.back { top: 20px; color: #a49789; }
-.lane.front { top: 58px; color: var(--wood-deep); }
+.lane.back { top: 88px; color: #8d7f70; }
+.lane.front { top: 116px; color: var(--wood-deep); }
 .walker { position: absolute; left: 0; bottom: 0; will-change: transform; }
 .walker > span { display: block; position: relative; transform-origin: 50% 100%; }
 .lane.back .walker > span { transform: scale(.66); }
@@ -155,26 +164,37 @@ h1, h2, h3 { font-family: var(--mincho); font-weight: 400; }
 @keyframes spin { to { transform: rotate(360deg); } }
 .walker .tag { position: absolute; bottom: 56px; left: 50%; transform: translateX(-50%); white-space: nowrap; padding: 1px 8px; border-radius: 4px; background: var(--slip); color: var(--ink); font: 500 .72rem/1.6 var(--gothic); box-shadow: 0 1px 2px rgba(44, 32, 25, .2); }
 @keyframes bob { 50% { transform: translateY(-1.2px); } }
-#panel { flex: 1; min-height: 0; overflow-y: auto; overscroll-behavior: contain; -webkit-overflow-scrolling: touch; padding: 14px 18px 24px; }
+#panel { flex: 1; min-height: 0; overflow-y: auto; overscroll-behavior: contain; -webkit-overflow-scrolling: touch; padding: 14px 18px calc(100px + env(safe-area-inset-bottom)); }
 #panel.fade { animation: fade .2s var(--ease); }
 @keyframes fade { from { opacity: .4; transform: translateY(4px); } to { opacity: 1; transform: none; } }
 h2.head { font-size: 1.5rem; display: flex; align-items: baseline; gap: 8px; line-height: 1.2; }
 h2.head span { color: var(--soft); font-size: 1rem; }
-.bar-row { position: sticky; top: -14px; z-index: 4; display: flex; align-items: center; justify-content: flex-end; margin: 0 -18px 2px; padding: 8px 18px 10px; background: linear-gradient(var(--plaster) 78%, rgba(244, 243, 240, 0)); }
-/* the shop's three counters, and how many to buy at once (one plate that cycles x1, x10, x100, Max) */
-.bar-row { flex-wrap: wrap; gap: 6px 10px; justify-content: space-between !important; }
-.subs { display: inline-flex; padding: 3px; border-radius: 8px; background: #e8e4dd; }
-.subs button { position: relative; min-height: 34px; padding: 4px 11px; border-radius: 6px; color: var(--soft); font-weight: 500; font-size: .9rem; transition: background .2s var(--ease), color .2s; }
-.subs button[aria-pressed="true"] { background: var(--wood); color: var(--on-wood); box-shadow: 0 1px 2px rgba(44, 32, 25, .25); }
-.subs .dot { font-style: normal; position: absolute; top: -5px; right: -3px; min-width: 16px; height: 16px; padding: 0 4px; border-radius: 50px; background: var(--gold); color: var(--wood); font-size: .72rem; line-height: 16px; text-align: center; }
+/* the shop's three counters, side by side; how many to buy at once, as four plates */
+.subs { position: sticky; top: -14px; z-index: 4; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 4px; margin: 14px 0 0; padding: 4px; border-radius: 12px; background: #e6e2dc; box-shadow: 0 -10px 0 var(--plaster); }
+.subs button { position: relative; min-height: 40px; border-radius: 9px; color: var(--ink-2); font-weight: 500; font-size: .94rem; transition: background .2s var(--ease), color .2s; }
+.subs button[aria-pressed="true"] { background: var(--wood-deep); color: var(--on-wood); box-shadow: 0 1px 2px rgba(44, 32, 25, .25); }
+.subs .dot { font-style: normal; display: inline-block; vertical-align: 1px; margin-left: 5px; min-width: 18px; height: 18px; padding: 0 5px; border-radius: 9px; background: var(--gold); color: var(--wood); font-size: .7rem; font-weight: 500; line-height: 18px; text-align: center; }
 .subs .dot[hidden] { display: none; }
-.mode { flex: none; margin-left: auto; min-height: 34px; min-width: 76px; padding: 4px 12px; border-radius: 6px; background: #e8e4dd; color: var(--ink); font-weight: 500; font-size: .9rem; font-variant-numeric: tabular-nums; }
-.mode:active { transform: scale(.96); }
+.modes { display: flex; align-items: center; gap: 6px; margin: 12px 0 0; }
+.modes > span { font-size: .72rem; font-weight: 500; letter-spacing: .08em; color: var(--soft); margin-right: 2px; }
+.modes button { position: relative; flex: 1; min-height: 34px; border-radius: 8px; background: #e6e2dc; font-size: .9rem; font-weight: 500; font-variant-numeric: tabular-nums; }
+.modes button[aria-pressed="true"] { background: var(--gold); color: var(--wood); }
 /* the small plates are at least 44pt to a finger: an invisible margin around each one */
-.mode, #renown { position: relative; }
-.subs button::after, .mode::after { content: ''; position: absolute; inset: -5px 0; }
-#renown::after { content: ''; position: absolute; inset: -6px -4px; }
+.modes button::after { content: ''; position: absolute; inset: -5px 0; }
 .away .x::after { content: ''; position: absolute; inset: -6px; }
+/* how a room works: behind a small ? */
+.help { margin: 10px 0 0; }
+.help summary { list-style: none; display: inline-flex; align-items: center; gap: 8px; min-height: 32px; cursor: pointer; font-size: .84rem; color: var(--soft); }
+.help summary::-webkit-details-marker { display: none; }
+.help summary::before { content: '?'; width: 24px; height: 24px; border-radius: 50%; display: grid; place-items: center; background: #e6e2dc; color: var(--ink); font-weight: 500; }
+.help[open] summary::before { background: var(--wood-deep); color: var(--gilt); }
+.help p { margin-top: 6px; font-size: .9rem; color: var(--ink-2); }
+
+/* ---------- each room's own picture at its head, full width under the top bar ---------- */
+.hero { position: relative; margin: -14px -18px 0; }
+.hero-note { position: absolute; left: 14px; top: 12px; z-index: 2; padding: 3px 10px; border-radius: 6px; background: var(--slip); font-size: .78rem; font-weight: 500; box-shadow: 0 1px 3px rgba(44, 32, 25, .2); }
+.kicker { font-size: .7rem; font-weight: 500; letter-spacing: .08em; text-transform: uppercase; color: var(--dye); }
+.count { float: right; margin-top: 2px; padding: 2px 9px; border-radius: 10px; background: var(--wood-deep); color: var(--gilt); font: 500 .8rem/1.5 var(--gothic); }
 
 /* a room's name board (hengaku): brushed gilt on dark wood */
 .plaque { position: relative; display: inline-flex; align-items: center; gap: 12px; margin: 20px 0 12px; padding: 7px 16px 7px 13px; border: 4px solid var(--wood-deep); background: var(--wood);
@@ -185,64 +205,91 @@ h2.head span { color: var(--soft); font-size: 1rem; }
 .plaque b { font: 400 1.6rem/1 var(--brush); color: var(--gilt); letter-spacing: .06em; }
 
 /* guests: each one a hanging scroll with their portrait (or their name, brushed) */
-.guest { display: grid; grid-template-columns: 78px minmax(0, 1fr); gap: 0 16px; padding: 18px 0 16px; border-bottom: 1px solid var(--hair); }
-.scroll { position: relative; width: 78px; height: 120px; margin-top: 4px; padding: 8px 7px 10px; box-shadow: var(--hang);
+/* the alcove (tokonoma): a post, a lintel, a plastered wall where the visitor's scroll hangs, tatami below */
+.alcove { display: grid; grid-template-columns: 12px minmax(0, 1fr); background: var(--wood); }
+.alcove > i { background: linear-gradient(90deg, var(--wood-2), var(--wood-deep)); }
+.alcove .wall { position: relative; display: flex; align-items: flex-start; gap: 16px; padding: 22px 16px 16px 18px; border-top: 14px solid var(--wood); box-shadow: inset 0 4px 5px rgba(0, 0, 0, .3);
+  background: radial-gradient(ellipse at 50% 30%, #f1ebdf, #e2d9c8); }
+.alcove .wall::after { content: ''; position: absolute; left: 0; right: 0; bottom: -28px; height: 28px; border-top: 6px solid #2b2a26;
+  background: repeating-linear-gradient(90deg, rgba(60, 50, 10, .07) 0 1px, transparent 1px 3px), linear-gradient(#cec38b, #c5b97f); }
+.alcove { padding-bottom: 28px; }
+.alcove .scroll { --w: 100px; --h: 150px; flex: none; }
+.alcove .who-is { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 5px; }
+.alcove h2 { font: 700 1.3rem/1.2 var(--mincho); }
+.alcove .who { font-size: .84rem; color: var(--ink-2); }
+.alcove .what { font: 400 .9rem/1.55 var(--mincho); color: var(--ink-2); display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+.gift { align-self: flex-start; padding: 5px 9px; border-radius: 8px; background: rgba(255, 255, 255, .6); font-size: .84rem; font-weight: 500; }
+.alcove .btn { align-self: flex-start; margin-top: 4px; min-height: 44px; }
+.alcove.quiet .scroll { opacity: .5; filter: grayscale(1); }
+/* the guests with the house: a grid of small scrolls */
+.gallery { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+.gallery figure { margin: 0; display: flex; flex-direction: column; align-items: center; gap: 7px; padding: 12px 6px 9px; border-radius: 12px; background: var(--slip); box-shadow: 0 1px 0 var(--hair); text-align: center; }
+.gallery figure.later { background: #ebe7e0; box-shadow: none; }
+.gallery .scroll { --w: 62px; --h: 92px; }
+.gallery figcaption { font-size: .78rem; font-weight: 500; line-height: 1.3; }
+.gallery figcaption span { display: block; font-weight: 400; color: var(--soft); }
+.gallery .rolled { width: 22px; height: 92px; border-radius: 6px; background: var(--cloth), var(--dye); box-shadow: inset 0 6px 0 var(--wood-deep), inset 0 -6px 0 var(--wood-deep); }
+.gallery .shadow img { filter: grayscale(1) brightness(.45) contrast(2) !important; opacity: .45; }
+.visit { display: flex; align-items: center; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--hair); }
+.visit .scroll { --w: 44px; --h: 64px; }
+.visit div { flex: 1; min-width: 0; font-size: .84rem; color: var(--soft); }
+.visit h3 { font-size: 1rem; color: var(--ink); }
+.scroll { position: relative; width: var(--w, 78px); height: var(--h, 120px); margin-top: 4px; padding: 8px 7px 10px; box-shadow: var(--hang);
   /* the gold ichimonji bands above and below the picture, on the mount itself so the portrait's sepia never dulls them */
   background: linear-gradient(#d4b266, #b8924a) 7px 8px / calc(100% - 14px) 5px no-repeat, linear-gradient(#d4b266, #b8924a) 7px calc(100% - 10px) / calc(100% - 14px) 5px no-repeat, var(--cloth), var(--dye); }
 .scroll::before, .scroll::after { content: ''; position: absolute; left: -4px; right: -4px; height: 5px; border-radius: 3px; background: var(--wood); }
 .scroll::before { top: -3px; }
 .scroll::after { bottom: -4px; height: 6px; background: var(--wood-deep); }
 .scroll img { display: block; width: 100%; height: 100%; object-fit: cover; object-position: 50% 18%; background: #eee8db; filter: sepia(.28) saturate(.75) contrast(1.03); margin-block: 5px; height: calc(100% - 10px); }
-.scroll b { display: flex; height: 100%; align-items: center; justify-content: center; background: #f3efe6; margin-block: 5px; height: calc(100% - 10px); writing-mode: vertical-rl; font: 400 min(1.15rem, calc(90px / var(--n) / 1.05))/1 var(--brush); color: var(--ink); letter-spacing: .05em; }
-.guest h3 { font-size: 1.15rem; line-height: 1.25; }
-.guest h3 span { color: var(--soft); font-size: .9rem; }
-.guest .who { font-size: .84rem; color: var(--soft); }
-.guest .what { font-family: var(--mincho); font-size: 1rem; line-height: 1.6; color: var(--ink-2); margin: 6px 0; }
-.guest .gift { font-size: .84rem; font-weight: 500; margin-bottom: 10px; }
-.guest .in { display: flex; align-items: center; gap: 8px; font-size: .84rem; color: var(--soft); }
+.scroll b { display: flex; height: 100%; align-items: center; justify-content: center; background: #f3efe6; margin-block: 5px; height: calc(100% - 10px); writing-mode: vertical-rl; font: 400 min(1.15rem, calc((var(--h, 120px) - 30px) / var(--n) / 1.05))/1 var(--brush); color: var(--ink); letter-spacing: .05em; }
+.gallery .scroll, .visit .scroll { padding: 6px 5px 7px; margin-top: 0; }
 .bond { display: inline-flex; gap: 3px; }
 .bond i { width: 7px; height: 7px; border-radius: 50%; background: var(--hair-2); }
 .bond i.on { background: var(--gold); box-shadow: inset 0 0 0 1px var(--gold-line); }
-/* the next guest: their scroll still rolled up */
-.guest.soon .scroll { height: 16px; margin-top: 30px; padding: 0; border-radius: 8px; background: var(--cloth), var(--dye); }
-.guest.soon .scroll::before, .guest.soon .scroll::after { display: none; }
 
 /* journeys: each clerk's road as a dotted line from home, the house dye travelling along it; the roads as station signs */
-.road { margin: 0 0 10px; padding: 12px 14px; background: var(--slip); border-radius: 6px; box-shadow: var(--hang); }
-.road .ends { display: flex; justify-content: space-between; gap: 12px; font-size: .84rem; color: var(--soft); }
-.road .ends span:last-child { color: var(--ink); font-weight: 500; }
-.line { position: relative; height: 14px; margin: 4px 0 6px; overflow: hidden; background: radial-gradient(circle, var(--hair-2) 1.3px, transparent 1.8px) 0 50% / 8px 8px repeat-x; }
-.line u { position: absolute; inset: 0; transform: translateX(calc(-1 * (100% - 10px))); background: linear-gradient(var(--dye), var(--dye)) 0 50% / 100% 2px no-repeat; will-change: transform; }
-.line u::after { content: ''; position: absolute; right: 0; top: 2px; width: 10px; height: 10px; border-radius: 50%; background: var(--dye); box-shadow: 0 0 0 2px var(--slip); }
-.road .row { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
-.road.back .row { min-height: 42px; }
-.road p { font-size: .9rem; color: var(--ink-2); }
-.road.back .line u { transform: none; }
-.pass { display: grid; grid-template-columns: 44px minmax(0, 1fr) auto; gap: 12px; align-items: center; padding: 12px 0; border-bottom: 1px solid var(--hair); }
-.pass .tag { width: 44px; height: 44px; border-radius: 4px; display: grid; place-items: center; background: var(--dye); color: #fff; font: 700 1.25rem/1 var(--mincho); }
-.pass h3 { font-size: 1.05rem; line-height: 1.3; }
-.pass h3 span { color: var(--soft); font-size: .9rem; }
-.pass .who { font-size: .84rem; color: var(--soft); }
-.pass .goods { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 6px; }
-.pass .goods span { padding: 1px 7px; border-radius: 4px; background: #e9e6e1; font-size: .72rem; color: var(--faint); }
-.pass .goods .got { color: var(--ink-2); }
-.pass .goods .got span { padding: 0; background: none; color: var(--soft); font-size: inherit; }
-.pass .hired { color: var(--soft); font-size: .84rem; }
+/* the road scroll (dōchūzu): the home station on the right, each open road's station along the way, clerks as dots on the road */
+.roadmap { border-bottom: 6px solid var(--wood); background: repeating-linear-gradient(0deg, rgba(120, 100, 70, .035) 0 1px, transparent 1px 4px), radial-gradient(ellipse at 40% 40%, #f3ecdd, #e6dcc8); }
+.roadmap svg { display: block; width: 100%; height: auto; }
+.roadmap text { font-family: var(--gothic); }
+.roadmap .home { fill: var(--dye); }
+.roadmap .trail { fill: none; stroke: var(--dye); stroke-width: 3; stroke-linecap: round; }
+.roadmap .clerk { fill: var(--dye); stroke: #f4efe6; stroke-width: 3; }
+/* goods found: one card, the collection's bar */
+.found { display: flex; align-items: center; gap: 12px; margin-top: 14px; padding: 10px 12px; border-radius: 12px; background: var(--slip); box-shadow: 0 1px 0 var(--hair); }
+.found > b { flex: none; width: 40px; height: 40px; border-radius: 10px; display: grid; place-items: center; background: var(--wood-deep); color: var(--gilt); font: 700 1.15rem/1 var(--mincho); }
+.found div { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 5px; }
+.found p { display: flex; justify-content: space-between; font-size: .84rem; }
+.found small { font-size: .78rem; color: var(--soft); }
+.meter { height: 6px; border-radius: 3px; background: #e6e2dc; overflow: hidden; }
+.meter i { display: block; height: 100%; border-radius: 3px; background: var(--dye); transform-origin: left; }
+/* a road: its station sign, how long and what it pays or where the clerk is, its goods, one button */
+.pass { display: grid; grid-template-columns: 52px minmax(0, 1fr) auto; gap: 11px; align-items: center; margin-top: 10px; padding: 10px; border-radius: 14px; background: var(--slip); box-shadow: 0 1px 0 var(--hair); }
+.pass .tag { width: 52px; height: 52px; border-radius: 10px; display: grid; place-items: center; background: var(--dye); color: #fff; font: 700 1.5rem/1 var(--mincho); }
+.pass > div { min-width: 0; display: flex; flex-direction: column; gap: 4px; }
+.pass h3 { font: 700 1rem/1.25 var(--mincho); }
+.pass .who { font-size: .78rem; color: var(--soft); }
+.pass .who.out { color: var(--dye); font-weight: 500; }
+.pass .goods { display: flex; flex-wrap: wrap; gap: 4px; }
+.pass .goods span { padding: 1px 7px; border-radius: 5px; background: #e9e6e1; font-size: .72rem; font-weight: 500; color: var(--faint); }
+.pass .goods .got { background: var(--wood-deep); color: var(--gilt); }
+.pass .btn { min-width: 72px; min-height: 48px; padding: 8px 12px; border-radius: 10px; }
+.pass .meter u { display: block; height: 100%; background: var(--dye); transform-origin: left; text-decoration: none; }
 
 /* the tea room: the ceremony on a tatami mat, and today's tasks */
-.tatami { display: grid; grid-template-columns: 80px minmax(0, 1fr); gap: 16px; align-items: center; padding: 18px 16px; border-radius: 3px;
+.tatami { display: grid; grid-template-columns: 112px minmax(0, 1fr); gap: 18px; align-items: center; padding: 26px 18px 24px;
   background: repeating-linear-gradient(0deg, rgba(60, 50, 10, .08) 0 1px, transparent 1px 3px), linear-gradient(90deg, #cec38b, #c5b97f 50%, #cec38b);
-  border-top: 7px solid #2b2a26; border-bottom: 7px solid #2b2a26; color: var(--ink); box-shadow: var(--hang); }
-.tatami h3 { font-size: 1.15rem; }
-.tatami p { font-size: .9rem; color: #463f2c; }
-.tatami .btn.go { margin-top: 10px; }
+  border-top: 10px solid #2b2a26; border-bottom: 10px solid #2b2a26; color: var(--ink); }
+.tatami h2 { font: 700 1.3rem/1.2 var(--mincho); }
+.tatami p { font-size: .9rem; color: #463f2c; margin-top: 4px; }
+.tatami .btn { margin-top: 12px; min-height: 44px; }
 .clock { margin-top: 8px; font-weight: 500; }
-.bowl { width: 80px; height: 72px; overflow: visible; }
+.bowl { width: 112px; height: 100px; overflow: visible; }
 .bowl .steam path { opacity: 0; }
 .bowl.on .steam path { animation: steam 3.2s ease-out infinite; }
 .bowl.on .steam path + path { animation-delay: 1.6s; }
 @keyframes steam { 0% { opacity: 0; transform: translateY(8px); } 35% { opacity: .9; } 100% { opacity: 0; transform: translateY(-10px); } }
-.task { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--hair); }
+.task { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 10px; padding: 12px; border-radius: 12px; background: var(--slip); box-shadow: 0 1px 0 var(--hair); }
 .task h3 { font-size: 1.05rem; line-height: 1.3; }
 .task p { font-size: .84rem; color: var(--soft); }
 .tip { font-size: .84rem; color: var(--soft); margin: 8px 0 0; }
@@ -250,11 +297,17 @@ h2.head span { color: var(--soft); font-size: 1rem; }
 .note.after { margin: 14px 0 0; }
 
 /* a crossroads: a notice on paper under a band of the house dye; the two ways are plain plates, a seal marks the one taken */
-.cross { margin: 0 0 14px; padding: 12px 14px 12px; background: var(--slip); border-top: 6px solid var(--dye); border-radius: 2px 2px 6px 6px; box-shadow: var(--hang); }
-.cross .when { font-size: .84rem; color: var(--soft); }
-.cross h2 { display: flex; align-items: baseline; flex-wrap: wrap; gap: 2px 10px; margin: 2px 0 6px; font-size: 1.35rem; line-height: 1.25; }
-.cross h2 [lang] { font: 400 1.25rem/1.2 var(--brush); color: var(--dye); }
-.cross .why { font-family: var(--mincho); font-size: 1rem; line-height: 1.6; color: var(--ink-2); }
+/* folded, it is one card with the dye seal; open, the story and the two ways */
+.cross { margin: 12px 0 0; padding: 10px 12px; background: var(--slip); border-radius: 12px; box-shadow: 0 1px 0 var(--hair), 0 2px 8px rgba(44, 32, 25, .08); }
+.cross summary { list-style: none; display: flex; align-items: center; gap: 12px; cursor: pointer; }
+.cross summary::-webkit-details-marker { display: none; }
+.cross summary > b { flex: none; width: 40px; height: 40px; border-radius: 50%; display: grid; place-items: center; background: var(--dye); color: #fff; font: 700 1.2rem/1 var(--mincho); transform: rotate(-6deg); }
+.cross summary > span { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 1px; }
+.cross summary::after { content: ''; flex: none; width: 7px; height: 7px; border: solid var(--soft); border-width: 1.6px 1.6px 0 0; transform: rotate(135deg); margin: 0 4px 4px; transition: transform .2s var(--ease); }
+.cross[open] summary::after { transform: rotate(-45deg); margin-bottom: 0; }
+.cross h2 { font: 700 1.05rem/1.3 var(--mincho); }
+.cross summary small { font-size: .84rem; color: var(--soft); }
+.cross .why { margin-top: 10px; font-family: var(--mincho); font-size: 1rem; line-height: 1.6; color: var(--ink-2); }
 .cross .note { margin: 10px 0 0; font-size: .84rem; }
 .ways { display: grid; gap: 8px; margin-top: 12px; }
 .way { position: relative; display: grid; gap: 2px; text-align: left; padding: 10px 52px 10px 14px; border-radius: 6px; background: #ece8e1; transition: background .15s, transform .1s; }
@@ -284,8 +337,9 @@ h2.head span { color: var(--soft); font-size: 1rem; }
 .present p { margin: 4px 0 10px; }
 
 /* a trade: a signboard with its gilt character (tap to run), the bar in the house dye, the buy plate */
-.trade { position: relative; display: grid; grid-template-columns: 64px minmax(0, 1fr); gap: 6px 14px; margin: 10px 0 0; padding: 14px 14px 14px 12px; border-radius: 6px; background: linear-gradient(180deg, var(--wood-2), var(--wood) 60%); color: var(--on-wood); box-shadow: var(--hang); align-items: center; }
-.tile { grid-row: 1 / 5; align-self: start; width: 64px; height: 64px; border-radius: 4px; background: var(--wood-deep); box-shadow: inset 0 0 0 1px rgba(226, 194, 127, .3); display: grid; place-items: center; position: relative; color: var(--gilt); transition: transform .12s var(--ease), background .25s, color .25s; }
+.trade { position: relative; display: grid; grid-template-columns: 60px minmax(0, 1fr) 78px; gap: 11px; margin: 10px 0 0; padding: 10px; border-radius: 14px; background: var(--wood); color: var(--on-wood); box-shadow: 0 2px 0 #1d150f; align-items: center; }
+.trade .body { min-width: 0; display: flex; flex-direction: column; gap: 6px; }
+.tile { width: 60px; height: 60px; border-radius: 10px; background: var(--wood-deep); box-shadow: inset 0 0 0 1px rgba(226, 194, 127, .3); display: grid; place-items: center; position: relative; color: var(--gilt); transition: transform .12s var(--ease), background .25s, color .25s; }
 .tile:active { transform: scale(.94); }
 .tile .g { font: 700 2.1rem/1 var(--mincho); }
 .tile .lv { position: absolute; bottom: -9px; left: 50%; transform: translateX(-50%); background: var(--wood-deep); box-shadow: inset 0 0 0 1px rgba(226, 194, 127, .4); border-radius: 4px; padding: 0 7px; font-size: .72rem; font-weight: 500; line-height: 1.6; white-space: nowrap; color: var(--gilt); }
@@ -293,38 +347,34 @@ h2.head span { color: var(--soft); font-size: 1rem; }
 /* a square waiting for a tap breathes a gold ring outward */
 .tile.idle::after { content: ''; position: absolute; inset: -2px; border-radius: 6px; box-shadow: 0 0 0 2px var(--gold); opacity: 0; animation: invite 1.8s var(--ease) infinite; pointer-events: none; }
 @keyframes invite { 0% { opacity: .8; transform: scale(.97); } 100% { opacity: 0; transform: scale(1.14); } }
-.float { position: absolute; right: 16px; top: 34px; font: 500 .9rem/1 var(--gothic); color: var(--gilt); pointer-events: none; text-shadow: 0 1px 2px rgba(0, 0, 0, .4); }
-.trade h3 { font-size: 1.15rem; line-height: 1.2; display: flex; align-items: baseline; gap: 6px; min-width: 0; }
-.trade h3 > span[lang] { color: var(--on-wood-soft); font-size: .9rem; }
-.trade h3 { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: block; }
-.meta .pay { font-weight: 500; font-size: .84rem; color: var(--gilt); }
-.prog { position: relative; height: 8px; border-radius: 4px; background: rgba(0, 0, 0, .32); overflow: hidden; cursor: pointer; }
+.float { position: absolute; right: 100px; top: 8px; font: 500 .9rem/1 var(--gothic); color: var(--gilt); pointer-events: none; text-shadow: 0 1px 2px rgba(0, 0, 0, .4); }
+.trade h3 { font: 700 1.05rem/1.2 var(--mincho); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.trade h3 > span[lang] { color: var(--on-wood-soft); font-size: .84rem; font-weight: 400; }
+/* the bar, with what a cycle pays and how long it takes written on it */
+.prog { position: relative; height: 22px; border-radius: 11px; background: #1d150f; overflow: hidden; cursor: pointer; }
 /* the bar moves on the compositor only: a scaled layer, never a width */
-.prog i { position: absolute; inset: 0; border-radius: 4px; background: var(--dye-lit); transform-origin: left; transform: scaleX(0); will-change: transform; }
+.prog i { position: absolute; inset: 0; background: var(--dye-lit); transform-origin: left; transform: scaleX(0); will-change: transform; }
 .prog.fast i { transform: none; }
-.meta { display: flex; justify-content: space-between; gap: 10px; font-size: .72rem; color: var(--on-wood-soft); line-height: 1.3; }
-.meta > span { display: inline-flex; align-items: center; gap: 4px; white-space: nowrap; }
-.meta > span:first-child { display: block; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
-.meta > span:first-child svg { vertical-align: -1px; margin-right: 4px; }
+.prog .in { position: absolute; inset: 0; display: flex; justify-content: space-between; align-items: center; gap: 8px; padding: 0 10px; font-size: .74rem; font-weight: 500; color: var(--on-wood); text-shadow: 0 1px 1px rgba(0, 0, 0, .35); white-space: nowrap; }
+.meta { font-size: .74rem; color: var(--on-wood-soft); line-height: 1.3; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.meta svg { vertical-align: -1px; margin-right: 3px; }
 .meta svg, .hired svg { width: 11px; height: 11px; }
-.buyrow { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 10px; margin-top: 2px; }
-.buy { flex: 1 0 auto; display: flex; align-items: center; justify-content: space-between; gap: 10px; min-height: 40px; padding: 6px 14px; border-radius: 4px; background: rgba(0, 0, 0, .26); font-size: .9rem; color: var(--on-wood-soft); transition: background .15s, color .15s, box-shadow .15s, transform .1s; }
-.buy b { font-weight: 500; }
-.buy span, .buy b { white-space: nowrap; }
-.buy.ok { background: var(--gold); color: var(--wood); box-shadow: 0 1px 2px rgba(44, 32, 25, .25); }
+.buy { width: 78px; min-height: 60px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px; padding: 4px; border-radius: 10px; background: #5a463a; font-size: .74rem; font-weight: 500; color: var(--on-wood-soft); transition: background .15s, color .15s, box-shadow .15s, transform .1s; }
+.buy b { font-size: .95rem; font-weight: 500; }
+.buy span, .buy b { white-space: nowrap; max-width: 100%; overflow: hidden; text-overflow: ellipsis; }
+.buy.ok { background: var(--gold); color: var(--wood); box-shadow: inset 0 -3px 0 var(--gold-line); }
 .buy.ok:hover { background: var(--gold-hover); }
-.buy.ok:active { transform: scale(.98); }
+.buy.ok:active { transform: scale(.97); }
 .buy:not(.ok) { cursor: default; }
-.ms { margin-left: auto; font-size: .72rem; color: var(--on-wood-soft); text-align: right; line-height: 1.25; max-width: 92px; }
-.trade.shut { background: #e9e6e1; box-shadow: none; color: var(--soft); }
-.trade.shut .tile { background: #dedad3; box-shadow: none; color: var(--soft); grid-row: 1 / 3; }
+.trade.shut { grid-template-columns: 60px minmax(0, 1fr); background: #e9e6e1; box-shadow: none; color: var(--soft); }
+.trade.shut .tile { background: #dedad3; box-shadow: none; color: var(--soft); }
 .trade.shut h3 > span[lang] { color: var(--soft); }
 .trade.shut h3 { color: var(--ink-2); }
 .opens { font-size: .84rem; color: var(--soft); }
 
 /* upgrades and managers: a list on the wall */
-.item { display: grid; grid-template-columns: 44px minmax(0, 1fr) auto; gap: 2px 12px; align-items: center; margin-top: 8px; padding: 12px 12px 12px 10px; border-radius: 6px; background: linear-gradient(180deg, var(--wood-2), var(--wood) 60%); color: var(--on-wood); box-shadow: var(--hang); }
-.item .tag { grid-row: 1 / 3; width: 44px; height: 44px; border-radius: 4px; background: var(--wood-deep); box-shadow: inset 0 0 0 1px rgba(226, 194, 127, .3); display: grid; place-items: center; font: 700 1.25rem/1 var(--mincho); color: var(--gilt); }
+.item { display: grid; grid-template-columns: 44px minmax(0, 1fr) auto; gap: 2px 12px; align-items: center; margin-top: 10px; padding: 10px; border-radius: 14px; background: var(--wood); color: var(--on-wood); box-shadow: 0 2px 0 #1d150f; }
+.item .tag { grid-row: 1 / 3; width: 44px; height: 44px; border-radius: 10px; background: var(--wood-deep); box-shadow: inset 0 0 0 1px rgba(226, 194, 127, .3); display: grid; place-items: center; font: 700 1.25rem/1 var(--mincho); color: var(--gilt); }
 .item h3 { font-size: 1.05rem; line-height: 1.25; word-break: keep-all; }
 .item h3 span[lang] { color: var(--on-wood-soft); font-size: .9rem; }
 .item p { font-size: .84rem; color: var(--on-wood-soft); }
@@ -346,6 +396,25 @@ h2.head span { color: var(--soft); font-size: 1rem; }
 .btn:disabled { cursor: default; color: var(--soft); }
 .renown .btn:not(.go), .chosen .btn:not(.go) { background: rgba(0, 0, 0, .26); color: var(--on-wood); }
 .renown .btn:disabled { color: var(--on-wood-soft); }
+
+/* ---------- the chronicle: the head of a hand scroll, its title brushed, the new chapters waiting ---------- */
+.annals { padding: 0 18px 18px; background: repeating-linear-gradient(0deg, rgba(120, 100, 70, .035) 0 1px, transparent 1px 4px), linear-gradient(#f3ecdd, #ebe2cf); box-shadow: inset 0 -1px 0 var(--hair-2); }
+.annals::before { content: ''; display: block; height: 14px; margin: 0 -18px 16px; background: linear-gradient(var(--wood-2), var(--wood-deep)); box-shadow: 0 3px 4px rgba(0, 0, 0, .25); }
+.annals .title { display: flex; align-items: center; gap: 14px; }
+.annals .title > b { flex: none; writing-mode: vertical-rl; font: 400 2rem/1 var(--brush); color: var(--ink); letter-spacing: .06em; }
+.annals h2 { font: 700 1.25rem/1.25 var(--mincho); }
+.annals p { font-size: .84rem; color: var(--ink-2); margin-top: 3px; }
+.annals .btn { margin-top: 10px; min-height: 44px; }
+
+/* ---------- the house: the register's cover in the house dye, the crest, the head of the house ---------- */
+.register { display: flex; align-items: center; gap: 16px; padding: 22px 18px; color: #fff; background: var(--cloth), var(--dye); box-shadow: inset 0 14px 0 rgba(0, 0, 0, .14); border-bottom: 6px solid var(--wood-deep); }
+.register .crest { flex: none; width: 92px; height: 92px; }
+.register .disc.kanji { flex: none; width: 92px; height: 92px; font-size: 2.4rem; }
+.register div { min-width: 0; display: flex; flex-direction: column; gap: 4px; }
+.register h2 { font: 700 1.4rem/1.2 var(--mincho); }
+.register h2 span { font-weight: 400; opacity: .85; }
+.register p { font-size: .84rem; color: rgba(255, 255, 255, .9); }
+.register .x { align-self: flex-start; margin-top: 4px; padding: 3px 9px; border-radius: 8px; background: rgba(0, 0, 0, .22); font-size: .84rem; font-weight: 500; }
 
 /* ---------- the chronicle ---------- */
 .entries { list-style: none; margin: 10px 0 0; padding: 0; }
@@ -378,14 +447,16 @@ h3.sub .fig { font-size: .9rem; color: var(--soft); }
 .credits { margin-top: 24px; font-size: .72rem; color: var(--soft); line-height: 1.5; }
 details.credits { margin-top: 10px; } details.credits summary { cursor: pointer; } details.credits a { color: inherit; text-underline-offset: 2px; }
 
-/* the tabs: the shop's wooden sill */
-#tabs { flex: none; display: flex; background: var(--wood); padding-bottom: env(safe-area-inset-bottom); }
-#tabs button { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 8px 0 7px; color: var(--on-wood-soft); position: relative; min-height: 56px; transition: color .2s; }
-#tabs button [lang="ja"] { font: 400 1.3rem/1.1 var(--mincho); }
-#tabs button .l { font-size: .72rem; }
-#tabs button[aria-current="page"] { color: var(--gilt); }
-#tabs button[aria-current="page"]::before { content: ''; position: absolute; top: 0; left: 28%; right: 28%; height: 2px; border-radius: 0 0 4px 4px; background: var(--gilt); }
-#tabs .dot { font-style: normal; font-variant-numeric: tabular-nums; position: absolute; top: 4px; left: calc(50% + 13px); min-width: 17px; height: 17px; padding: 0 5px; border-radius: 50px; background: var(--gold); color: var(--wood); font-size: .72rem; font-weight: 500; line-height: 17px; text-align: center; }
+/* the rooms: a wooden bar floating over the bottom of the page, the room you are in on a gold plate */
+#tabs { position: absolute; z-index: 5; left: 10px; right: 10px; bottom: max(10px, calc(env(safe-area-inset-bottom) - 10px)); height: 66px; padding: 6px; display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 2px; border-radius: 22px;
+  background: var(--wood-deep); box-shadow: 0 6px 18px rgba(29, 21, 15, .35), inset 0 0 0 1px rgba(226, 194, 127, .16); }
+#tabs button { position: relative; min-width: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; border-radius: 16px; color: var(--gilt); transition: background .2s var(--ease), color .2s; }
+#tabs button [lang="ja"] { font: 400 1.3rem/1.05 var(--mincho); }
+#tabs button .l { font-size: .66rem; font-weight: 500; color: var(--on-wood-soft); white-space: nowrap; }
+#tabs button[aria-current="page"] { background: var(--gold); color: var(--wood); }
+#tabs button[aria-current="page"] [lang="ja"] { font-weight: 700; }
+#tabs button[aria-current="page"] .l { color: var(--wood); }
+#tabs .dot { font-style: normal; font-variant-numeric: tabular-nums; position: absolute; top: 3px; right: 4px; min-width: 17px; height: 17px; padding: 0 5px; border-radius: 50px; background: #b8322a; color: #fff; font-size: .7rem; font-weight: 500; line-height: 17px; text-align: center; box-shadow: 0 0 0 2px var(--wood-deep); }
 #tabs .dot[hidden] { display: none; }
 
 /* ---------- choosing a house (the first screen) ---------- */
@@ -419,7 +490,7 @@ details.credits { margin-top: 10px; } details.credits summary { cursor: pointer;
 .chosen .row { display: flex; gap: 8px; margin-top: 12px; }
 .chosen .btn.go { flex: 1; }
 
-#toast { position: fixed; left: 50%; bottom: calc(72px + env(safe-area-inset-bottom)); transform: translateX(-50%); z-index: 5; pointer-events: none; }
+#toast { position: fixed; left: 50%; bottom: calc(92px + env(safe-area-inset-bottom)); transform: translateX(-50%); z-index: 5; pointer-events: none; }
 #toast span { display: block; background: var(--wood); color: var(--on-wood); border-radius: 6px; padding: 9px 18px; font-weight: 500; font-size: .9rem; box-shadow: 0 10px 24px -8px rgba(44, 32, 25, .5); animation: toast 2.6s var(--ease) forwards; width: max-content; max-width: min(520px, calc(100vw - 32px)); text-align: center; }
 @keyframes toast { 0% { opacity: 0; transform: translateY(10px); } 10%, 80% { opacity: 1; transform: none; } 100% { opacity: 0; } }
 
@@ -442,17 +513,32 @@ details.credits { margin-top: 10px; } details.credits summary { cursor: pointer;
   <filter id="resist-holes" x=".025" y=".025" width=".95" height=".95" color-interpolation-filters="sRGB"><feColorMatrix type="matrix" values="0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 -1 1"/></filter>
 </defs></svg>
 <div id="app">
-  <header id="top"><h1 class="sr">Tenka 天下</h1>
-    <div class="eave" aria-hidden="true"></div><div class="beam" aria-hidden="true"></div>
-    <div id="house" role="img"></div>
-    <div class="sign">
+  <header id="hud"><h1 class="sr">Tenka 天下</h1>
+    <div class="row">
+      <b class="coin" id="coin" lang="ja" aria-hidden="true">石</b>
+      <p class="purse num"><span id="money"></span><small><span id="unit"></span> · <span id="rate"></span></small></p>
       <div class="when"><div id="year" class="num"></div><div id="era"></div></div>
-      <p class="wealth num"><span id="money"></span><small><span id="unit"></span> · <span id="rate"></span></small></p>
     </div>
-    <div class="ages" id="ages" aria-hidden="true"></div>
-    <div class="nextrow"><p id="next"></p><button id="renown"></button></div>
+    <div class="chips">
+      <button class="chip" id="renown" data-go="house"></button>
+      <button class="chip" id="teachip" data-go="tea"></button>
+      <button class="chip" id="clerkchip" data-go="trips"></button>
+    </div>
   </header>
-  <main id="panel"><div id="view"></div><div id="street" aria-hidden="true"><div class="town"></div><div class="ground"><div class="lane back"></div><div class="lane front"></div></div></div></main>
+  <main id="panel">
+    <section id="front" aria-label="The shop front">
+      <div class="scene">
+        <div class="eave" aria-hidden="true"></div><div class="beam" aria-hidden="true"></div>
+        <div id="house" role="img"></div>
+        <div class="road-strip" aria-hidden="true"></div>
+        <div id="street" aria-hidden="true"><div class="lane back"></div><div class="lane front"></div></div>
+        <div id="door"></div>
+      </div>
+      <div class="ages" id="ages" aria-hidden="true"></div>
+      <p id="next"></p>
+    </section>
+    <div id="view"></div>
+  </main>
   <nav id="tabs" aria-label="Sections">
     <button data-tab="shop"><span lang="ja">店</span><span class="l">Shop</span><i class="dot" hidden></i></button>
     <button data-tab="guests"><span lang="ja">客</span><span class="l">Guests</span><i class="dot" hidden></i></button>
